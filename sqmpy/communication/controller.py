@@ -48,7 +48,16 @@ class ChannelController:
 
     def __init__(self):
         self._channels = {}
-    
+
+    def add_channel(self, channel):
+        """
+        Add a channel
+        @channel: object of type ChannelBase
+        """
+        assert isinstance(channel, ChannelBase)
+        self._channels[channel.get_name()] = channel
+        channel.connect()
+
     def get_channel(self, name):
         """
         Get the channel object

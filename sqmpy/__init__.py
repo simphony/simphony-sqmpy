@@ -18,19 +18,16 @@ app = Flask(__name__)
 # Import config module as configs
 app.config.from_object('config')
 
-#Enabling Admin app
-admin = Admin(app)
-
 # Override from environment variable
 app.config.from_envvar('SQMPY_SETTINGS', silent=True)
 
+#Enabling Admin app
+admin = Admin(app)
 
 # Enabling views
 import sqmpy.views
-import sqmpy.user.views
-import sqmpy.job.views
-
-# Initializing
+import sqmpy.security.views
+import sqmpy.scheduling.views
 
 @app.teardown_appcontext
 def shutdown_session(exception=None):

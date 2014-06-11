@@ -4,7 +4,7 @@ _basedir = os.path.abspath(os.path.dirname(__file__))
 DEBUG = True
 
 ADMINS = frozenset(['sade@iwm.fraunhofer.de'])
-SECRET_KEY = 'This string will be replaced with a proper key in production.'
+SECRET_KEY = "This string will be replaced with a proper key in production."
 
 SQLALCHEMY_DATABASE_URI = 'sqlite:///' + os.path.join(_basedir, 'sqmpy.db')
 DATABASE_CONNECT_OPTIONS = {}

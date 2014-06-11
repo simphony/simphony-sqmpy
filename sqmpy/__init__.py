@@ -11,7 +11,7 @@ from flask.ext.admin.contrib.sqla import ModelView
 from sqmpy.database import db_session
 
 
-app = Flask(__name__)
+app = Flask(__name__, static_url_path='')
 # This one would be used for production, if any
 #app.config.from_pyfile('config.py', silent=True)
 

@@ -7,12 +7,15 @@ from sqmpy import app
 import sqmpy.models
 from sqmpy.database import db_session
 
-TEST = 0
+#TEST = 0
 
 @app.route('/', methods=["GET"])
 def index():
-    """Index page handler"""
-    global TEST
-    TEST += 1
-    return "Hello World! (index: %s)" % TEST
+    """
+    Index page handler
+    """
+    #global TEST
+    #TEST += 1
+    #return "Hello World! (index: %s)" % TEST
+    return render_template('index.html')
 

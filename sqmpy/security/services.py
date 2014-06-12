@@ -8,6 +8,12 @@ def valid_login(email, password):
     """
     Checks if the login is valid
     """
-    print "In valid login method"
     return core_services.get_component(SECURITY_MANAGER).valid_login(email,
                                                                      password)
+
+#
+# def get_user(email):
+#     """
+#     Returns a user object
+#     """
+#     return core_services.get_component(SECURITY_MANAGER).get_user(email)

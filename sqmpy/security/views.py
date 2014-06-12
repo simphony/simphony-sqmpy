@@ -21,12 +21,17 @@ class UserView(ModelView):
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     form = LoginForm()
-    if form.validate_on_submit():
-        # login and validate the user...
-        login_user(user)
-        flash("Logged in successfully.")
-        return redirect(request.args.get('next') or url_for('index'))
-    return render_template('security/login.html', form=form)
+    error = None
+    if request.method == 'POST':
+        if form.validate_on_submit():
+            # login and validate the user...
+            raise
+            login_user(user)
+            flash("Logged in successfully.")
+            return redirect(request.args.get('next') or url_for('index'))
+        else:
+            error = "Invalid username/password"
+    return render_template('security/login.html', form=form, error=error)
 
 
 @app.route('/logout')

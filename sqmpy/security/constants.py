@@ -17,3 +17,5 @@ STATUS = {
   NEW: 'new',
   ACTIVE: 'active',
 }
+
+SECURITY_MANAGER = 'security.manager'

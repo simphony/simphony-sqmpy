@@ -15,8 +15,8 @@
       <form class="form-signin" role="form" action="/login" method="post">
         <h2 class="form-signin-heading">Please sign in</h2>
 
-        <input type="email" class="form-control" placeholder="Email address" required autofocus>
-        <input type="password" class="form-control" placeholder="Password" required>
+        <input name="email" type="email" class="form-control" placeholder="Email address" required autofocus>
+        <input name="password" type="password" class="form-control" placeholder="Password" required>
           {% if error %}<p class="alert-danger">{{error}}</p>{% endif %}
         <label class="checkbox">
           <input type="checkbox" value="remember-me"> Remember me

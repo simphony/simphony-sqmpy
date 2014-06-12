@@ -29,6 +29,11 @@ import sqmpy.views
 import sqmpy.security.views
 import sqmpy.scheduling.views
 
+#Instanciate core
+# look at http://flask.pocoo.org/docs/api/#flask.Flask.logger
+#app.logger.debug("Importing core..")
+import sqmpy.core
+
 @app.teardown_appcontext
 def shutdown_session(exception=None):
     db_session.remove()

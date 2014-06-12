@@ -8,6 +8,7 @@ from sqmpy.security import login_manager
 from sqmpy.security.forms import LoginForm
 from sqmpy.security.models import User
 from sqmpy.database import db_session
+from sqmpy.security.services import valid_login
 
 
 class UserView(ModelView):
@@ -23,11 +24,13 @@ def login():
     form = LoginForm()
     error = None
     if request.method == 'POST':
-        if form.validate_on_submit():
-            # login and validate the user...
-            raise
-            login_user(user)
-            flash("Logged in successfully.")
+        #if form.validate_on_submit():
+        # login and validate the user...
+        email = request.form.get('email')
+        password = request.form.get('password')
+        if valid_login(email, password):
+            #login_user(user)
+            #flash("Logged in successfully.")
             return redirect(request.args.get('next') or url_for('index'))
         else:
             error = "Invalid username/password"

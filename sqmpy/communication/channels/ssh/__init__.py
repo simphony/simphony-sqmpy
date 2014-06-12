@@ -2,7 +2,7 @@ __author__ = 'Mehdi Sadeghi'
 
 from ssh import SSHClient
 
-from sqmpy.communication.controller import ChannelBase
+from sqmpy.communication.manager import ChannelBase
 
 
 class SSHChannel(ChannelBase):

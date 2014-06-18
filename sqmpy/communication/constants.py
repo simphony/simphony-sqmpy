@@ -1,5 +1,5 @@
 __author__ = 'Mehdi Sadeghi'
 
 
-COMMUNICATION_MANAGER = 'sqm.communication.manager'
+COMMUNICATION_MANAGER = 'sqmpy.communication.manager'
 SSH_CHANNEL = 'SSH'

@@ -18,4 +18,4 @@ STATUS = {
     ACTIVE: 'active',
 }
 
-SECURITY_MANAGER = 'sqm.security.manager'
+SECURITY_MANAGER = 'sqmpy.security.manager'

@@ -1,5 +1,12 @@
-__author__ = 'Mehdi Sadeghi'
+"""
+    sqmpy
+    ~~~~~
 
+    A job management web application that makes it easier
+    for scientists to submit and monitor jobs to remote
+    to remote resources.
+    `sqm' stands for Simple Queue Manager.
+"""
 import os
 import sys
 
@@ -12,6 +19,7 @@ from sqmpy.database import db_session
 from sqmpy.communication.constants import COMMUNICATION_MANAGER
 from sqmpy.communication.channels.ssh import SSHFactory
 
+__author__ = 'Mehdi Sadeghi'
 
 app = Flask(__name__, static_url_path='')
 # This one would be used for production, if any

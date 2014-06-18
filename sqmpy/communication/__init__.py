@@ -1,8 +1,14 @@
-__author__ = 'Mehdi Sadeghi'
+"""
+    sqmpy.communication
+    ~~~~~~~~~~
 
+    Contains channels abstraction and communication services.
+"""
 from sqmpy.core import SQMComponent, SQMException
 from sqmpy.core import core_services
 from sqmpy.communication.constants import COMMUNICATION_MANAGER
+
+__author__ = 'Mehdi Sadeghi'
 
 
 class ChannelManagerException(SQMException):

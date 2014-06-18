@@ -1,5 +1,9 @@
-__author__ = 'Mehdi Sadeghi'
+"""
+    sqmpy.security
+    ~~~~~~~~~~~~~~~~
 
+    Provides user management.
+"""
 import bcrypt
 from flask.ext.login import LoginManager
 
@@ -7,6 +11,8 @@ from sqmpy import app
 from sqmpy.security.models import User
 from sqmpy.core import SQMComponent, SQMException, core_services
 from sqmpy.security.constants import SECURITY_MANAGER
+
+__author__ = 'Mehdi Sadeghi'
 
 
 class SecurityManagerException(SQMException):

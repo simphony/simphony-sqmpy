@@ -1,10 +1,13 @@
-__author__ = 'Mehdi Sadeghi'
-
 """
-Basic modules to be used overall application
-"""
+    sqmpy.core
+    ~~~~~~~~~~
 
+    Provides some of core functions for the application, such
+    as component registration.
+"""
 #import logging
+
+__author__ = 'Mehdi Sadeghi'
 
 
 class SQMException(Exception):

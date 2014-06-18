@@ -9,6 +9,8 @@ from flask.ext.admin import Admin
 from flask.ext.admin.contrib.sqla import ModelView
 
 from sqmpy.database import db_session
+from sqmpy.communication.constants import COMMUNICATION_MANAGER
+from sqmpy.communication.channels.ssh import SSHFactory
 
 
 app = Flask(__name__, static_url_path='')
@@ -29,10 +31,22 @@ import sqmpy.views
 import sqmpy.security.views
 import sqmpy.scheduling.views
 
-#Instanciate core
+#Instanciate core and services manually
 # look at http://flask.pocoo.org/docs/api/#flask.Flask.logger
 #app.logger.debug("Importing core..")
 import sqmpy.core
+from sqmpy.core import core_services
+import sqmpy.communication
+
+# Getting communication manager in order to add SSH channel.
+# Right now these are not dynamic but later on I will make them
+# dynamic if we need to. So far I make the code more flexible
+# to let future changes happen simpler.
+import communication.services as communication_services
+
+# Adding the only supported channel so far. SSH
+communication_services.register_factory(SSHFactory())
+
 
 @app.teardown_appcontext
 def shutdown_session(exception=None):

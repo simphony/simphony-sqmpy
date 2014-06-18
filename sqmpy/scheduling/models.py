@@ -25,6 +25,7 @@ class Program(Base):
     executable = Column(String(100), unique=True)
     jobs = relationship("Job", backref="programs")
 
+
 class Queue(Base):
     __tablename__ = 'queues'
     id = Column(Integer, primary_key=True)
@@ -32,6 +33,7 @@ class Queue(Base):
     type_id = Column(Integer, ForeignKey('queuetypes.id'))
     host = Column(String(150), unique=False)
     jobs = relationship("Job", backref="queues")
+
 
 class QueueType(Base):
     __tablename__ = 'queuetypes'

@@ -31,6 +31,7 @@ class CoreManager(SQMComponent):
     """
 
     def __init__(self):
+        super(CoreManager, self).__init__('CORE_MANAGER')
         self._components = {}
 
     def register(self, component):

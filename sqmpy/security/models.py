@@ -7,7 +7,7 @@ from sqlalchemy.sql.sqltypes import SmallInteger
 from sqlalchemy.orm import relationship, backref
 
 from sqmpy.database import Base
-from sqmpy.security import constants as USER
+from sqmpy.security import constants
 
 
 class User(Base):
@@ -16,8 +16,8 @@ class User(Base):
     name = Column(String(50), unique=True)
     email = Column(String(120), unique=True)
     password = Column(String(120))
-    role = Column(SmallInteger, default=USER.USER)
-    status = Column(SmallInteger, default=USER.NEW)
+    role = Column(SmallInteger, default=constants.USER)
+    status = Column(SmallInteger, default=constants.NEW)
     registered_on = Column(DateTime)
     #jobs = relationship("Job", backref="users")
 
@@ -28,16 +28,16 @@ class User(Base):
         self.registered_on = datetime.datetime.now()
 
     def get_status(self):
-        return USER.STATUS[self.status]
+        return constants.STATUS[self.status]
 
     def get_role(self):
-        return USER.ROLE[self.role]
+        return constants.ROLE[self.role]
 
     def is_authenticated(self):
         return True
 
     def is_active(self):
-        if self.status != USER.INACTIVE:
+        if self.status != constants.INACTIVE:
             return True
         return False
 

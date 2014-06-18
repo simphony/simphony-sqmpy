@@ -1,10 +1,12 @@
 __author__ = 'Mehdi Sadeghi'
 
+from sqmpy.scheduling.models import Job
+
 
 class JobController:
     """ 
     This class is responsible to keep jobs information 
-    and handles controll messages for jobs
+    and handles control messages for jobs
     """
 
     def __init__(self):

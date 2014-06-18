@@ -15,6 +15,22 @@ class SecurityManagerException(SQMException):
     """
 
 
+def _get_digest(password):
+    """
+    Generates password digest
+    """
+    return bcrypt.hashpw(password, bcrypt.gensalt())
+
+
+def _is_correct_password(password, digest):
+    """
+    Checks if the given password corresponds to the given digest
+    :param password:
+    :param digest:
+    """
+    return bcrypt.hashpw(password, digest) == digest
+
+
 class SecurityManager(SQMComponent):
     """
     Class to deal with security and users in SQM
@@ -28,22 +44,9 @@ class SecurityManager(SQMComponent):
         """
         user = User.query.filter_by(email=email).first()
         if user is not None:
-            return self._is_correct_password(password, user.password)
+            return _is_correct_password(password, user.password)
 
         return False
-
-    def _get_digest(self, password):
-        """
-        Generates password digest
-        """
-        return bcrypt.hashpw(password, bcrypt.gensalt())
-
-
-    def _is_correct_password(self, password, digest):
-        """
-        Checks if the given password corresponds to the given digest
-        """
-        return bcrypt.hashpw(password, digest) == digest
 
 
 #Activate Login

@@ -2,7 +2,7 @@ from flask import flash, url_for, request, redirect, render_template
 from flask.ext.admin import Admin
 from flask.ext.admin.contrib.sqla import ModelView
 from flask.ext.login import login_user, logout_user, login_required
-from flask_login import login_user
+from flask.ext.login import login_user
 
 from sqmpy import app, admin
 from sqmpy.security import login_manager

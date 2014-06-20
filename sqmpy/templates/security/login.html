@@ -12,9 +12,9 @@
   {% block body %}
     <div class="container">
 
-      <form class="form-signin" role="form" action="/login" method="post">
+      <form class="form-signin" role="form" action="{{ url_for('login', next=request.args.get('next', '')) }}" method="post">
+        {% if request.args.get('next') %}<p class="alert-danger">To visit {{request.args.get('next')}} on this server you need to sign in.</p>{% endif %}
         <h2 class="form-signin-heading">Please sign in</h2>
-
         <input name="email" type="email" class="form-control" placeholder="Email address" required autofocus>
         <input name="password" type="password" class="form-control" placeholder="Password" required>
           {% if error %}<p class="alert-danger">{{error}}</p>{% endif %}

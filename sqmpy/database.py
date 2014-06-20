@@ -21,5 +21,5 @@ def init_db():
     # you will have to import them first before calling init_db()
     import sqmpy.models
     import sqmpy.security.models
-    import sqmpy.scheduling.models
+    import sqmpy.job.models
     Base.metadata.create_all(bind=engine)

@@ -11,7 +11,7 @@ from sqmpy.database import db_session
 #TEST = 0
 
 
-@app.route('/', methods=["GET"])
+@app.route('/', methods=['GET'])
 @login_required
 def index():
     """

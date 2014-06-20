@@ -37,7 +37,7 @@ admin = Admin(app)
 # Enabling views
 import sqmpy.views
 import sqmpy.security.views
-import sqmpy.scheduling.views
+import sqmpy.job.views
 
 #Instanciate core and services manually
 # look at http://flask.pocoo.org/docs/api/#flask.Flask.logger

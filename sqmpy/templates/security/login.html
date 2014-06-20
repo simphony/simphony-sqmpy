@@ -13,11 +13,21 @@
     <div class="container">
 
       <form class="form-signin" role="form" action="{{ url_for('login', next=request.args.get('next', '')) }}" method="post">
-        {% if request.args.get('next') %}<p class="alert-danger">To visit {{request.args.get('next')}} on this server you need to sign in.</p>{% endif %}
+        {% if request.args.get('next') %}
+          <div class="alert alert-warning alert-dismissable">
+              <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+              <!--span class="glyphicon glyphicon-warning-sign"></span--><!--strong> Warning!</strong--> To visit {{request.args.get('next')}} on this server you need to sign in.
+              </div>
+          {% endif %}
         <h2 class="form-signin-heading">Please sign in</h2>
         <input name="email" type="email" class="form-control" placeholder="Email address" required autofocus>
         <input name="password" type="password" class="form-control" placeholder="Password" required>
-          {% if error %}<p class="alert-danger">{{error}}</p>{% endif %}
+          {% if error %}
+          <div class="alert alert-danger alert-dismissable">
+          <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+          <!--strong>Error!</strong--> {{error}}
+          </div>
+          {% endif %}
         <label class="checkbox">
           <input name="remember" type="checkbox" value="remember-me"> Remember me
         </label>

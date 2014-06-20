@@ -1,8 +1,20 @@
-{% extends 'layout.html' %}
+{% extends 'job/job_base.html' %}
 
 {% block container%}
-      <div class="starter-template">
-        <h1>Simple Queue Manager</h1>
-        <p class="lead">This is entry page for Simple Queue Manager.<br> That's all you get for now.</p>
-      </div>
+{{ super() }}
+<div class="panel panel-default">
+    <!-- Default panel contents -->
+    <div class="panel-heading">List of jobs for user %s. </div>
+
+    <!-- Table -->
+    <table class="table">
+        <tr>
+            <th>#</th>
+            <th>Job Title</th>
+            <th>Submission Date</th>
+            <th>Status</th>
+            <th>Description</th>
+        </tr>
+    </table>
+</div>
 {% endblock %}

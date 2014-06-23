@@ -60,7 +60,7 @@ class SecurityManager(SQMComponent):
 login_manager = LoginManager()
 
 # Create security blueprint
-security_blueprint = Blueprint('security', __name__)
+security_blueprint = Blueprint('sqmpy.security', __name__)
 
 @security_blueprint.record_once
 def on_load(state):

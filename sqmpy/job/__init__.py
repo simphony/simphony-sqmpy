@@ -40,7 +40,7 @@ class JobManager(SQMComponent):
             return self.__jobs[job_name]
 
 
-job_blueprint = Blueprint('job', __name__)
+job_blueprint = Blueprint('sqmpy.job', __name__)
 
 @job_blueprint.context_processor
 def job_cnx_processor():

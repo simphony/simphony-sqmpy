@@ -1,23 +1,26 @@
 {% extends 'job/job_base.html' %}
 
 {% block container%}
-{{ super() }}
-<div class="panel panel-default">
-    <!-- Default panel contents -->
-    <div class="panel-heading">List of jobs</div>
+    {{ super() }}
+    <div class="panel panel-default">
+        <!-- Default panel contents -->
+        <div class="panel-heading">List of jobs</div>
 
-    <!-- Table -->
-    <table class="table">
-        <tr>
-            <th>#</th>
-            <th>Job Title</th>
-            <th>Submission Date</th>
-            {% if current_user.get_role() == "admin" %}
-            <th>User</th>
-            {% endif    %}
-            <th>Status</th>
-            <th>Description</th>
-        </tr>
-    </table>
-</div>
+        <!-- Table -->
+        <table class="table">
+            <tr>
+                <th>#</th>
+                <th>Job Title</th>
+                <th>Submission Date</th>
+                {% if current_user.get_role() == "admin" %}
+                    <th>User</th>
+                {% endif %}
+                <th>Status</th>
+                <th>Description</th>
+            </tr>
+        </table>
+    </div>
+    <div>
+        <p><a type="button" class="btn btn-primary" role="button" href="{{url_for('.submit')}}">New Job</a></p>
+    </div>
 {% endblock %}

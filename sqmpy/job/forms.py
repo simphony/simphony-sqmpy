@@ -5,7 +5,7 @@
     Implements job management forms.
 """
 from flask.ext.wtf import Form, RecaptchaField
-from wtforms import TextField, PasswordField, BooleanField, TextAreaField, validators, FileField
+from wtforms import TextField, BooleanField, TextAreaField, FileField, SelectField
 from wtforms.validators import Required, EqualTo, Email, Optional
 
 __author__ = 'Mehdi Sadeghi'
@@ -17,4 +17,5 @@ class JobSubmissionForm(Form):
     """
     title = TextField('Title', [Required()])
     script = TextAreaField('Script', [Required()])
-    input = FileField('Input file', Optional())
+    input = FileField('Input file', [Optional()])
+    resources = SelectField('Resources', [Required()])

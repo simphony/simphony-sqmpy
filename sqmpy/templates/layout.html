@@ -1,78 +1,75 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
+    <head>
     {% block head %}
-    {% block head_meta %}
-    <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    {% endblock %}
-    <title>{% block title %}Simple Queue Manager{% endblock %}</title>
+        {% block head_meta %}
+            <meta charset="utf-8">
+            <meta http-equiv="X-UA-Compatible" content="IE=edge">
+            <meta name="viewport" content="width=device-width, initial-scale=1">
+        {% endblock %}
+        <title>{% block title %}Simple Queue Manager{% endblock %}</title>
 
-    <!-- Bootstrap -->
-    <link href="{{ url_for('static', filename='css/bootstrap.min.css')  }}" rel="stylesheet">
-    <link href="{{ url_for('static', filename='css/starter-template.css') }}" rel="stylesheet">
+        <!-- Bootstrap -->
+        <link href="{{ url_for('static', filename='css/bootstrap.min.css')  }}" rel="stylesheet">
+        <link href="{{ url_for('static', filename='css/starter-template.css') }}" rel="stylesheet">
 
-    <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
-    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
-    <!--[if lt IE 9]>
-    <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
-    <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
-    <![endif]-->
-    {% block head_tail%}
+        <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
+        <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+        <!--[if lt IE 9]>
+        <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+        <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+        <![endif]-->
+        {% block head_tail%}
+        {% endblock %}
     {% endblock %}
-
-    {% endblock %}
-</head>
-<body>
-{% block body %}
-<div class="navbar navbar-inverse navbar-fixed-top" role="navigation">
-    <div class="container">
-        <div class="navbar-header">
-            <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
-                <span class="sr-only">Toggle navigation</span>
-                <span class="icon-bar"></span>
-                <span class="icon-bar"></span>
-                <span class="icon-bar"></span>
-            </button>
-            <a class="navbar-brand" href="/">SQM</a>
+    </head>
+    <body>
+        {% block body %}
+            <div class="navbar navbar-inverse navbar-fixed-top" role="navigation">
+                <div class="container">
+                    <div class="navbar-header">
+                        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+                            <span class="sr-only">Toggle navigation</span>
+                            <span class="icon-bar"></span>
+                            <span class="icon-bar"></span>
+                            <span class="icon-bar"></span>
+                        </button>
+                        <a class="navbar-brand" href="/">SQM</a>
+                    </div>
+                    <div class="collapse navbar-collapse">
+                        <ul class="nav navbar-nav">
+                            <li {% if not active_page %}class="active"{% endif %}><a href="/">Home</a></li>
+                            {% block navbar_links %}
+                                <li><a href="{{ url_for('sqmpy.job.index') }}">Jobs</a></li>
+                            {% endblock %}
+                            <!--li><a href="#about">About</a></li-->
+                            <!--li><a href="#contact">Contact</a></li-->
+                        </ul>
+                        <ul class="nav navbar-nav navbar-right">
+                            {% if not current_user.is_authenticated() %}
+                                <li><a href="{{ url_for('sqmpy.security.login') }}">log in</a></li>
+                            {% else %}
+                                <li><a href="{{ url_for('sqmpy.security.logout') }}">{{current_user.name}} | log out</a></li>
+                            {% endif %}
+                        </ul>
+                    </div>
+                    <!--/.nav-collapse -->
+                </div>
+            </div>
+        <div class="container starter-template">
+            {% block container%}
+            {% endblock %}
         </div>
-        <div class="collapse navbar-collapse">
-            <ul class="nav navbar-nav">
-                <li {% if not active_page %}class="active"{% endif %}><a href="/">Home</a></li>
-                {% block navbar_links %}
-                <li><a href="job">Jobs</a></li>
-                {% endblock %}
-                <!--li><a href="#about">About</a></li-->
-                <!--li><a href="#contact">Contact</a></li-->
+        <!-- /.container -->
+        {% endblock %}
 
-            </ul>
-            <ul class="nav navbar-nav navbar-right">
-              {% if not current_user.is_authenticated() %}
-                <li><a href="{{ url_for('security.login') }}">log in</a></li>
-              {% else %}
-                <li><a href="{{ url_for('security.logout') }}">{{current_user.name}} | log out</a></li>
-              {% endif %}
-            </ul>
-        </div>
-        <!--/.nav-collapse -->
-    </div>
-</div>
-
-<div class="container starter-template">
-    {% block container%}
-    {% endblock %}
-</div>
-<!-- /.container -->
-{% endblock %}
-
-{% block body_tail_js%}
-<!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
-<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>
-<!-- Include all compiled plugins (below), or include individual files as needed -->
-<script src="{{ url_for('static', filename='js/bootstrap.min.js') }}"></script>
-{% endblock %}
-{% block body_tail %}
-{% endblock %}
-</body>
+        {% block body_tail_js%}
+            <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
+            <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>
+            <!-- Include all compiled plugins (below), or include individual files as needed -->
+            <script src="{{ url_for('static', filename='js/bootstrap.min.js') }}"></script>
+        {% endblock %}
+        {% block body_tail %}
+        {% endblock %}
+    </body>
 </html>

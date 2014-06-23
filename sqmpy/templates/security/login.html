@@ -12,7 +12,7 @@
   {% block body %}
     <div class="container">
 
-      <form class="form-signin" role="form" action="{{ url_for('login', next=request.args.get('next', '')) }}" method="post">
+      <form class="form-signin" role="form" action="{{ url_for('security.login', next=request.args.get('next', '')) }}" method="post">
         {% if request.args.get('next') %}
           <div class="alert alert-warning alert-dismissable">
               <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>

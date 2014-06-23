@@ -1,9 +1,11 @@
 """
-    sqmpy.scheduling
+    sqmpy.job
     ~~~~~~~~~~~~~~~~
 
     Provides job submission and monitoring.
 """
+from flask import Blueprint
+
 from sqmpy.core import SQMComponent
 from sqmpy.job.models import Job
 from sqmpy.job.constants import JOB_MANAGER
@@ -36,3 +38,6 @@ class JobManager(SQMComponent):
         """
         if job_name in self.__jobs:
             return self.__jobs[job_name]
+
+
+job_blueprint = Blueprint('job', __name__)

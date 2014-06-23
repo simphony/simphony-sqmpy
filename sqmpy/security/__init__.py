@@ -5,9 +5,10 @@
     Provides user management.
 """
 import bcrypt
+
+from flask import Blueprint
 from flask.ext.login import LoginManager
 
-from sqmpy import app
 from sqmpy.security.models import User
 from sqmpy.core import SQMComponent, SQMException, core_services
 from sqmpy.security.constants import SECURITY_MANAGER
@@ -57,17 +58,18 @@ class SecurityManager(SQMComponent):
 
 #Activate Login
 login_manager = LoginManager()
-login_manager.init_app(app)
-login_manager.login_view = 'login'
 
+# Create security blueprint
+security_blueprint = Blueprint('security', __name__)
+
+@security_blueprint.record_once
+def on_load(state):
+    login_manager.init_app(state.app)
+    login_manager.login_view = '/security/login'
 
 @login_manager.user_loader
-def load_user(user_id):
-    """
-    This method will load requested user or return None
-    """
-    return User.query.get(user_id)
-
+def load_user(id):
+    return User.query.get(id)
 
 #Register the component in core
 #@TODO: This should be dynamic later

@@ -2,10 +2,9 @@ from flask import flash, url_for, request, redirect, render_template
 from flask.ext.admin import Admin
 from flask.ext.admin.contrib.sqla import ModelView
 from flask.ext.login import login_user, logout_user, login_required
-from flask.ext.login import login_user
 
-from sqmpy import app, admin
-from sqmpy.security import login_manager
+from sqmpy import admin
+from sqmpy.security import login_manager, security_blueprint
 from sqmpy.security.forms import LoginForm
 from sqmpy.security.models import User
 from sqmpy.database import db_session
@@ -20,7 +19,7 @@ class UserView(ModelView):
         super(UserView, self).__init__(User, db_session)
 
 
-@app.route('/login', methods=['GET', 'POST'])
+@security_blueprint.route('/security/login', methods=['GET', 'POST'])
 def login():
     form = LoginForm()
     error = None
@@ -42,7 +41,7 @@ def login():
     return render_template('security/login.html', form=form, error=error)
 
 
-@app.route('/logout')
+@security_blueprint.route('/security/logout')
 @login_required
 def logout():
     logout_user()

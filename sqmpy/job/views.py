@@ -23,12 +23,19 @@ admin.add_view(ModelView(sqmpy.job.models.Program, db_session))
 admin.add_view(ModelView(sqmpy.job.models.Queue, db_session))
 
 
-@app.route('/jobs', methods=['GET'])
+@app.route('/job', methods=['GET'])
+@app.route('/job/list', methods=['GET'])
+@app.route('/job/<job_id>', methods=['GET'])
 @login_required
-def list_jobs():
+def list_jobs(job_id=None):
     """
     Show list of jobs
     :param request:
     :return:
     """
-    return render_template('job/jobs.html', active_page="jobs")
+
+    if job_id is not None:
+        # Get the job and show job detail page
+        return render_template('job/job_detail.html', active_page="jobs")
+    else:
+        return render_template('job/job_list.html', active_page="jobs")

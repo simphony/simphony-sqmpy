@@ -4,7 +4,7 @@
 {{ super() }}
 <div class="panel panel-default">
     <!-- Default panel contents -->
-    <div class="panel-heading">List of jobs for user %s. </div>
+    <div class="panel-heading">List of jobs</div>
 
     <!-- Table -->
     <table class="table">
@@ -12,6 +12,9 @@
             <th>#</th>
             <th>Job Title</th>
             <th>Submission Date</th>
+            {% if current_user.get_role() == "admin" %}
+            <th>User</th>
+            {% endif    %}
             <th>Status</th>
             <th>Description</th>
         </tr>

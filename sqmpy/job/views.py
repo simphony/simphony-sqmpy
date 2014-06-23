@@ -31,4 +31,4 @@ def list_jobs():
     :param request:
     :return:
     """
-    return render_template('job/jobs.html')
+    return render_template('job/jobs.html', active_page="jobs")

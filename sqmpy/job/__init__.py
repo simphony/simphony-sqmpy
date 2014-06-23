@@ -41,3 +41,7 @@ class JobManager(SQMComponent):
 
 
 job_blueprint = Blueprint('job', __name__)
+
+@job_blueprint.context_processor
+def job_cnx_processor():
+    return dict(active_page='job')

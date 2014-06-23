@@ -1,1 +1,37 @@
 {% extends 'job/job_base.html' %}
+
+{% block container%}
+    {{ super() }}
+    <form class="navbar-form navbar-left" role="submission" action="{{url_for('.submit')}}" method="POST">
+        <div class="form-group">
+            <h3>Submit a job</h3>
+            <input type="text" class="form-control" name="title" placeholder="Title"><br>
+            <input id="file_input" type="file" class="form-control file" name="input_file" title="Input File"><br>
+
+            <!-- Single button -->
+
+            <div class="btn-group">
+                <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">
+                Resource <span class="caret"></span>
+                </button>
+                <ul class="dropdown-menu" role="menu">
+                    <li><a href="#" onclick="document.getElementById('selected_resource').value=this.text">Joe2 at iwm.fraunhofer.de</a></li>
+                    <!--li class="divider"></li>
+                    <li><a href="#">Separated link</a></li-->
+                </ul>
+            </div>
+            <input id="selected_resource" readonly="true" type="text" class="form-control" name="selected_resource" placeholder=""><br>
+            <div>
+            <input type="textarea" class="form-control" name="script" placeholder=""></div>
+            <button type="submit" class="btn btn-primary">Submit</button>
+        </div>
+    </form>
+{% endblock %}
+
+{% block body_tail %}
+    {{ super() }}
+    <script>
+        $('input[type=file]').bootstrapFileInput();
+        $('.file-inputs').bootstrapFileInput();
+    </script>
+{% endblock %}

@@ -12,6 +12,8 @@
         <!-- Bootstrap -->
         <link href="{{ url_for('static', filename='css/bootstrap.min.css')  }}" rel="stylesheet">
         <link href="{{ url_for('static', filename='css/starter-template.css') }}" rel="stylesheet">
+        <link rel="stylesheet" href="http://netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap-theme.min.css" />
+        <link rel="stylesheet" href="http://code.jquery.com/ui/1.10.3/themes/smoothness/jquery-ui.css" />
 
         <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
         <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
@@ -63,13 +65,12 @@
         <!-- /.container -->
         {% endblock %}
 
-        {% block body_tail_js%}
+        {% block body_tail%}
             <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
             <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>
             <!-- Include all compiled plugins (below), or include individual files as needed -->
             <script src="{{ url_for('static', filename='js/bootstrap.min.js') }}"></script>
-        {% endblock %}
-        {% block body_tail %}
+            <script src="http://gregpike.net/demos/bootstrap-file-input/bootstrap.file-input.js"></script>
         {% endblock %}
     </body>
 </html>

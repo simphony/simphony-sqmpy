@@ -18,4 +18,4 @@ class JobSubmissionForm(Form):
     title = TextField('Title', [Required()])
     script = TextAreaField('Script', [Required()])
     input = FileField('Input file', [Optional()])
-    resources = SelectField('Resources', [Required()])
+    resource = SelectField('Resource', [Required()])

@@ -66,10 +66,10 @@ def submit():
     """
     form = JobSubmissionForm()
     if request.method == 'POST':
-        #if form.
-        # Submit the job
-        job_id = None
-        # Redirect to list
-        return redirect(url_for('detail'), job_id)
+        if form.validate():
+            # Submit the job
+            job_id = None
+            # Redirect to list
+            return redirect(url_for('detail'), job_id)
 
-    return render_template('job/job_submit.html')
+    return render_template('job/job_submit.html', active_page="jobs")

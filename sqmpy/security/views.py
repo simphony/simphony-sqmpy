@@ -56,18 +56,15 @@ def register():
     Register a new user
     :return:
     """
-    form = RegisterForm(request.form)
-    if request.method == 'POST' and form.validate():
-        user = User()
-        user.name = form.name.data
-        user.email = form.email.data
-        user.password = _get_digest(form.password.data)
-        user.registered_on = datetime.datetime.now()
-        user.role = security_constants.USER
-        user.status = security_constants.NEW
-        db_session.add(user)
-        db_session.commit()
-        return redirect('/security/login')
+    form = RegisterForm(request.form, csrf_enabled=False)
+    if request.method == 'POST':
+        if form.validate():
+            user = User(form.name.data,
+                        form.email.data,
+                        _get_digest(form.password.data))
+            db_session.add(user)
+            db_session.commit()
+            return redirect('/security/login')
 
     return render_template('security/register.html', form=form)
 

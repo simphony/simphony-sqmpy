@@ -15,8 +15,8 @@ class RegisterForm(Form):
     """
     A basic registration form.
     """
-    name = TextField('NickName', [Required()])
-    email = TextField('Email address', [Required(), Email()])
+    name = TextField('Name', [Required()])
+    email = TextField('Email', [Required(), Email()])
     password = PasswordField('Password', [Required()])
     confirm = PasswordField('Repeat Password', [
         Required(),

@@ -1,6 +1,6 @@
 __author__ = 'Mehdi Sadeghi'
 
-from sqlalchemy import Column, Integer, String, DateTime, ForeignKey
+from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Text
 from sqlalchemy.orm import relationship, backref
 from sqmpy.database import Base
 
@@ -14,8 +14,17 @@ class Job(Base):
     input_location = Column(String(200), unique=False)
     output_location = Column(String(200), unique=False)
     owner_id = Column(Integer, ForeignKey('users.id'))
+    user_script = Column(Text())
     program_id = Column(Integer, ForeignKey('programs.id'))
     queue_id = Column(Integer, ForeignKey('queues.id'))
+
+
+class Resource(Base):
+    __tablename__ = 'resources'
+    id = Column(Integer, primary_key=True)
+    name = Column(String(50), unique=True)
+    domain = Column(String(150), unique=True)
+    ipv4 = Column(String(15), unique=True)
 
 
 class Program(Base):

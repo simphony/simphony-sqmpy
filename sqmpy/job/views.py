@@ -15,14 +15,16 @@ from sqmpy.database import db_session
 from sqmpy.job import models as job_models
 from sqmpy.job import job_blueprint
 from sqmpy.job.forms import JobSubmissionForm
+from sqmpy.job.models import Resource
 
 
 __author__ = 'Mehdi Sadeghi'
 
 # Adding appropriate admin views
 admin.add_view(ModelView(job_models.Job, db_session))
-admin.add_view(ModelView(job_models.Program, db_session))
-admin.add_view(ModelView(job_models.Queue, db_session))
+admin.add_view(ModelView(job_models.Resource, db_session))
+#admin.add_view(ModelView(job_models.Program, db_session))
+#admin.add_view(ModelView(job_models.Queue, db_session))
 
 
 @job_blueprint.route('/job', methods=['GET'])
@@ -49,6 +51,7 @@ def list_jobs(job_id=None):
         return render_template('job/job_list.html', active_page="jobs")
 
 
+@job_blueprint.route('/job/<job_id>', methods=['GET'])
 def detail(job_id):
     """
     Show detail page for a job
@@ -64,12 +67,13 @@ def submit():
     Submit a single job into the selected machine or queue
     :return:
     """
-    form = JobSubmissionForm()
-    if request.method == 'POST':
-        if form.validate():
-            # Submit the job
-            job_id = None
-            # Redirect to list
-            return redirect(url_for('detail'), job_id)
+    form = JobSubmissionForm(request.form)
+    form.resource.choices = [(h.key.id(), h.name) for h in Resource.query.all()]
 
-    return render_template('job/job_submit.html', active_page="jobs")
+    if request.method == 'POST' and form.validate():
+        # Submit the job
+        job_id = None
+        # Redirect to list
+        return redirect(url_for('detail'), job_id)
+
+    return render_template('job/job_submit.html', form=form)

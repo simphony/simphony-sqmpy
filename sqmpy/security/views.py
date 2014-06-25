@@ -1,14 +1,17 @@
-from flask import flash, url_for, request, redirect, render_template
+import datetime
+
+from flask import flash, url_for, request, redirect, render_template, abort
 from flask.ext.admin import Admin
 from flask.ext.admin.contrib.sqla import ModelView
 from flask.ext.login import login_user, logout_user, login_required
 
 from sqmpy import admin
-from sqmpy.security import login_manager, security_blueprint
-from sqmpy.security.forms import LoginForm
+from sqmpy.security import login_manager, security_blueprint, _get_digest
+from sqmpy.security.forms import LoginForm, RegisterForm
 from sqmpy.security.models import User
 from sqmpy.database import db_session
 import sqmpy.security.services as security_services
+import sqmpy.security.constants as security_constants
 
 
 class UserView(ModelView):
@@ -46,6 +49,28 @@ def login():
 def logout():
     logout_user()
     return redirect('/')
+
+@security_blueprint.route('/security/register', methods=['GET', 'POST'])
+def register():
+    """
+    Register a new user
+    :return:
+    """
+    form = RegisterForm(request.form)
+    if request.method == 'POST' and form.validate():
+        user = User()
+        user.name = form.name.data
+        user.email = form.email.data
+        user.password = _get_digest(form.password.data)
+        user.registered_on = datetime.datetime.now()
+        user.role = security_constants.USER
+        user.status = security_constants.NEW
+        db_session.add(user)
+        db_session.commit()
+        return redirect('/security/login')
+
+    return render_template('security/register.html', form=form)
+
 
 #Add admin views
 admin.add_view(UserView())

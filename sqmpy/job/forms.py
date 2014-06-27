@@ -4,8 +4,8 @@
 
     Implements job management forms.
 """
-from flask.ext.wtf import RecaptchaField
-from wtforms import StringField, BooleanField, TextAreaField, FileField, SelectField, validators, Form
+from flask.ext.wtf import RecaptchaField, Form
+from wtforms import StringField, BooleanField, TextAreaField, FileField, SelectField, validators
 from wtforms.validators import Required, EqualTo, Email, Optional
 
 __author__ = 'Mehdi Sadeghi'

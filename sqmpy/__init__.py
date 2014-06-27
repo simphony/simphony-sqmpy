@@ -11,6 +11,7 @@ import os
 import sys
 
 from flask import Flask, Blueprint
+from flask.ext.wtf.csrf import CsrfProtect
 from flask.ext.admin import Admin
 from flask.ext.admin.contrib.sqla import ModelView
 
@@ -34,6 +35,9 @@ app.config.from_envvar('SQMPY_SETTINGS', silent=True)
 
 #Enabling Admin app
 admin = Admin(app)
+
+# Enable CSRF protection
+CsrfProtect(app)
 
 # Registering blueprints,
 # IMPORTANT: views should be imported before registering blueprints

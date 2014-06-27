@@ -24,10 +24,9 @@ class UserView(ModelView):
 
 @security_blueprint.route('/security/login', methods=['GET', 'POST'])
 def login():
-    form = LoginForm()
+    form = LoginForm(request.form)
     error = None
     if request.method == 'POST':
-        #if form.validate_on_submit():
         # login and validate the user...
         email = request.form.get('email')
         password = request.form.get('password')

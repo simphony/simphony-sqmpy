@@ -16,6 +16,7 @@ from sqmpy.job import models as job_models
 from sqmpy.job import job_blueprint
 from sqmpy.job.forms import JobSubmissionForm
 from sqmpy.job.models import Resource
+import sqmpy.job.services as job_services
 
 
 __author__ = 'Mehdi Sadeghi'
@@ -46,34 +47,41 @@ def list_jobs(job_id=None):
     """
     if job_id is not None:
         # Get the job and show job detail page
-        return render_template('job/job_detail.html', active_page="jobs")
+        return render_template('job/job_detail.html')
     else:
-        return render_template('job/job_list.html', active_page="jobs")
+        return render_template('job/job_list.html', jobs=job_services.list_jobs())
 
 
-@job_blueprint.route('/job/<job_id>', methods=['GET'])
+@job_blueprint.route('/job/<int:job_id>', methods=['GET'])
+@login_required
 def detail(job_id):
     """
     Show detail page for a job
     :return:
     """
     job=None
-    return render_template('job/job_detail.html', job)
+    return render_template('job/job_detail.html', job=job)
 
 
 @job_blueprint.route('/job/submit', methods=['GET', 'POST'])
-def submit():
+@job_blueprint.route('/job/submit/<job_id>', methods=['GET'])
+@login_required
+def submit(job_id=None):
     """
     Submit a single job into the selected machine or queue
     :return:
     """
-    form = JobSubmissionForm(request.form)
-    form.resource.choices = [(h.key.id(), h.name) for h in Resource.query.all()]
+    if job_id is not None:
+        pass
+
+    form = JobSubmissionForm()
+    form.resource.choices = [(h.id, h.url) for h in Resource.query.all()]
 
     if request.method == 'POST' and form.validate():
         # Submit the job
-        job_id = None
+        job_id = \
+            job_services.submit_job(form.name.data, form.resource.data, form.script.data, form.input_file.data, form.description.data)
         # Redirect to list
-        return redirect(url_for('detail'), job_id)
+        return redirect(url_for('.detail', job_id=job_id))
 
     return render_template('job/job_submit.html', form=form)

@@ -28,10 +28,10 @@
           <!--strong>Error!</strong--> {{error}}
           </div>
           {% endif %}
-        <label class="checkbox">
+        <!--label class="checkbox">
           <input name="remember" type="checkbox" value="remember-me"> Remember me
-        </label>
-
+        </label-->
+          <small>No account yet? Register <a href="{{ url_for('sqmpy.security.register')}}">here.</a></small>
         <button class="btn btn-lg btn-primary btn-block" type="submit">Sign in</button>
 
       </form>

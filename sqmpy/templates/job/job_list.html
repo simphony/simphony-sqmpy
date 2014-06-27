@@ -1,16 +1,23 @@
 {% extends 'job/job_base.html' %}
 
-{% block container%}
-    {{ super() }}
-    <div class="panel panel-default">
-        <!-- Default panel contents -->
-        <div class="panel-heading">List of jobs</div>
+{% block head_tail%}
+{{super()}}
+<!-- Latest compiled and minified CSS -->
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/jasny-bootstrap/3.1.3/css/jasny-bootstrap.min.css">
+{% endblock %}
 
+{% block container %}
+    {{ super() }}
+
+    <div class="panel panel-default row">
+        <!-- Default panel contents -->
+        <div class="panel-heading table-responsive">List of jobs</div>
         <!-- Table -->
-        <table class="table">
+        <table class="table table-striped table_bordered table-hover">
+            <thead>
             <tr>
-                <th>#</th>
-                <th>Job Title</th>
+                <th>ID</th>
+                <th>Job Name</th>
                 <th>Submission Date</th>
                 {% if current_user.get_role() == "admin" %}
                     <th>User</th>
@@ -18,9 +25,31 @@
                 <th>Status</th>
                 <th>Description</th>
             </tr>
+            </thead>
+            <tbody data-link="row" class="rowlink">
+            {% for name, job in jobs%}
+            <tr>
+                <td>{{ job.id }}</td>
+                <td>{{ job.name }}</td>
+                <td>{{ job.submit_date }}</td>
+                {% if current_user.get_role() == "admin" %}
+                    <td>{{ job.owner_id }}</td>
+                {% endif %}
+                <td>{{ job.last_status }}</td>
+                <td>{{ job.description }}</td>
+            </tr>
+            {% endfor%}
+            </tbody>
         </table>
     </div>
     <div>
         <p><a type="button" class="btn btn-primary" role="button" href="{{url_for('.submit')}}">New Job</a></p>
     </div>
+
+{% endblock %}
+
+{% block body_tail %}
+<!-- Latest compiled and minified JavaScript -->
+<script src="//cdnjs.cloudflare.com/ajax/libs/jasny-bootstrap/3.1.3/js/jasny-bootstrap.min.js"></script>
+<script>$('tbody.rowlink').rowlink();</script>
 {% endblock %}

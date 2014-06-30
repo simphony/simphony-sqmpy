@@ -5,8 +5,6 @@
     Provides some of core functions for the application, such
     as component registration.
 """
-#import logging
-
 __author__ = 'Mehdi Sadeghi'
 
 

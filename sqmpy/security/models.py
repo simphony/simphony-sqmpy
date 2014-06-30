@@ -1,5 +1,9 @@
-__author__ = 'Mehdi Sadeghi'
+"""
+    sqmpy.security.models
+    ~~~~~~~~~~~~~~~~
 
+    User related database models
+"""
 import datetime
 
 from sqlalchemy import Column, Integer, String, DateTime, ForeignKey
@@ -8,6 +12,8 @@ from sqlalchemy.orm import relationship, backref
 
 from sqmpy.database import Base
 from sqmpy.security import constants
+
+__author__ = 'Mehdi Sadeghi'
 
 
 class User(Base):

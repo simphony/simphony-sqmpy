@@ -1,17 +1,22 @@
-import datetime
+"""
+    sqmpy.security.views
+    ~~~~~~~~~~~~~~~~~~~~~
 
+    View functions for security mudule
+"""
 from flask import flash, url_for, request, redirect, render_template, abort
-from flask.ext.admin import Admin
 from flask.ext.admin.contrib.sqla import ModelView
 from flask.ext.login import login_user, logout_user, login_required
 
 from sqmpy import admin
-from sqmpy.security import login_manager, security_blueprint, _get_digest
+from sqmpy.security import security_blueprint
 from sqmpy.security.forms import LoginForm, RegisterForm
+from sqmpy.security.manager import get_password_digest
 from sqmpy.security.models import User
 from sqmpy.database import db_session
 import sqmpy.security.services as security_services
-import sqmpy.security.constants as security_constants
+
+__author__ = 'Mehdi Sadeghi'
 
 
 class UserView(ModelView):
@@ -49,6 +54,7 @@ def logout():
     logout_user()
     return redirect('/')
 
+
 @security_blueprint.route('/security/register', methods=['GET', 'POST'])
 def register():
     """
@@ -60,7 +66,7 @@ def register():
         if form.validate():
             user = User(form.name.data,
                         form.email.data,
-                        _get_digest(form.password.data))
+                        get_password_digest(form.password.data))
             db_session.add(user)
             db_session.commit()
             return redirect('/security/login')

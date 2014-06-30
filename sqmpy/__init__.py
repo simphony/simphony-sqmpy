@@ -7,21 +7,16 @@
     to remote resources.
     `sqm' stands for Simple Queue Manager.
 """
-import os
-import sys
-
 from flask import Flask, Blueprint
 from flask.ext.wtf.csrf import CsrfProtect
 from flask.ext.admin import Admin
-from flask.ext.admin.contrib.sqla import ModelView
 
 from sqmpy.database import db_session
-from sqmpy.communication.constants import COMMUNICATION_MANAGER
-from sqmpy.communication.channels.ssh import SSHFactory
-from sqmpy.job import job_blueprint
 from sqmpy.security import security_blueprint
+from sqmpy.job import job_blueprint
 
 __author__ = 'Mehdi Sadeghi'
+
 
 app = Flask(__name__, static_url_path='')
 # This one would be used for production, if any
@@ -32,6 +27,18 @@ app.config.from_object('config')
 
 # Override from environment variable
 app.config.from_envvar('SQMPY_SETTINGS', silent=True)
+
+# Setup logging.
+import logging
+from logging import Formatter
+from logging.handlers import RotatingFileHandler
+file_handler = RotatingFileHandler(app.config.get('LOG_FILE'))
+file_handler.setLevel(logging.DEBUG)
+file_handler.setFormatter(Formatter(
+    '%(asctime)s %(levelname)s: %(message)s '
+    '[in %(pathname)s:%(lineno)d]'
+))
+app.logger.addHandler(file_handler)
 
 #Enabling Admin app
 admin = Admin(app)
@@ -46,23 +53,6 @@ import sqmpy.security.views
 import sqmpy.job.views
 app.register_blueprint(security_blueprint)
 app.register_blueprint(job_blueprint)
-
-#Instanciate core and services manually
-# look at http://flask.pocoo.org/docs/api/#flask.Flask.logger
-#app.logger.debug("Importing core..")
-import sqmpy.core
-import sqmpy.communication
-#from sqmpy.core import core_services
-
-# Getting communication manager in order to add SSH channel.
-# Right now these are not dynamic but later on I will make them
-# dynamic if we need to. So far I make the code more flexible
-# to let future changes happen simpler.
-#import communication.services as communication_services
-
-# Adding the only supported channel so far. SSH
-#communication_services.register_factory(SSHFactory())
-
 
 @app.teardown_appcontext
 def shutdown_session(exception=None):

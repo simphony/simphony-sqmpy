@@ -1,8 +1,14 @@
-__author__ = 'Mehdi Sadeghi'
+"""
+    sqmpy.job.models
+    ~~~~~~~~~~~~~~~~
 
+    Job related database models
+"""
 from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Text
 from sqlalchemy.orm import relationship, backref
 from sqmpy.database import Base
+
+__author__ = 'Mehdi Sadeghi'
 
 
 class Job(Base):
@@ -27,6 +33,7 @@ class Resource(Base):
     name = Column(String(50), unique=True)
     url = Column(String(150), unique=True)
     jobs = relationship('Job', backref="resource")
+
 
 # class Program(Base):
 #     __tablename__ = 'programs'

@@ -1,12 +1,11 @@
 """
-    sqmpy.sheduling.views
+    sqmpy.job.views
     ~~~~~~~~~~~~~~~~~~~~~
 
     View functions for jobs mudule
 """
 from flask import Flask, request, session, g, redirect, url_for, abort, \
     render_template, flash
-from flask.ext.admin import Admin
 from flask.ext.admin.contrib.sqla import ModelView
 from flask.ext.login import login_required
 
@@ -18,14 +17,12 @@ from sqmpy.job.forms import JobSubmissionForm
 from sqmpy.job.models import Resource
 import sqmpy.job.services as job_services
 
-
 __author__ = 'Mehdi Sadeghi'
+
 
 # Adding appropriate admin views
 admin.add_view(ModelView(job_models.Job, db_session))
 admin.add_view(ModelView(job_models.Resource, db_session))
-#admin.add_view(ModelView(job_models.Program, db_session))
-#admin.add_view(ModelView(job_models.Queue, db_session))
 
 
 @job_blueprint.route('/job', methods=['GET'])

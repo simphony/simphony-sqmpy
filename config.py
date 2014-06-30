@@ -19,3 +19,10 @@ RECAPTCHA_USE_SSL = False
 RECAPTCHA_PUBLIC_KEY = '6LeYIbsSAAAAACRPIllxA7wvXjIE411PfdB2gt2J'
 RECAPTCHA_PRIVATE_KEY = '6LeYIbsSAAAAAJezaIq3Ft_hSTo0YtyeFG-JgRtu'
 RECAPTCHA_OPTIONS = {'theme': 'white'}
+
+
+# Logging options
+LOG_FILE = os.path.join(_basedir, 'sqmpy.log')
+
+# Staging options
+STAGING_DIR = os.path.join(_basedir,'staging')

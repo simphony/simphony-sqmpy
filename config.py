@@ -25,4 +25,4 @@ RECAPTCHA_OPTIONS = {'theme': 'white'}
 LOG_FILE = os.path.join(_basedir, 'sqmpy.log')
 
 # Staging options
-STAGING_DIR = os.path.join(_basedir,'staging')
+STAGING_FOLDER = os.path.join(_basedir,'staging')

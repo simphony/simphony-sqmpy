@@ -7,7 +7,7 @@
 
 {% from "_formhelpers.html" import render_field %}
 <h3>Submit a new    job</h3>
-<form class="form-horizontal"  role="form" action="{{url_for('.submit')}}" method="POST">
+<form class="form-horizontal"  role="form" enctype=multipart/form-data action="{{url_for('.submit')}}" method="POST">
   <dl>
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
     {{ render_field(form.name) }}

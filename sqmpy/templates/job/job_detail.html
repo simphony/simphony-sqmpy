@@ -1,1 +1,23 @@
 {% extends 'job/job_base.html' %}
+
+{% block container %}
+    {{ super() }}
+    <div>
+        <h3>Job Details</h3>
+        <dl>
+            <dt>Name</dt>
+            <dd>{{job.name}}</dd>
+            <dt>Submit Date</dt>
+            <dd>{{job.submit_date}}</dd>
+            <dt>Resource</dt>
+            <dd>{{job.resource_id}}</dd>
+            <dt>Last Status</dt>
+            <dd>{{job.last_status}}</dd>
+            <dt>Script</dt>
+            <dd>{{job.user_script}}</dd>
+            <dt>Description</dt>
+            <dd>{{job.description}}</dd>
+        </dl>
+    </div>
+
+{% endblock %}

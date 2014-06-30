@@ -59,7 +59,9 @@ def detail(job_id):
     Show detail page for a job
     :return:
     """
-    job=None
+    job = \
+        job_services.get_job(job_id)
+
     return render_template('job/job_detail.html', job=job)
 
 

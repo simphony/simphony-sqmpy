@@ -34,7 +34,7 @@ class JobManager(SQMComponent):
         super(JobManager, self).__init__(JOB_MANAGER)
         self.__jobs = {}
         for job in Job.query.all():
-            self.__jobs[job.name] = job
+            self.__jobs[job.id] = job
 
     def submit_job(self, name, resource_id, script, inputfile=None, description=None, **kwargs):
         """
@@ -56,9 +56,6 @@ class JobManager(SQMComponent):
         if script in (None, ''):
             raise JobManagerException("Script is not valid.")
 
-        if name in self.__jobs:
-            raise JobManagerException("Job with name {name} already registered")
-
         # Store the job
         job = Job()
         job.name = name
@@ -71,14 +68,14 @@ class JobManager(SQMComponent):
         job.description = description
         job.resource_id = resource_id
 
-        # Add job to self
-        self.__jobs[job.name] = job
-
         # Submit the job to the queue
         self._run(job)
 
         db_session.add(job)
         db_session.commit()
+
+        # Add job to self
+        self.__jobs[job.id] = job
 
         return job.id
 
@@ -165,13 +162,15 @@ class JobManager(SQMComponent):
 
         return jd
 
-    def get_job(self, job_name, *args, **kwargs):
+    def get_job(self, job_id, *args, **kwargs):
         """
         Get a job
-        :job_name: name of the job
+        :job_id: id of the job
         """
-        if job_name in self.__jobs:
-            return self.__jobs[job_name]
+        if job_id in self.__jobs:
+            return self.__jobs[job_id]
+        else:
+            raise JobManagerException("Job not found.")
 
     def list_jobs(self, *args, **kwargs):
         """
@@ -179,9 +178,9 @@ class JobManager(SQMComponent):
         :return: jobs iterator
         """
         user_jobs = {}
-        for job_name, job in self.__jobs.iteritems():
+        for job_id, job in self.__jobs.iteritems():
             if job.owner_id == current_user.id:
-                user_jobs[job_name] = job
+                user_jobs[job_id] = job
         return user_jobs.iteritems()
 
 

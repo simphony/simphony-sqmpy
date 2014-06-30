@@ -28,3 +28,11 @@ def submit_job(name, resource, script, inputfile=None, description=None, **kwarg
     :return: job id
     """
     return core_services.get_component(JOB_MANAGER).submit_job(name, resource, script, inputfile, description, **kwargs)
+
+
+def get_job(job_id, *args, **kwargs):
+    """
+    Get a job
+    :job_id: name of the job
+    """
+    return core_services.get_component(JOB_MANAGER).get_job(job_id, *args, **kwargs)

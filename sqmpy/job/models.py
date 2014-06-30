@@ -26,7 +26,7 @@ class Resource(Base):
     id = Column(Integer, primary_key=True)
     name = Column(String(50), unique=True)
     url = Column(String(150), unique=True)
-    jobs = relationship("Job", backref="resources")
+    jobs = relationship('Job', backref="resource")
 
 # class Program(Base):
 #     __tablename__ = 'programs'

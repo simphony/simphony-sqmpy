@@ -15,7 +15,7 @@ from flask_login import current_user
 
 from sqmpy.core import SQMComponent
 from sqmpy.database import db_session
-from sqmpy.job.exceptions import JobManagerException
+from sqmpy.job.exceptions import JobManagerException, JobNotFoundException, FileNotFoundException
 from sqmpy.job.models import Job, Resource, StagingFile
 from sqmpy.job.constants import JOB_MANAGER, JobStatus, FileRelation
 
@@ -132,9 +132,12 @@ class JobManager(SQMComponent):
         :return:
         """
         job = Job.query.get(job_id)
+        if job is None:
+            raise JobNotFoundException('Job number %s does not exist.' % job_id)
         for f in job.files:
             if f.name == file_name:
                 return self._get_job_file_directory(job.id)
+        raise FileNotFoundException('Job number %s does not have any file called %s' % (job_id, file_name))
 
     def _run(self, job):
         """

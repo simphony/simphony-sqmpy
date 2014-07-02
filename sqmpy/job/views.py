@@ -18,6 +18,7 @@ from sqmpy import app, admin
 from sqmpy.database import db_session
 from sqmpy.job import models as job_models
 from sqmpy.job import job_blueprint
+from sqmpy.job.exceptions import JobNotFoundException, FileNotFoundException
 from sqmpy.job.forms import JobSubmissionForm
 from sqmpy.job.models import Resource
 import sqmpy.job.services as job_services
@@ -109,8 +110,16 @@ def submit(job_id=None):
 def uploaded_file(username, job_id, filename):
     if username != current_user.name:
         abort(403)
-    upload_dir = job_services.get_file_location(job_id, filename)
-    print upload_dir
+    upload_dir = None
+    try:
+        upload_dir = job_services.get_file_location(job_id, filename)
+    except JobNotFoundException:
+        abort(404)
+    except FileNotFoundException:
+        abort(404)
+
+    #if not os.path.isfile(os.path.join(upload_dir, filename)):
+    #    abort(404)
     return send_from_directory(upload_dir, filename)
 
 # from werkzeug import SharedDataMiddleware

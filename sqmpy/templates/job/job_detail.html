@@ -5,12 +5,32 @@
     <div>
         <h3>Job Details</h3>
         <dl>
+            <dt>Job ID</dt>
+            <dd>{{job.id}}</dd>
             <dt>Name</dt>
             <dd>{{job.name}}</dd>
             <dt>Submit Date</dt>
             <dd>{{job.submit_date}}</dd>
             <dt>Resource</dt>
             <dd>{{job.resource.url}}</dd>
+            {% if job.files|length > 0 %}
+                <dt>Related Files</dt>
+                <ul>
+                {% for file in job.files %}
+                    {% if file.relation == 0 %}
+                    <li>Input: {{file.get_path()}}
+                        <a type="button" class="btn" role="button"
+                           href="{{url_for('.uploaded_file', username=current_user.name, job_id=job.id, filename=file.name)}}">Download</a></li>
+                    {% endif %}
+                    {% if file.relation == 1 %}
+                    <li>Output: {{file.get_path()}}</li>
+                    {% endif %}
+                    {% if file.relation == 2 %}
+                    <li>Error: {{file.get_path()}}</li>
+                    {% endif %}
+                {% endfor %}
+                </ul>
+            {% endif %}
             <dt>Last Status</dt>
             <dd>{{job.last_status}}</dd>
             <dt>Script</dt>

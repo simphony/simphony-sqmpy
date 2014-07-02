@@ -83,39 +83,36 @@ def submit(job_id=None):
 
     if request.method == 'POST' and form.validate():
         file = request.files['input_file']
-        input_file_location = None
+        absolute_path = None
         if file:
             # Remove unsupported characters from filename
             safe_filename = secure_filename(file.filename)
             # Save file to upload folder under user's username
-            upload_dir = os.path.join(app.config['STAGING_FOLDER'], current_user.name)
-            if not os.path.exists(upload_dir):
-                os.makedirs(upload_dir)
-            input_file_location = os.path.join(upload_dir, safe_filename)
-            file.save(input_file_location)
-
-            #return redirect(url_for('uploaded_file',
-            #                        filename=safe_filename))
+            input_files = [(safe_filename, file.stream)]
         # Submit the job
         job_id = \
-            job_services.submit_job(form.name.data, form.resource.data, form.script.data, input_file_location, form.description.data)
+            job_services.submit_job(form.name.data, form.resource.data, form.script.data, input_files, form.description.data)
         # Redirect to list
         return redirect(url_for('.detail', job_id=job_id))
 
     return render_template('job/job_submit.html', form=form)
 
-# # This route is expecting a parameter containing the name
-# # of a file. Then it will locate that file on the upload
-# # directory and show it on the browser, so if the user uploads
-# # an image, that image is going to be show after the upload
-# @app.route('/uploads/<filename>')
-# def uploaded_file(filename):
-#     return send_from_directory(app.config['STAGING_FOLDER'],
-#                                filename)
-#
-# from werkzeug import SharedDataMiddleware
-# app.add_url_rule('/uploads/<filename>', 'uploaded_file',
-#                  build_only=True)
-# app.wsgi_app = SharedDataMiddleware(app.wsgi_app, {
-#     '/uploads':  app.config['STAGING_FOLDER']
-# })
+# This route is expecting a parameter containing the name
+# of a file. Then it will locate that file on the upload
+# directory and show it on the browser, so if the user uploads
+# an image, that image is going to be show after the upload
+@job_blueprint.route('/uploads/<username>/<job_id>/<filename>')
+def uploaded_file(username, job_id, filename):
+    #if username != current_user.name:
+        #abort(403)
+
+    upload_dir = job_services.get_file_location(job_id, filename)
+    print upload_dir
+    return send_from_directory(upload_dir, filename)
+
+from werkzeug import SharedDataMiddleware
+app.add_url_rule('/uploads/<filename>', 'uploaded_file',
+                 build_only=True)
+app.wsgi_app = SharedDataMiddleware(app.wsgi_app, {
+    '/uploads':  app.config['STAGING_FOLDER']
+})

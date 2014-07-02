@@ -7,7 +7,7 @@
     to remote resources.
     `sqm' stands for Simple Queue Manager.
 """
-from flask import Flask, Blueprint
+from flask import Flask
 from flask.ext.wtf.csrf import CsrfProtect
 from flask.ext.admin import Admin
 
@@ -57,4 +57,3 @@ app.register_blueprint(job_blueprint)
 @app.teardown_appcontext
 def shutdown_session(exception=None):
     db_session.remove()
-

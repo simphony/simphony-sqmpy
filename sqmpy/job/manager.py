@@ -4,6 +4,9 @@
 
     Manager class along with it's helpers.
 """
+import os
+import uuid
+import hashlib
 import datetime
 
 import saga
@@ -13,8 +16,8 @@ from flask_login import current_user
 from sqmpy.core import SQMComponent
 from sqmpy.database import db_session
 from sqmpy.job.exceptions import JobManagerException
-from sqmpy.job.models import Job, Resource
-from sqmpy.job.constants import JOB_MANAGER, JobStatus
+from sqmpy.job.models import Job, Resource, StagingFile
+from sqmpy.job.constants import JOB_MANAGER, JobStatus, FileRelation
 
 __author__ = 'Mehdi Sadeghi'
 
@@ -23,6 +26,9 @@ class JobManager(SQMComponent):
     """
     This class is responsible to keep state of the executed jobs.
     """
+    # Under use staging directory one folder with this name will be created to
+    # store job's input files
+    INPUT_FILES_DIR = 'input_files'
 
     def __init__(self):
         super(JobManager, self).__init__(JOB_MANAGER)
@@ -30,13 +36,14 @@ class JobManager(SQMComponent):
         for job in Job.query.all():
             self.__jobs[job.id] = job
 
-    def submit_job(self, name, resource_id, script, inputfile=None, description=None, **kwargs):
+    def submit_job(self, name, resource_id, script, input_files=None, description=None, **kwargs):
         """
-        Submit a new job
+        Submit a new job along with its input files. Input files will be moved under
+            a new folder with this structure: <staging_dir>/<username>/<job_id>/input_files/
         :name: job name
         :resource_id: resource to submit job there
         :script: user script
-        :inputfile: input data file if any
+        :input_files: a list of <filename, file_stream> for each given file.
         :description: about the job
         :return: job id
         """
@@ -55,15 +62,44 @@ class JobManager(SQMComponent):
         job.name = name
         job.submit_date = datetime.datetime.now()
         job.last_status = JobStatus.INIT
-        job.input_location = ''
-        job.output_location = ''
         job.owner_id = current_user.id
         job.user_script = script
-        job.description = description
         job.resource_id = resource_id
+        job.description = description
 
         db_session.add(job)
         db_session.commit()
+
+        # Save staging data before running the job
+        # Input files will be moved under a new folder with this structure:
+        #   <staging_dir>/<username>/<job_id>/input_files/
+        if input_files is not None:
+            from sqmpy import app
+            user_dir = os.path.join(app.config['STAGING_FOLDER'], current_user.name)
+            if not os.path.exists(user_dir):
+                os.makedirs(user_dir)
+            job_dir = os.path.join(user_dir, str(job.id))
+            if not os.path.exists(job_dir):
+                os.makedirs(job_dir)
+            for file_name, file_stream in input_files:
+                if file_name is not None and file_stream is not None:
+                    #file_uuid = str(uuid.uuid4())
+                    #absolute_name = os.path.join(job_dir, file_uuid)
+                    absolute_name = os.path.join(job_dir, file_name)
+                    f = open(absolute_name, 'w')
+                    f.write(file_stream.getvalue())
+                    f.close()
+                    sf = StagingFile()
+                    sf.name = file_name
+                    sf.relation = FileRelation.INPUT
+                    sf.original_name = file_name
+                    sf.checksum = hashlib.md5(open(absolute_name).read()).hexdigest()
+                    sf.location = job_dir
+                    sf.parent_id = job.id
+                    db_session.add(sf)
+                else:
+                    raise JobManagerException("Invalid file name or path")
+            db_session.commit()
 
         # Add job to self
         self.__jobs[job.id] = job
@@ -72,6 +108,33 @@ class JobManager(SQMComponent):
         self._run(job)
 
         return job.id
+
+    def _get_job_file_directory(self, job_id):
+        """
+        Returns the direcotry which contains job files
+        :param job_id:
+        :return:
+        """
+        from sqmpy import app
+        user_dir = os.path.join(app.config['STAGING_FOLDER'], current_user.name)
+        if not os.path.exists(user_dir):
+            os.makedirs(user_dir)
+        job_dir = os.path.join(user_dir, str(job_id))
+        if not os.path.exists(job_dir):
+            os.makedirs(job_dir)
+        return job_dir
+
+    def get_file_location(self, job_id, file_name):
+        """
+        Returns the folder of the file
+        :param job_id:
+        :param file_name:
+        :return:
+        """
+        job = Job.query.get(job_id)
+        for f in job.files:
+            if f.name == file_name:
+                return self._get_job_file_directory(job.id)
 
     def _run(self, job):
         """

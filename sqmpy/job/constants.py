@@ -14,3 +14,12 @@ class JobStatus(object):
     CANCELLED = 'Cancelled'
     FAILED = 'Failed'
     FINISHED = 'Finished'
+
+
+class FileRelation(object):
+    """
+    Relation between job and file
+    """
+    INPUT = 0
+    OUTPUT = 1
+    ERROR = 2

@@ -91,7 +91,11 @@ def submit(job_id=None):
             input_files = [(safe_filename, file.stream)]
         # Submit the job
         job_id = \
-            job_services.submit_job(form.name.data, form.resource.data, form.script.data, input_files, form.description.data)
+            job_services.submit_job(form.name.data,
+                                    form.resource.data,
+                                    form.script.data,
+                                    input_files,
+                                    form.description.data)
         # Redirect to list
         return redirect(url_for('.detail', job_id=job_id))
 
@@ -103,16 +107,15 @@ def submit(job_id=None):
 # an image, that image is going to be show after the upload
 @job_blueprint.route('/uploads/<username>/<job_id>/<filename>')
 def uploaded_file(username, job_id, filename):
-    #if username != current_user.name:
-        #abort(403)
-
+    if username != current_user.name:
+        abort(403)
     upload_dir = job_services.get_file_location(job_id, filename)
     print upload_dir
     return send_from_directory(upload_dir, filename)
 
-from werkzeug import SharedDataMiddleware
-app.add_url_rule('/uploads/<filename>', 'uploaded_file',
-                 build_only=True)
-app.wsgi_app = SharedDataMiddleware(app.wsgi_app, {
-    '/uploads':  app.config['STAGING_FOLDER']
-})
+# from werkzeug import SharedDataMiddleware
+# app.add_url_rule('/uploads/<filename>', 'uploaded_file',
+#                  build_only=True)
+# app.wsgi_app = SharedDataMiddleware(app.wsgi_app, {
+#     '/uploads':  app.config['STAGING_FOLDER']
+# })

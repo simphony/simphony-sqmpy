@@ -71,13 +71,14 @@ def submit(job_id=None):
     form.resource.choices = [(h.id, h.url) for h in Resource.query.all()]
 
     if request.method == 'POST' and form.validate():
-        file = request.files['input_file']
+        f = request.files['input_file']
         input_files = None
-        if file:
+        if f:
             # Remove unsupported characters from filename
-            safe_filename = secure_filename(file.filename)
+            safe_filename = secure_filename(f.filename)
             # Save file to upload folder under user's username
-            input_files = [(safe_filename, file.stream)]
+            input_files = [(safe_filename, f.stream)]
+
         # Submit the job
         job_id = \
             job_services.submit_job(form.name.data,
@@ -109,10 +110,3 @@ def uploaded_file(username, job_id, filename):
     #if not os.path.isfile(os.path.join(upload_dir, filename)):
     #    abort(404)
     return send_from_directory(upload_dir, filename)
-
-# from werkzeug import SharedDataMiddleware
-# app.add_url_rule('/uploads/<filename>', 'uploaded_file',
-#                  build_only=True)
-# app.wsgi_app = SharedDataMiddleware(app.wsgi_app, {
-#     '/uploads':  app.config['STAGING_FOLDER']
-# })

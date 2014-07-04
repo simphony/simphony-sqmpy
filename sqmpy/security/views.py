@@ -8,7 +8,6 @@ from flask import flash, url_for, request, redirect, render_template, abort
 from flask.ext.admin.contrib.sqla import ModelView
 from flask.ext.login import login_user, logout_user, login_required
 
-from sqmpy import admin
 from sqmpy.security import security_blueprint
 from sqmpy.security.forms import LoginForm, RegisterForm
 from sqmpy.security.manager import get_password_digest
@@ -72,7 +71,3 @@ def register():
             return redirect('/security/login')
 
     return render_template('security/register.html', form=form)
-
-
-#Add admin views
-admin.add_view(UserView())

@@ -4,19 +4,12 @@
 
     View functions for jobs mudule
 """
-from flask_login import current_user
-import os
-
 from flask import Flask, request, session, g, redirect, url_for, abort, \
     render_template, flash, send_from_directory
-from flask.ext.admin.contrib.sqla import ModelView
-from flask.ext.login import login_required
+from flask.ext.login import login_required, current_user
 
 from werkzeug import secure_filename
 
-from sqmpy import app, admin
-from sqmpy.database import db_session
-from sqmpy.job import models as job_models
 from sqmpy.job import job_blueprint
 from sqmpy.job.exceptions import JobNotFoundException, FileNotFoundException
 from sqmpy.job.forms import JobSubmissionForm
@@ -24,11 +17,6 @@ from sqmpy.job.models import Resource
 import sqmpy.job.services as job_services
 
 __author__ = 'Mehdi Sadeghi'
-
-
-# Adding appropriate admin views
-admin.add_view(ModelView(job_models.Job, db_session))
-admin.add_view(ModelView(job_models.Resource, db_session))
 
 
 @job_blueprint.route('/job', methods=['GET'])
@@ -84,7 +72,7 @@ def submit(job_id=None):
 
     if request.method == 'POST' and form.validate():
         file = request.files['input_file']
-        absolute_path = None
+        input_files = None
         if file:
             # Remove unsupported characters from filename
             safe_filename = secure_filename(file.filename)

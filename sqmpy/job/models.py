@@ -5,10 +5,10 @@
     Job related database models
 """
 import os
-import uuid
 
 from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Text
 from sqlalchemy.orm import relationship, backref
+
 from sqmpy.database import Base
 
 __author__ = 'Mehdi Sadeghi'
@@ -23,6 +23,7 @@ class Job(Base):
     name = Column(String(50))
     submit_date = Column(DateTime)
     last_status = Column(String(50))
+    remote_pid = Column(Integer)
     user_script = Column(Text())
     description = Column(Text())
     owner_id = Column(Integer, ForeignKey('users.id'))

@@ -13,47 +13,111 @@ from flask.ext.admin import Admin
 
 from sqmpy.database import db_session
 from sqmpy.security import security_blueprint
+from sqmpy.security.manager import SecurityManager
 from sqmpy.job import job_blueprint
+from sqmpy.job.manager import JobManager
 
 __author__ = 'Mehdi Sadeghi'
 
 
-app = Flask(__name__, static_url_path='')
-# This one would be used for production, if any
-#app.config.from_pyfile('config.py', silent=True)
+app = None
 
-# Import config module as configs
-app.config.from_object('config')
 
-# Override from environment variable
-app.config.from_envvar('SQMPY_SETTINGS', silent=True)
+class SqmpyApplication(Flask):
+    """
+    To wrap sqmpy stuff
+    """
+    def __init__(self):
+        super(SqmpyApplication, self).__init__(__name__, static_url_path='')
+        #app = Flask(__name__, static_url_path='')
+        # This one would be used for production, if any
+        #app.config.from_pyfile('config.py', silent=True)
 
-# Setup logging.
-import logging
-from logging import Formatter
-from logging.handlers import RotatingFileHandler
-file_handler = RotatingFileHandler(app.config.get('LOG_FILE'))
-file_handler.setLevel(logging.DEBUG)
-file_handler.setFormatter(Formatter(
-    '%(asctime)s %(levelname)s: %(message)s '
-    '[in %(pathname)s:%(lineno)d]'
-))
-app.logger.addHandler(file_handler)
+        # Import config module as configs
+        self.config.from_object('config')
 
-#Enabling Admin app
-admin = Admin(app)
+        # Override from environment variable
+        self.config.from_envvar('SQMPY_SETTINGS', silent=True)
 
-# Enable CSRF protection
-CsrfProtect(app)
+        #Enabling Admin app
+        self.admin = Admin(self)
 
-# Registering blueprints,
-# IMPORTANT: views should be imported before registering blueprints
-import sqmpy.views
-import sqmpy.security.views
-import sqmpy.job.views
-app.register_blueprint(security_blueprint)
-app.register_blueprint(job_blueprint)
+        self._enable_apps()
+        self._configure_logging()
 
-@app.teardown_appcontext
-def shutdown_session(exception=None):
-    db_session.remove()
+        @self.teardown_appcontext
+        def shutdown_session(exception=None):
+            db_session.remove()
+
+    def _enable_apps(self):
+        """
+        Enable extra apps such as CSRF protection
+        """
+        # Enable CSRF protection
+        CsrfProtect(self)
+
+    def _configure_logging(self):
+        """
+        Logging settings
+        """
+        # Setup logging.
+        import logging
+        from logging import Formatter
+        from logging.handlers import RotatingFileHandler
+        file_handler = RotatingFileHandler(self.config.get('LOG_FILE'))
+        file_handler.setLevel(logging.DEBUG)
+        file_handler.setFormatter(Formatter(
+            '%(asctime)s %(levelname)s: %(message)s '
+            '[in %(pathname)s:%(lineno)d]'
+        ))
+        self.logger.addHandler(file_handler)
+
+    def register_admin_views(self):
+        """
+        Register admin views from different modules.
+        """
+        from sqmpy.security.views import UserView
+        self.admin.add_view(UserView())
+
+        # Adding appropriate admin views
+        from flask.ext.admin.contrib.sqla import ModelView
+        from sqmpy.job import models as job_models
+        self.admin.add_view(ModelView(job_models.Job, db_session))
+        self.admin.add_view(ModelView(job_models.Resource, db_session))
+
+
+    def load_blueprints(self):
+        """
+        Load blueprints
+        """
+        # Registering blueprints,
+        # IMPORTANT: views should be imported before registering blueprints
+        import sqmpy.views
+        import sqmpy.security.views
+        import sqmpy.job.views
+        self.register_blueprint(security_blueprint)
+        self.register_blueprint(job_blueprint)
+
+
+def init_app():
+    """
+    Initializes app variable with Flask application.
+    I wrap initialization here to avoid import errors
+    :return:
+    """
+    global app
+    app = SqmpyApplication()
+    app.load_blueprints()
+    app.register_admin_views()
+
+    from sqmpy.core import core_services
+
+    #Register the component in core
+    #@TODO: This should be dynamic later
+    core_services.register(SecurityManager())
+
+    #Register the component in core
+    #TODO: This should be dynamic later
+    core_services.register(JobManager())
+
+    return app

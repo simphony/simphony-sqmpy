@@ -5,13 +5,12 @@
     Manager class along with it's helpers.
 """
 import os
-import uuid
 import hashlib
 import datetime
 
 import saga
 
-from flask_login import current_user
+from flask.ext.login import current_user
 
 from sqmpy.core import SQMComponent
 from sqmpy.database import db_session
@@ -74,13 +73,7 @@ class JobManager(SQMComponent):
         # Input files will be moved under a new folder with this structure:
         #   <staging_dir>/<username>/<job_id>/input_files/
         if input_files is not None:
-            from sqmpy import app
-            user_dir = os.path.join(app.config['STAGING_FOLDER'], current_user.name)
-            if not os.path.exists(user_dir):
-                os.makedirs(user_dir)
-            job_dir = os.path.join(user_dir, str(job.id))
-            if not os.path.exists(job_dir):
-                os.makedirs(job_dir)
+            job_dir = self._get_job_file_directory(job.id)
             for file_name, file_stream in input_files:
                 if file_name is not None and file_stream is not None:
                     #file_uuid = str(uuid.uuid4())
@@ -172,6 +165,10 @@ class JobManager(SQMComponent):
             # Create the job to submit
             saga_job = js.create_job(jd)
 
+            # Register call back function for saga_job. This callback should
+            # store output files locally and store new status in db
+            saga_job.add_callback()
+
             # for logging
             from sqmpy import app
 
@@ -182,6 +179,9 @@ class JobManager(SQMComponent):
             # Run the job eventually
             app.logger.debug("...starting job...")
             saga_job.run()
+
+            # Store remote pid
+            #job.remote_pid = saga_job.id
 
             app.logger.debug("Job ID    : %s" % (saga_job.id))
             app.logger.debug("Job State : %s" % (saga_job.state))

@@ -23,18 +23,21 @@ class JobInputFileHandler(object):
     To save input files of the job in appropriate folders and insert records for them.
     """
     @staticmethod
-    def save_input_files(job, input_files):
+    def save_input_files(job, input_files, script):
         """
         Saves input files of the given job in appropriate folders
         :param job:
         :param input_files: list of (file_name, file_buffer)
+        :param script: given script to be run on remote machines
         :return:
         """
+        # Get or create job directory
+        job_dir = JobInputFileHandler._get_job_file_directory(job.id)
+
         # Save staging data before running the job
         # Input files will be moved under a new folder with this structure:
         #   <staging_dir>/<username>/<job_id>/input_files/
         if input_files is not None:
-            job_dir = JobInputFileHandler._get_job_file_directory(job.id)
             for file_name, file_buffer in input_files:
                 if file_name is not None and file_buffer is not None:
                     #file_uuid = str(uuid.uuid4())
@@ -55,7 +58,24 @@ class JobInputFileHandler(object):
                     db_session.add(sf)
                 else:
                     raise JobManagerException("Invalid file name or path")
-            db_session.commit()
+
+        # Save script
+        if job.user_script not in (None, ''):
+            file_name = 'job-{job_id}_script'.format(job_id=job.id)
+            absolute_name = os.path.join(job_dir, file_name)
+            f = open(absolute_name, 'w')
+            f.write(script)
+            f.close()
+            sf = StagingFile()
+            sf.name = file_name
+            sf.relation = FileRelation.SCRIPT
+            sf.checksum = hashlib.md5(open(absolute_name).read()).hexdigest()
+            sf.location = job_dir
+            sf.parent_id = job.id
+            db_session.add(sf)
+
+        # Commit db session
+        db_session.commit()
 
     @staticmethod
     def _get_job_file_directory(job_id):

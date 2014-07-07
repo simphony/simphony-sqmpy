@@ -10,6 +10,7 @@ from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Text
 from sqlalchemy.orm import relationship, backref
 
 from sqmpy.database import Base
+from sqmpy.job.constants import FileRelation
 
 __author__ = 'Mehdi Sadeghi'
 
@@ -50,7 +51,7 @@ class StagingFile(Base):
     __tablename__ = 'stagingfiles'
     id = Column(Integer, primary_key=True)
     name = Column(String(50))
-    original_name = Column(String(50), nullable=False)
+    original_name = Column(String(50))
     relation = Column(Integer, nullable=False)
     location = Column(String(150), unique=True, nullable=False)
     checksum = Column(String)
@@ -62,6 +63,14 @@ class StagingFile(Base):
         :return:
         """
         return os.path.join(self.location, self.name)
+
+    def get_relation_str(self):
+        """
+        Return string representation for relation value
+        :return:
+        """
+        return FileRelation(self.relation).name.lower()
+        #FileRelation.tostring(self.relation)
 
 
 # class Program(Base):

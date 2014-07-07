@@ -25,10 +25,6 @@ class JobManager(SQMComponent):
     """
     This class is responsible to keep state of the executed jobs.
     """
-    # Under use staging directory one folder with this name will be created to
-    # store job's input files
-    INPUT_FILES_DIR = 'input_files'
-
     def __init__(self):
         super(JobManager, self).__init__(JOB_MANAGER)
 
@@ -72,8 +68,9 @@ class JobManager(SQMComponent):
 
         # Save staging data before running the job
         # Input files will be moved under a new folder with this structure:
-        #   <staging_dir>/<username>/<job_id>/input_files/
-        JobInputFileHandler.save_input_files(job, input_files)
+        #   <staging_dir>/<username>/<job_id>/
+        # This will also save script file in the mentioned job folder as `job-[JOB_ID]_script'
+        JobInputFileHandler.save_input_files(job, input_files, script)
 
         # Create saga wrapper
         saga_wrapper = SagaJobWrapper(job)
@@ -126,4 +123,11 @@ class JobManager(SQMComponent):
                 user_jobs[job.id] = job
         return user_jobs.iteritems()
 
-
+    def get_file_location(self, job_id, file_name):
+        """
+        Returns the folder of the file
+        :param job_id:
+        :param file_name:
+        :return:
+        """
+        return JobInputFileHandler.get_file_location(job_id, file_name)

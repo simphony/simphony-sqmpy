@@ -78,29 +78,32 @@ class JobManager(SQMComponent):
         # Add job to self
         self.__jobs[job.id] = saga_wrapper
 
+        # Run the saga job
+        saga_wrapper.run()
+
         # Submit the job to the queue
-        self._run(job)
+#        self._run(job)
 
         return job.id
 
-    def _run(self, job):
-        """
-        Run the given job on it's resource
-        :param job: job instance
-        :return: None
-        """
-        assert isinstance(job, Job)
-
-        # Use SAGA to submit the job
-        try:
-            # Get saga wrapper
-            saga_wrapper = self.__jobs[job.id]
-
-            # Run the saga job
-            saga_wrapper.run()
-
-        except saga.SagaException, ex:
-            raise JobManagerException(ex.message)
+    # def _run(self, job):
+    #     """
+    #     Run the given job on it's resource
+    #     :param job: job instance
+    #     :return: None
+    #     """
+    #     assert isinstance(job, Job)
+    #
+    #     # Use SAGA to submit the job
+    #     try:
+    #         # Get saga wrapper
+    #         saga_wrapper = self.__jobs[job.id]
+    #
+    #         # Run the saga job
+    #         saga_wrapper.run()
+    #
+    #     except saga.SagaException, ex:
+    #         raise JobManagerException(ex.message)
 
     def get_job(self, job_id, *args, **kwargs):
         """

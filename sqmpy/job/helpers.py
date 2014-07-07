@@ -43,7 +43,7 @@ class JobInputFileHandler(object):
                     #file_uuid = str(uuid.uuid4())
                     #absolute_name = os.path.join(job_dir, file_uuid)
                     absolute_name = os.path.join(job_dir, file_name)
-                    f = open(absolute_name, 'w')
+                    f = open(absolute_name, 'wb')
                     # Copy file buffer into destination
                     from shutil import copyfileobj
                     copyfileobj(file_buffer, f, 16384)
@@ -63,7 +63,7 @@ class JobInputFileHandler(object):
         if job.user_script not in (None, ''):
             file_name = 'job-{job_id}_script'.format(job_id=job.id)
             absolute_name = os.path.join(job_dir, file_name)
-            f = open(absolute_name, 'w')
+            f = open(absolute_name, 'wb')
             f.write(script)
             f.close()
             sf = StagingFile()

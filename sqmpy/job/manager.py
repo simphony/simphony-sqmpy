@@ -31,6 +31,9 @@ class JobManager(SQMComponent):
 
     def __init__(self):
         super(JobManager, self).__init__(JOB_MANAGER)
+
+        # A dictionary to keep active jobs along with their wrapper objects.
+        # Wrapper objects contain the job itself along with related saga objects.
         self.__jobs = {}
 
     def submit_job(self, name, resource_id, script, input_files=None, description=None, **kwargs):
@@ -72,8 +75,11 @@ class JobManager(SQMComponent):
         #   <staging_dir>/<username>/<job_id>/input_files/
         JobInputFileHandler.save_input_files(job, input_files)
 
+        # Create saga wrapper
+        saga_wrapper = SagaJobWrapper(job)
+
         # Add job to self
-        self.__jobs[job.id] = (job, None)
+        self.__jobs[job.id] = saga_wrapper
 
         # Submit the job to the queue
         self._run(job)
@@ -90,11 +96,8 @@ class JobManager(SQMComponent):
 
         # Use SAGA to submit the job
         try:
-            # Create saga wrapper
-            saga_wrapper = SagaJobWrapper(job)
-
-            # Assign the wrapper to the currently running job
-            self.__jobs[job.id] = (job, saga_wrapper)
+            # Get saga wrapper
+            saga_wrapper = self.__jobs[job.id]
 
             # Run the saga job
             saga_wrapper.run()

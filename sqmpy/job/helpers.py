@@ -50,7 +50,7 @@ class JobInputFileHandler(object):
                     f.close()
                     sf = StagingFile()
                     sf.name = file_name
-                    sf.relation = FileRelation.INPUT
+                    sf.relation = FileRelation.INPUT.value
                     sf.original_name = file_name
                     sf.checksum = hashlib.md5(open(absolute_name).read()).hexdigest()
                     sf.location = job_dir
@@ -68,7 +68,7 @@ class JobInputFileHandler(object):
             f.close()
             sf = StagingFile()
             sf.name = file_name
-            sf.relation = FileRelation.SCRIPT
+            sf.relation = FileRelation.SCRIPT.value
             sf.checksum = hashlib.md5(open(absolute_name).read()).hexdigest()
             sf.location = job_dir
             sf.parent_id = job.id

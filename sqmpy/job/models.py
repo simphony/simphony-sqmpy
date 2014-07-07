@@ -53,7 +53,7 @@ class StagingFile(Base):
     name = Column(String(50))
     original_name = Column(String(50))
     relation = Column(Integer, nullable=False)
-    location = Column(String(150), unique=True, nullable=False)
+    location = Column(String(150), nullable=False)
     checksum = Column(String)
     parent_id = Column(Integer, ForeignKey('jobs.id'))
 

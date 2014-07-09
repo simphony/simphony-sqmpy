@@ -78,12 +78,18 @@ def submit(job_id=None):
             safe_filename = secure_filename(f.filename)
             # Save file to upload folder under user's username
             input_files = [(safe_filename, f.stream)]
+            #raise Exception('for fun')
+
+        # Correct line endings before sending the script content
+        script = ''
+        if form.script.data is not None:
+            script = form.script.data.replace('\r\n', '\n')
 
         # Submit the job
         job_id = \
             job_services.submit_job(form.name.data,
                                     form.resource.data,
-                                    form.script.data,
+                                    script,
                                     input_files,
                                     form.description.data)
         # Redirect to list

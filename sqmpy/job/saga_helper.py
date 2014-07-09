@@ -39,6 +39,36 @@ class NotifyCallback(saga.Callback):
         # Remain registered
         return True
 
+import time
+import threading
+
+
+class JobStateChangeMonitor(threading.Thread):
+    """
+    A timer to check job status changes.
+    """
+    def __init__(self, job):
+        """
+        Initialize the time and job instance
+        :param job: a saga job instance
+        """
+        super(JobStateChangeMonitor, self).__init__()
+        self._saga_job = job
+        from sqmpy import app
+        self._logger = app.logger
+
+    def run(self):
+        """
+        Start the timer and keep watching
+        """
+        while True:#self._saga_job.state == saga.RUNNING:
+            self._logger.debug("Monitoring thread: Job ID    : %s" % self._saga_job.id)
+            print "Monitoring thread: Job ID    : %s" % self._saga_job.id
+            self._logger.debug("Monitoring thread: Job State : %s" % self._saga_job.state)
+            print "Monitoring thread: Job State : %s" % self._saga_job.state
+            # Check every 3 seconds
+            time.sleep(5)
+
 
 class JobStateChangeCallback(saga.Callback):
     """
@@ -214,6 +244,8 @@ class SagaJobWrapper(object):
         # Run the job eventually
         self._logger.debug("...starting job...")
         self._saga_job.run()
+        monitor = JobStateChangeMonitor(self._saga_job)
+        monitor.start()
 
         # Store remote pid
         self._job.remote_pid = self._saga_job.get_id()
@@ -228,7 +260,7 @@ class SagaJobWrapper(object):
         for job in self._job_service.list():
             self._logger.debug(" * %s" % job)
 
-        self._job_service.close()
+        #self._job_service.close()
 
     def _create_job_description(self, script_file):
         """

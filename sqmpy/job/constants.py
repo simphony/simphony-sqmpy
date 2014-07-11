@@ -5,6 +5,9 @@
     Constants to be used in job package
 """
 from enum import Enum, unique
+
+import saga
+
 __author__ = 'Mehdi Sadeghi'
 
 JOB_MANAGER = 'sqmpy.job.manager'
@@ -16,12 +19,14 @@ class JobStatus(object):
     Represents job states
     """
     INIT = 'Initialization'
-    QUEUED = 'Queued'
-    RUNNING = 'Running'
-    PAUSED = 'Paused'
-    CANCELLED = 'Cancelled'
-    FAILED = 'Failed'
-    FINISHED = 'Finished'
+    UNKNOWN = saga.job.UNKNOWN
+    NEW = saga.job.NEW
+    PENDING = saga.job.PENDING
+    RUNNING = saga.job.RUNNING
+    DONE = saga.job.DONE
+    CANCELED = saga.job.CANCELED
+    FAILED = saga.job.FAILED
+    SUSPENDED = saga.job.SUSPENDED
 
 
 @unique

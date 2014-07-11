@@ -25,4 +25,17 @@ RECAPTCHA_OPTIONS = {'theme': 'white'}
 LOG_FILE = os.path.join(_basedir, 'sqmpy.log')
 
 # Staging options
-STAGING_FOLDER = os.path.join(_basedir,'staging')
+STAGING_FOLDER = os.path.join(_basedir, 'staging')
+
+# SMTP Configs, uncomment any line to add it
+#TODO Right now only MAIL_SERVER is being read, fix others.
+MAIL_SERVER = 'iwmcas.iwm.fraunhofer.de'
+DEFAULT_MAIL_SENDER = 'sade@iwm.fraunhofer.de'
+#MAIL_SERVER = default 'localhost'
+#MAIL_PORT = 25
+#MAIL_USE_TLS = False
+#MAIL_USE_SSL = False
+#MAIL_DEBUG = app.debug
+#MAIL_USERNAME = 'sade'
+#MAIL_PASSWORD = 'tvhki,tv'
+#DEFAULT_MAIL_SENDER = None

@@ -10,6 +10,7 @@
 from flask import Flask
 from flask.ext.wtf.csrf import CsrfProtect
 from flask.ext.admin import Admin
+from flask.ext.mail import Mail
 
 from sqmpy.database import db_session
 from sqmpy.security import security_blueprint
@@ -20,7 +21,7 @@ from sqmpy.job.manager import JobManager
 __author__ = 'Mehdi Sadeghi'
 
 
-app = None
+#app = None
 
 
 class SqmpyApplication(Flask):
@@ -31,7 +32,7 @@ class SqmpyApplication(Flask):
         super(SqmpyApplication, self).__init__(__name__, static_url_path='')
         #app = Flask(__name__, static_url_path='')
         # This one would be used for production, if any
-        #app.config.from_pyfile('config.py', silent=True)
+        #self.config.from_pyfile('config.py', silent=True)
 
         # Import config module as configs
         self.config.from_object('config')
@@ -41,6 +42,8 @@ class SqmpyApplication(Flask):
 
         #Enabling Admin app
         self.admin = Admin(self)
+
+        self.mail = Mail(self)
 
         self._enable_apps()
         self._configure_logging()
@@ -84,6 +87,7 @@ class SqmpyApplication(Flask):
         from sqmpy.job import models as job_models
         self.admin.add_view(ModelView(job_models.Job, db_session))
         self.admin.add_view(ModelView(job_models.Resource, db_session))
+        self.admin.add_view(ModelView(job_models.JobStateHistory, db_session))
 
 
     def load_blueprints(self):
@@ -121,3 +125,5 @@ def init_app():
     core_services.register(JobManager())
 
     return app
+
+app = init_app()

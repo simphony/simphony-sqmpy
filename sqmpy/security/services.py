@@ -16,3 +16,12 @@ def valid_login(email, password):
     """
     return core_services.get_component(SECURITY_MANAGER).valid_login(email,
                                                                      password)
+
+
+def get_user(user_id):
+    """
+    Returns the user with given id
+    :param id:
+    :return:
+    """
+    return core_services.get_component(SECURITY_MANAGER).get_user(user_id)

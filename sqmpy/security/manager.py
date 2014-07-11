@@ -8,6 +8,7 @@ import bcrypt
 
 from sqmpy.core import SQMComponent
 from sqmpy.security.constants import SECURITY_MANAGER
+from sqmpy.security.exceptions import SecurityManagerException
 from sqmpy.security.models import User
 
 __author__ = 'Mehdi Sadeghi'
@@ -30,6 +31,16 @@ class SecurityManager(SQMComponent):
 
         return False
 
+    def get_user(self, user_id):
+        """
+        Returns the user with given id
+        :param id:
+        :return:
+        """
+        user = User.query.get(user_id)
+        if user is None:
+            raise SecurityManagerException('User [{user_id}] not found.'.format(user_id=user_id))
+        return user
 
 def get_password_digest(password):
     """

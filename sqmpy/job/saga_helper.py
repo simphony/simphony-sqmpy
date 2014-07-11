@@ -4,48 +4,26 @@
 
     Provides ways to interact with saga classes
 """
+import time
+import smtplib
+import datetime
+import threading
+from email.mime.text import MIMEText
+
 import saga
 
 from sqmpy.database import db_session
 from sqmpy.job.constants import FileRelation
 from sqmpy.job.exceptions import JobManagerException
-from sqmpy.job.models import Job, Resource, StagingFile
+from sqmpy.job.models import Resource, StagingFile, JobStateHistory
+from sqmpy.security import services as security_services
 
 __author__ = 'Mehdi Sadeghi'
 
 
-class NotifyCallback(saga.Callback):
-    """
-    A call back to notify user about job state changes
-    """
-    def __init__(self, job):
-        """
-        Initializing callback with an instance of sqmpy job
-        :param job: sqmpy job
-        :return:
-        """
-        self._sqmpy_job = job
-
-    def cb(self, obj, key, val):
-        """
-        Callback itself.
-        :param obj: the watched object instance
-        :param key:the watched attribute, e.g. state or state_detail
-        :param val:the new value of the watched attribute
-        :return:
-        """
-        # Notify user
-
-        # Remain registered
-        return True
-
-import time
-import threading
-
-
 class JobStateChangeMonitor(threading.Thread):
     """
-    A timer to check job status changes.
+    A timer thread to check job status changes.
     """
     def __init__(self, job):
         """
@@ -59,7 +37,9 @@ class JobStateChangeMonitor(threading.Thread):
 
     def run(self):
         """
-        Start the timer and keep watching
+        Start the timer and keep watching until the job state is done, failed or canceled.
+        Right now this thread only reads the status and this cause the saga callbacks
+        to be triggered.
         """
         while True:
             new_state = self._saga_job.state
@@ -98,6 +78,7 @@ class JobStateChangeCallback(saga.Callback):
         :return:
         """
         from sqmpy import app
+
         saga_job = obj
         app.logger.debug("### Job State Change Report")
         app.logger.debug("Callback: Job ID   : %s" % self._sqmpy_job.id)
@@ -116,14 +97,40 @@ class JobStateChangeCallback(saga.Callback):
 
         # Update job status
         if self._sqmpy_job.last_status != val:
+            job_owner = security_services.get_user(self._sqmpy_job.owner_id)
+            try:
+                smtp_server = smtplib.SMTP(app.config.get('MAIL_SERVER'))
+                message = \
+                    'Status changed from {old} to {new}'.format(old=self._sqmpy_job.last_status,
+                                                                new=val)
+                message = MIMEText(message)
+                message['Subject'] = 'Change in job number [{job_id}]'.format(job_id=self._sqmpy_job.id)
+                message['From'] = 'monitor@sqmpy'
+                message['To'] = job_owner.email
+                smtp_server.sendmail('sade@iwm.fraunhofer.de',
+                                     [job_owner.email],
+                                     message.as_string())
+                smtp_server.quit()
+            except smtplib.SMTPException:
+                raise
+
+            # Insert history record
+            history_record = JobStateHistory()
+            history_record.change_time = datetime.datetime.now()
+            history_record.old_state = self._sqmpy_job.last_status
+            history_record.new_state = val
+            history_record.job_id = self._sqmpy_job.id
+            db_session.add(history_record)
+
+            # Keep the new value
             self._sqmpy_job.last_status = val
             if db_session.object_session(self._sqmpy_job) is None:
                 db_session.add(self._sqmpy_job)
-                db_session.commit()
             else:
                 db_session.object_session(self._sqmpy_job).commit()
 
-        # Remain registered
+            # Remain registered
+            db_session.commit()
         return True
 
 
@@ -145,6 +152,8 @@ class SagaJobWrapper(object):
         # SAGA remote directory object representing remote job folder
         self._remote_job_dir = None
         self._saga_job = None
+        # Keep the instance of job monitoring thread
+        self._monitor_thread = None
         from sqmpy import app
         self._logger = app.logger
 
@@ -173,6 +182,8 @@ class SagaJobWrapper(object):
         #TODO Add a hook here to register any callbacks
         # This callback should store output files locally and store new status in db
         self._saga_job.add_callback(saga.STATE, JobStateChangeCallback(self._job))
+        # Email notification callback
+        #self._saga_job.add_callback(saga.STATE, JobStateChangeNotifyCallback(self._job))
 
     def _get_remote_job_endpoint(self):
         """
@@ -245,8 +256,11 @@ class SagaJobWrapper(object):
         # Run the job eventually
         self._logger.debug("...starting job...")
         self._saga_job.run()
-        monitor = JobStateChangeMonitor(self._saga_job)
-        monitor.start()
+
+        # Create the monitoring thread
+        self._monitor_thread = JobStateChangeMonitor(self._saga_job)
+        # Begin monitoring
+        self._monitor_thread.start()
 
         # Store remote pid
         self._job.remote_pid = self._saga_job.get_id()

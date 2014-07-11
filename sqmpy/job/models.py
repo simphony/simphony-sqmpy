@@ -73,24 +73,15 @@ class StagingFile(Base):
         #FileRelation.tostring(self.relation)
 
 
-# class Program(Base):
-#     __tablename__ = 'programs'
-#     id = Column(Integer, primary_key=True)
-#     title = Column(String(50), unique=False)
-#     executable = Column(String(100), unique=True)
-
-
-# class Queue(Base):
-#     __tablename__ = 'queues'
-#     id = Column(Integer, primary_key=True)
-#     title = Column(String(50), unique=False)
-#     type_id = Column(Integer, ForeignKey('queuetypes.id'))
-#     host = Column(String(150), unique=False)
-#     jobs = relationship("Job", backref="queues")
-
-
-# class QueueType(Base):
-#     __tablename__ = 'queuetypes'
-#     id = Column(Integer, primary_key=True)
-#     name = Column(String(100), unique=True)
-#     queues = relationship("Queue", backref="queuetypes")
+class JobStateHistory(Base):
+    """
+    Record of changes in job state
+    """
+    __tablename__ = 'jobstatehistory'
+    id = Column(Integer, primary_key=True)
+    # Please note that real change time would be a little different,
+    # because there is a time interval that we query about status changes
+    change_time = Column(DateTime)
+    old_state = Column(String(50))
+    new_state = Column(String(50))
+    job_id = Column(Integer, ForeignKey('jobs.id'))

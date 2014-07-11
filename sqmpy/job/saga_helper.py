@@ -61,12 +61,19 @@ class JobStateChangeMonitor(threading.Thread):
         """
         Start the timer and keep watching
         """
-        while True:#self._saga_job.state == saga.RUNNING:
+        while True:
+            new_state = self._saga_job.state
             self._logger.debug("Monitoring thread: Job ID    : %s" % self._saga_job.id)
             print "Monitoring thread: Job ID    : %s" % self._saga_job.id
-            self._logger.debug("Monitoring thread: Job State : %s" % self._saga_job.state)
-            print "Monitoring thread: Job State : %s" % self._saga_job.state
+            self._logger.debug("Monitoring thread: Job State : %s" % new_state)
+            print "Monitoring thread: Job State : %s" % new_state
+            if new_state in (saga.DONE,
+                             saga.FAILED,
+                             saga.CANCELED):
+                return
+
             # Check every 3 seconds
+            # TODO Read monitor interval period from application config
             time.sleep(5)
 
 
@@ -93,14 +100,14 @@ class JobStateChangeCallback(saga.Callback):
         from sqmpy import app
         saga_job = obj
         app.logger.debug("### Job State Change Report")
-        app.logger.debug("Job ID   : %s" % self._sqmpy_job.id)
-        app.logger.debug("Job Name   : %s" % self._sqmpy_job.name)
-        app.logger.debug("Job Current State   : %s" % saga_job.state)
-        app.logger.debug("Exitcode    : %s" % saga_job.exit_code)
-        app.logger.debug("Exec. hosts : %s" % saga_job.execution_hosts)
-        app.logger.debug("Create time : %s" % saga_job.created)
-        app.logger.debug("Start time  : %s" % saga_job.started)
-        app.logger.debug("End time    : %s" % saga_job.finished)
+        app.logger.debug("Callback: Job ID   : %s" % self._sqmpy_job.id)
+        app.logger.debug("Callback: Job Name   : %s" % self._sqmpy_job.name)
+        app.logger.debug("Callback: Job Current State   : %s" % saga_job.state)
+        app.logger.debug("Callback: Exitcode    : %s" % saga_job.exit_code)
+        app.logger.debug("Callback: Exec. hosts : %s" % saga_job.execution_hosts)
+        app.logger.debug("Callback: Create time : %s" % saga_job.created)
+        app.logger.debug("Callback: Start time  : %s" % saga_job.started)
+        app.logger.debug("Callback: End time    : %s" % saga_job.finished)
 
         # If the job is complete transfer files if any
         if val in (saga.DONE, saga.FAILED, saga.EXCEPTION, saga):
@@ -115,12 +122,6 @@ class JobStateChangeCallback(saga.Callback):
                 db_session.commit()
             else:
                 db_session.object_session(self._sqmpy_job).commit()
-
-        print '#'*30
-        print obj
-        print key
-        print val
-        print '#'*30
 
         # Remain registered
         return True

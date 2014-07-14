@@ -1,4 +1,4 @@
-from sqmpy import init_app, app
+from sqmpy import app
 
 if __name__ == '__main__':
     #import logging

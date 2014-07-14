@@ -16,22 +16,57 @@ from sqmpy.database import db_session
 from sqmpy.job.constants import FileRelation
 from sqmpy.job.exceptions import JobManagerException
 from sqmpy.job.models import Resource, StagingFile, JobStateHistory
-from sqmpy.security import services as security_services
+#from sqmpy.security import services as security_services
 
 __author__ = 'Mehdi Sadeghi'
+
+
+def send_state_change_email(job_id, old_state, new_state):
+    """
+    A simple helper class to send smtp email for job state change
+    :param job_id: Job id in database
+    :param old_state:
+    :param new_state:
+    :return:
+    """
+    from sqmpy import app
+    from sqmpy.security.models import User
+    from sqmpy.job.models import Job
+    from sqmpy.database import db_session
+    owner_email = db_session.query(User.email).filter(User.id == Job.owner_id, Job.id == job_id).one()[0]
+
+    #job_owner = security_services.get_user(self._sqmpy_job.owner_id)
+    try:
+        smtp_server = smtplib.SMTP(app.config.get('MAIL_SERVER'))
+        message = \
+            'Status changed from {old} to {new}'.format(old=old_state,
+                                                        new=new_state)
+        message = MIMEText(message)
+        message['Subject'] = 'Change in job number [{job_id}]'.format(job_id=job_id)
+        message['From'] = 'monitor@sqmpy'
+        message['To'] = owner_email
+        smtp_server.sendmail('sade@iwm.fraunhofer.de',
+                             [owner_email],
+                             message.as_string())
+        smtp_server.quit()
+    except smtplib.SMTPException, ex:
+        from sqmpy import app
+        app.logger.debug("Callback: Failed to send mail: %s" % ex)
 
 
 class JobStateChangeMonitor(threading.Thread):
     """
     A timer thread to check job status changes.
     """
-    def __init__(self, job):
+    def __init__(self, job_id, saga_job):
         """
         Initialize the time and job instance
-        :param job: a saga job instance
+        :param job_id: sqmpy job id
+        :param saga_job: a saga job instance
         """
         super(JobStateChangeMonitor, self).__init__()
-        self._saga_job = job
+        self._saga_job = saga_job
+        self._job_id = job_id
         from sqmpy import app
         self._logger = app.logger
 
@@ -50,6 +85,19 @@ class JobStateChangeMonitor(threading.Thread):
             if new_state in (saga.DONE,
                              saga.FAILED,
                              saga.CANCELED):
+                # Fixme Here I have to double check if the value is stored correctly.
+                # There is a problem that if the job is done and we query job's state
+                # the registered callbacks would not be called. So I wait here for a
+                # few seconds and afterwards I check the last status and update it if
+                # necessary.
+                time.sleep(3)
+                from sqmpy.database import db_session
+                from sqmpy.job.models import Job
+                job = Job.query.get(self._job_id)
+                if job.last_status != new_state:
+                    send_state_change_email(self._job_id, job.last_status, new_state)
+                    job.last_status = new_state
+                    db_session.commit()
                 return
 
             # Check every 3 seconds
@@ -97,23 +145,7 @@ class JobStateChangeCallback(saga.Callback):
 
         # Update job status
         if self._sqmpy_job.last_status != val:
-            job_owner = security_services.get_user(self._sqmpy_job.owner_id)
-            try:
-                smtp_server = smtplib.SMTP(app.config.get('MAIL_SERVER'))
-                message = \
-                    'Status changed from {old} to {new}'.format(old=self._sqmpy_job.last_status,
-                                                                new=val)
-                message = MIMEText(message)
-                message['Subject'] = 'Change in job number [{job_id}]'.format(job_id=self._sqmpy_job.id)
-                message['From'] = 'monitor@sqmpy'
-                message['To'] = job_owner.email
-                smtp_server.sendmail('sade@iwm.fraunhofer.de',
-                                     [job_owner.email],
-                                     message.as_string())
-                smtp_server.quit()
-            except smtplib.SMTPException:
-                raise
-
+            send_state_change_email(self._sqmpy_job.id, self._sqmpy_job.last_status, val)
             # Insert history record
             history_record = JobStateHistory()
             history_record.change_time = datetime.datetime.now()
@@ -258,7 +290,7 @@ class SagaJobWrapper(object):
         self._saga_job.run()
 
         # Create the monitoring thread
-        self._monitor_thread = JobStateChangeMonitor(self._saga_job)
+        self._monitor_thread = JobStateChangeMonitor(self._job.id, self._saga_job)
         # Begin monitoring
         self._monitor_thread.start()
 

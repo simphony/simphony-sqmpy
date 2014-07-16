@@ -13,15 +13,8 @@ from flask.ext.admin import Admin
 from flask.ext.mail import Mail
 
 from sqmpy.database import db_session
-from sqmpy.security import security_blueprint
-from sqmpy.security.manager import SecurityManager
-from sqmpy.job import job_blueprint
-from sqmpy.job.manager import JobManager
 
 __author__ = 'Mehdi Sadeghi'
-
-
-#app = None
 
 
 class SqmpyApplication(Flask):
@@ -89,7 +82,6 @@ class SqmpyApplication(Flask):
         self.admin.add_view(ModelView(job_models.Resource, db_session))
         self.admin.add_view(ModelView(job_models.JobStateHistory, db_session))
 
-
     def load_blueprints(self):
         """
         Load blueprints
@@ -99,11 +91,14 @@ class SqmpyApplication(Flask):
         import sqmpy.views
         import sqmpy.security.views
         import sqmpy.job.views
+        from sqmpy.security import security_blueprint
+        from sqmpy.job import job_blueprint
+
         self.register_blueprint(security_blueprint)
         self.register_blueprint(job_blueprint)
 
 
-def init_app():
+def __init_app():
     """
     Initializes app variable with Flask application.
     I wrap initialization here to avoid import errors
@@ -115,6 +110,8 @@ def init_app():
     app.register_admin_views()
 
     from sqmpy.core import core_services
+    from sqmpy.job.manager import JobManager
+    from sqmpy.security.manager import SecurityManager
 
     #Register the component in core
     #@TODO: This should be dynamic later
@@ -126,4 +123,4 @@ def init_app():
 
     return app
 
-app = init_app()
+app = __init_app()

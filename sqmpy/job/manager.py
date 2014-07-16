@@ -6,8 +6,6 @@
 """
 import datetime
 
-import saga
-
 from flask.ext.login import current_user
 
 from sqmpy.core import SQMComponent

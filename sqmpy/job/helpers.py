@@ -7,15 +7,46 @@
 """
 import os
 import hashlib
+import smtplib
+from email.mime.text import MIMEText
 
 from flask.ext.login import current_user
 
+from sqmpy import app
 from sqmpy.database import db_session
+from sqmpy.security.models import User
 from sqmpy.job.exceptions import JobManagerException, JobNotFoundException, FileNotFoundException
 from sqmpy.job.models import Job, StagingFile
 from sqmpy.job.constants import FileRelation
 
 __author__ = 'Mehdi Sadeghi'
+
+
+def send_state_change_email(job_id, old_state, new_state):
+    """
+    A simple helper class to send smtp email for job state change
+    :param job_id: Job id in database
+    :param old_state:
+    :param new_state:
+    :return:
+    """
+    owner_email = db_session.query(User.email).filter(User.id == Job.owner_id, Job.id == job_id).one()[0]
+
+    try:
+        smtp_server = smtplib.SMTP(app.config.get('MAIL_SERVER'))
+        message = \
+            'Status changed from {old} to {new}'.format(old=old_state,
+                                                        new=new_state)
+        message = MIMEText(message)
+        message['Subject'] = 'Change in job number [{job_id}]'.format(job_id=job_id)
+        message['From'] = 'monitor@sqmpy'
+        message['To'] = owner_email
+        smtp_server.sendmail('sade@iwm.fraunhofer.de',
+                             [owner_email],
+                             message.as_string())
+        smtp_server.quit()
+    except smtplib.SMTPException, ex:
+        app.logger.debug("Callback: Failed to send mail: %s" % ex)
 
 
 class JobInputFileHandler(object):
@@ -84,7 +115,6 @@ class JobInputFileHandler(object):
         :param job_id:
         :return:
         """
-        from sqmpy import app
         user_dir = os.path.join(app.config['STAGING_FOLDER'], current_user.name)
         if not os.path.exists(user_dir):
             os.makedirs(user_dir)

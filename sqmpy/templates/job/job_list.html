@@ -27,7 +27,7 @@
             </tr>
             </thead>
             <tbody data-link="row" class="rowlink">
-            {% for name, job in jobs%}
+            {% for name, job in jobs.iteritems() %}
             <tr>
                 <td><a href="{{url_for('.detail', job_id=job.id)}}"></a>{{ job.id }}</td>
                 <td>{{ job.name }}</td>

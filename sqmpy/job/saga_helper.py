@@ -10,8 +10,7 @@ import threading
 
 import saga
 
-from sqmpy import app
-from sqmpy.database import db_session
+from sqmpy import app, db
 from sqmpy.job.constants import FileRelation
 from sqmpy.job.exceptions import JobManagerException
 from sqmpy.job.helpers import send_state_change_email
@@ -61,7 +60,7 @@ class JobStateChangeMonitor(threading.Thread):
                 if job.last_status != new_state:
                     send_state_change_email(self._job_id, job.last_status, new_state)
                     job.last_status = new_state
-                    db_session.commit()
+                    db.session.commit()
                 return
 
             # Check every 3 seconds
@@ -114,17 +113,17 @@ class JobStateChangeCallback(saga.Callback):
             history_record.old_state = self._sqmpy_job.last_status
             history_record.new_state = val
             history_record.job_id = self._sqmpy_job.id
-            db_session.add(history_record)
+            db.session.add(history_record)
 
             # Keep the new value
             self._sqmpy_job.last_status = val
-            if db_session.object_session(self._sqmpy_job) is None:
-                db_session.add(self._sqmpy_job)
+            if db.session.object_session(self._sqmpy_job) is None:
+                db.session.add(self._sqmpy_job)
             else:
-                db_session.object_session(self._sqmpy_job).commit()
+                db.session.object_session(self._sqmpy_job).commit()
 
             # Remain registered
-            db_session.commit()
+            db.session.commit()
         return True
 
 
@@ -259,7 +258,7 @@ class SagaJobWrapper(object):
 
         # Store remote pid
         self._job.remote_pid = self._saga_job.get_id()
-        db_session.commit()
+        db.session.commit()
 
         self._logger.debug("Job ID    : %s" % self._saga_job.id)
         self._logger.debug("Job State : %s" % self._saga_job.state)

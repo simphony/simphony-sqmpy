@@ -11,10 +11,14 @@ from flask import Flask
 from flask.ext.wtf.csrf import CsrfProtect
 from flask.ext.admin import Admin
 from flask.ext.mail import Mail
-
-from sqmpy.database import db_session
+from flask.ext.sqlalchemy import SQLAlchemy
+from flask.ext.admin.contrib.sqla import ModelView
 
 __author__ = 'Mehdi Sadeghi'
+
+
+app = None
+db = None
 
 
 class SqmpyApplication(Flask):
@@ -23,9 +27,6 @@ class SqmpyApplication(Flask):
     """
     def __init__(self):
         super(SqmpyApplication, self).__init__(__name__, static_url_path='')
-        #app = Flask(__name__, static_url_path='')
-        # This one would be used for production, if any
-        #self.config.from_pyfile('config.py', silent=True)
 
         # Import config module as configs
         self.config.from_object('config')
@@ -33,24 +34,16 @@ class SqmpyApplication(Flask):
         # Override from environment variable
         self.config.from_envvar('SQMPY_SETTINGS', silent=True)
 
-        #Enabling Admin app
-        self.admin = Admin(self)
+        # Initialize db right after basic initialization
+        self.db = SQLAlchemy(self)
 
-        self.mail = Mail(self)
-
-        self._enable_apps()
         self._configure_logging()
 
-        @self.teardown_appcontext
-        def shutdown_session(exception=None):
-            db_session.remove()
-
-    def _enable_apps(self):
-        """
-        Enable extra apps such as CSRF protection
-        """
-        # Enable CSRF protection
+        # Activate other apps
         CsrfProtect(self)
+        self.admin = Admin(self)
+        self.mail = Mail(self)
+
 
     def _configure_logging(self):
         """
@@ -72,15 +65,15 @@ class SqmpyApplication(Flask):
         """
         Register admin views from different modules.
         """
-        from sqmpy.security.views import UserView
-        self.admin.add_view(UserView())
+        # Add security admin views
+        from sqmpy.security import models as security_models
+        self.admin.add_view(ModelView(security_models.User, self.db.session))
 
-        # Adding appropriate admin views
-        from flask.ext.admin.contrib.sqla import ModelView
+        # Adding job admin views
         from sqmpy.job import models as job_models
-        self.admin.add_view(ModelView(job_models.Job, db_session))
-        self.admin.add_view(ModelView(job_models.Resource, db_session))
-        self.admin.add_view(ModelView(job_models.JobStateHistory, db_session))
+        self.admin.add_view(ModelView(job_models.Job, self.db.session))
+        self.admin.add_view(ModelView(job_models.Resource, self.db.session))
+        self.admin.add_view(ModelView(job_models.JobStateHistory, self.db.session))
 
     def load_blueprints(self):
         """
@@ -106,6 +99,8 @@ def __init_app():
     """
     global app
     app = SqmpyApplication()
+    global db
+    db = app.db
     app.load_blueprints()
     app.register_admin_views()
 
@@ -123,4 +118,6 @@ def __init_app():
 
     return app
 
-app = __init_app()
+
+# Initialize app and db
+__init_app()

@@ -5,25 +5,16 @@
     View functions for security mudule
 """
 from flask import flash, url_for, request, redirect, render_template, abort
-from flask.ext.admin.contrib.sqla import ModelView
 from flask.ext.login import login_user, logout_user, login_required
 
+from sqmpy import db
 from sqmpy.security import security_blueprint
 from sqmpy.security.forms import LoginForm, RegisterForm
 from sqmpy.security.manager import get_password_digest
 from sqmpy.security.models import User
-from sqmpy.database import db_session
 import sqmpy.security.services as security_services
 
 __author__ = 'Mehdi Sadeghi'
-
-
-class UserView(ModelView):
-    """
-    User view for admin interface
-    """
-    def __init__(self):
-        super(UserView, self).__init__(User, db_session)
 
 
 @security_blueprint.route('/security/login', methods=['GET', 'POST'])
@@ -66,8 +57,8 @@ def register():
             user = User(form.user_name.data,
                         form.email.data,
                         get_password_digest(form.password.data))
-            db_session.add(user)
-            db_session.commit()
+            db.session.add(user)
+            db.session.commit()
             return redirect('/security/login')
 
     return render_template('security/register.html', form=form)

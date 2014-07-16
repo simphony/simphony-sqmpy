@@ -7,9 +7,11 @@
 from flask import request, session, g, redirect, url_for, abort, \
     render_template, flash, send_from_directory
 from flask.ext.login import login_required, current_user
+from flask_sqlalchemy import Pagination
 
 from werkzeug import secure_filename
 
+from sqmpy import app
 from sqmpy.job import job_blueprint
 from sqmpy.job.exceptions import JobNotFoundException, FileNotFoundException
 from sqmpy.job.forms import JobSubmissionForm
@@ -18,29 +20,41 @@ import sqmpy.job.services as job_services
 
 __author__ = 'Mehdi Sadeghi'
 
+PER_PAGE = 20
 
-@job_blueprint.route('/job', methods=['GET'])
+
+@job_blueprint.route('/job/', methods=['GET'])
 def index():
     """
     Entry page for job subsystem
     :return:
     """
-    return list_jobs()
+    return redirect(url_for('sqmpy.job.list_jobs'))
 
 
-#@job_blueprint.route('/job/list', methods=['GET'])
+def url_for_other_page(page):
+    args = request.view_args.copy()
+    args['page'] = page
+    return url_for(request.endpoint, **args)
+app.jinja_env.globals['url_for_other_page'] = url_for_other_page
+
+
+@job_blueprint.route('/jobs/', methods=['GET'], defaults={'page': 1})
+@job_blueprint.route('/jobs/page/<int:page>', methods=['GET'])
 @login_required
-def list_jobs(job_id=None):
+def list_jobs(page):
     """
-    Show list of jobs
-    :param request:
+    Show list of jobs for current user
     :return:
     """
-    if job_id is not None:
-        # Get the job and show job detail page
-        return render_template('job/job_detail.html')
-    else:
-        return render_template('job/job_list.html', jobs=job_services.list_jobs())
+    jobs = job_services.list_jobs()
+    if not jobs and page != 1:
+        abort(404)
+    count = len(jobs)
+    pagination = None#Pagination(page, PER_PAGE, count)
+    return render_template('job/job_list.html',
+                           pagination=pagination,
+                           jobs=job_services.list_jobs())
 
 
 @job_blueprint.route('/job/<int:job_id>', methods=['GET'])

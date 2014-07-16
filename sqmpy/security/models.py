@@ -6,26 +6,22 @@
 """
 import datetime
 
-from sqlalchemy import Column, Integer, String, DateTime, ForeignKey
-from sqlalchemy.sql.sqltypes import SmallInteger
-from sqlalchemy.orm import relationship, backref
-
-from sqmpy.database import Base
+from sqmpy import db
 from sqmpy.security import constants
 
 __author__ = 'Mehdi Sadeghi'
 
 
-class User(Base):
+class User(db.Model):
     __tablename__ = 'users'
-    id = Column(Integer, primary_key=True)
-    name = Column(String(50), unique=True)
-    email = Column(String(120), unique=True)
-    password = Column(String(120))
-    role = Column(SmallInteger, default=constants.USER)
-    status = Column(SmallInteger, default=constants.NEW)
-    registered_on = Column(DateTime)
-    #jobs = relationship("Job", backref="users")
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(50), unique=True)
+    email = db.Column(db.String(120), unique=True)
+    password = db.Column(db.String(120))
+    role = db.Column(db.SmallInteger, default=constants.USER)
+    status = db.Column(db.SmallInteger, default=constants.NEW)
+    registered_on = db.Column(db.DateTime)
+    #jobs = db.relationship("Job", backref="users")
 
     def __init__(self, name=None, email=None, password=None):
         self.name = name

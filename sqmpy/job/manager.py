@@ -8,8 +8,8 @@ import datetime
 
 from flask.ext.login import current_user
 
+from sqmpy import db
 from sqmpy.core import SQMComponent
-from sqmpy.database import db_session
 from sqmpy.job.exceptions import JobManagerException
 from sqmpy.job.helpers import JobInputFileHandler
 from sqmpy.job.models import Job
@@ -61,8 +61,8 @@ class JobManager(SQMComponent):
         job.resource_id = resource_id
         job.description = description
 
-        db_session.add(job)
-        db_session.commit()
+        db.session.add(job)
+        db.session.commit()
 
         # Save staging data before running the job
         # Input files will be moved under a new folder with this structure:
@@ -119,10 +119,10 @@ class JobManager(SQMComponent):
         :return: jobs iterator
         """
         user_jobs = {}
-        for job in Job.query.all():
-            if job.owner_id == current_user.id:
-                user_jobs[job.id] = job
-        return user_jobs.iteritems()
+        for job in Job.query.filter(Job.owner_id == current_user.id):
+            user_jobs[job.id] = job
+
+        return user_jobs
 
     def get_file_location(self, job_id, file_name):
         """

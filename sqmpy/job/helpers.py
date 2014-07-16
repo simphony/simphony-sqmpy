@@ -12,8 +12,7 @@ from email.mime.text import MIMEText
 
 from flask.ext.login import current_user
 
-from sqmpy import app
-from sqmpy.database import db_session
+from sqmpy import app, db
 from sqmpy.security.models import User
 from sqmpy.job.exceptions import JobManagerException, JobNotFoundException, FileNotFoundException
 from sqmpy.job.models import Job, StagingFile
@@ -30,7 +29,7 @@ def send_state_change_email(job_id, old_state, new_state):
     :param new_state:
     :return:
     """
-    owner_email = db_session.query(User.email).filter(User.id == Job.owner_id, Job.id == job_id).one()[0]
+    owner_email = db.session.query(User.email).filter(User.id == Job.owner_id, Job.id == job_id).one()[0]
 
     try:
         smtp_server = smtplib.SMTP(app.config.get('MAIL_SERVER'))
@@ -86,7 +85,7 @@ class JobInputFileHandler(object):
                     sf.checksum = hashlib.md5(open(absolute_name).read()).hexdigest()
                     sf.location = job_dir
                     sf.parent_id = job.id
-                    db_session.add(sf)
+                    db.session.add(sf)
                 else:
                     raise JobManagerException("Invalid file name or path")
 
@@ -103,10 +102,10 @@ class JobInputFileHandler(object):
             sf.checksum = hashlib.md5(open(absolute_name).read()).hexdigest()
             sf.location = job_dir
             sf.parent_id = job.id
-            db_session.add(sf)
+            db.session.add(sf)
 
         # Commit db session
-        db_session.commit()
+        db.session.commit()
 
     @staticmethod
     def _get_job_file_directory(job_id):

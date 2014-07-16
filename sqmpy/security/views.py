@@ -63,7 +63,7 @@ def register():
     form = RegisterForm(request.form, csrf_enabled=False)
     if request.method == 'POST':
         if form.validate():
-            user = User(form.name.data,
+            user = User(form.user_name.data,
                         form.email.data,
                         get_password_digest(form.password.data))
             db_session.add(user)

@@ -1,26 +1,25 @@
 from flask.ext.wtf import Form, RecaptchaField
-from wtforms import TextField, PasswordField, BooleanField
-from wtforms.validators import Required, EqualTo, Email, Optional
+from wtforms import TextField, PasswordField, validators
 
 
 class LoginForm(Form):
     """
     A basic login form.
     """
-    email = TextField('Email address', [Required(), Email()])
-    password = PasswordField('Password', [Required()])
+    email = TextField('Email address', [validators.Required(), validators.Email()])
+    password = PasswordField('Password', [validators.Required()])
 
 
 class RegisterForm(Form):
     """
     A basic registration form.
     """
-    name = TextField('Name', [Required()])
-    email = TextField('Email', [Required(), Email()])
-    password = PasswordField('Password', [Required()])
+    user_name = TextField('Username', [validators.Required(), validators.Regexp('^[a-z0-9_-]{3,16}$')])
+    email = TextField('Email', [validators.Required(), validators.Email()])
+    password = PasswordField('Password', [validators.Required()])
     confirm = PasswordField('Repeat Password', [
-        Required(),
-        EqualTo('password', message='Passwords must match')
+        validators.Required(),
+        validators.EqualTo('password', message='Passwords must match')
     ])
     #accept_tos = BooleanField('I accept the TOS', [Optional()])
     #recaptcha = RecaptchaField([Required()])

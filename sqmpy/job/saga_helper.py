@@ -16,7 +16,7 @@ from sqmpy.database import db_session
 from sqmpy.job.constants import FileRelation
 from sqmpy.job.exceptions import JobManagerException
 from sqmpy.job.models import Resource, StagingFile, JobStateHistory
-#from sqmpy.security import services as security_services
+from sqmpy.security import services as security_services
 
 __author__ = 'Mehdi Sadeghi'
 
@@ -224,21 +224,26 @@ class SagaJobWrapper(object):
         """
         return 'ssh://{remote_host}'.format(remote_host=self._job.resource.url)
 
-    def _get_remote_dir(self):
+    def _get_remote_job_dir(self, job_id):
         """
-        Get remote working directory
+        Returns the remote job working directory. Creates the parent
+        folders if they don't exist.
         :return:
         """
-        return '/W5/sade'
-
-    def _get_remote_file_endpoint(self):
-        """
-        Get remote file endpoint
-        :return:
-        """
-        # Saga only supports sftp for now, see: http://saga-project.github.io/saga-python/doc/tutorial/part5.html
-        return 'sftp://{remote_host}/{remote_dir}'.format(remote_host=self._job.resource.url,
-                                                          remote_dir=self._get_remote_dir())
+        # Job directory would resist inside sqmpy folder. sqmpy folder
+        # Job directory name would be job id. The sqmpy folder will be
+        # created in user home folder.
+        # TODO: Let user give a working directory for the job or a resource
+        # Fixme: Use proper ssh name to find home folder. Currently it is current user_name
+        owner = security_services.get_user(self._job.owner_id)
+        remote_address = \
+            'sftp://{remote_host}/home/{user_name}/sqmpy/{job_id}'.format(remote_host=self._job.resource.url,
+                                                                          user_name=owner.name,
+                                                                          job_id=job_id)
+        return \
+            saga.filesystem.Directory(remote_address,
+                                      saga.filesystem.CREATE_PARENTS,
+                                      session=self._session)
 
     def run(self):
         """
@@ -255,10 +260,7 @@ class SagaJobWrapper(object):
                              session=self._session)
 
         # Set remote job working directory
-        self._remote_job_dir = \
-            saga.filesystem.Directory(self._get_remote_file_endpoint(),
-                                      saga.filesystem.CREATE,
-                                      session=self._session)
+        self._remote_job_dir = self._get_remote_job_dir(self._job.id)
 
         # Copy script and input files to remote host
         script_file = \

@@ -47,7 +47,9 @@ def get_password_digest(password):
     Generates password digest
     :param password:
     """
-    return bcrypt.hashpw(password, bcrypt.gensalt())
+    # encode is required to avoid encoding exceptions
+    return bcrypt.hashpw(password.encode('utf-8'),
+                         bcrypt.gensalt())
 
 
 def _is_correct_password(password, digest):
@@ -56,4 +58,5 @@ def _is_correct_password(password, digest):
     :param password:
     :param digest:
     """
-    return bcrypt.hashpw(password, digest) == digest
+    return bcrypt.hashpw(password.encode('utf-8'),
+                         digest.encode('utf-8')) == digest

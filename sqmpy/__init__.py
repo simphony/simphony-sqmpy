@@ -10,7 +10,7 @@
 from flask import Flask
 from flask.ext.wtf.csrf import CsrfProtect
 from flask.ext.admin import Admin
-from flask.ext.mail import Mail
+#from flask.ext.mail import Mail
 from flask.ext.sqlalchemy import SQLAlchemy
 from flask.ext.admin.contrib.sqla import ModelView
 
@@ -42,7 +42,7 @@ class SqmpyApplication(Flask):
         # Activate other apps
         CsrfProtect(self)
         self.admin = Admin(self)
-        self.mail = Mail(self)
+#        self.mail = Mail(self)
 
 
     def _configure_logging(self):

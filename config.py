@@ -46,6 +46,8 @@ class Config(object):
     MAIL_SERVER = 'iwmcas.iwm.fraunhofer.de'
     DEFAULT_MAIL_SENDER = 'sade@iwm.fraunhofer.de'
 
+    PER_PAGE = 5
+
 
 class DevelopmentConfig(Config):
     """

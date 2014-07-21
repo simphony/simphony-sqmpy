@@ -17,18 +17,24 @@ def list_jobs():
     return core_services.get_component(JOB_MANAGER).list_jobs()
 
 
-def submit_job(name, resource_id, script, input_files=None, description=None, **kwargs):
+def submit_job(name, resource_id, script, script_type, input_files=None, description=None, **kwargs):
     """
     Submit a new job along with its input files. Input files will be moved under
         a new folder with this structure: <staging_dir>/<username>/<job_id>/input_files/
-    :name: job name
-    :resource_id: resource to submit job there
-    :script: user script
-    :input_files: a list of <filename, file_stream> for each given file.
-    :description: about the job
+    :param name: job name
+    :param resource_id: resource to submit job there
+    :param script: user script
+    :param script_type: integer type of the script according to ScriptType enum
+    :param input_files: a list of <filename, file_stream> for each given file.
+    :param description: about the job
     :return: job id
     """
-    return core_services.get_component(JOB_MANAGER).submit_job(name, resource_id, script, input_files, description, **kwargs)
+    return core_services.get_component(JOB_MANAGER).submit_job(name,
+                                                               resource_id,
+                                                               script,
+                                                               script_type,
+                                                               input_files,
+                                                               description, **kwargs)
 
 
 def get_job(job_id, *args, **kwargs):

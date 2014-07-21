@@ -24,6 +24,7 @@ class Job(db.Model):
     last_status = db.Column(db.String(50))
     remote_pid = db.Column(db.Integer)
     user_script = db.Column(db.Text())
+    script_type = db.Column(db.Integer)
     description = db.Column(db.Text())
     owner_id = db.Column(db.Integer, db.ForeignKey('users.id'))
     resource_id = db.Column(db.Integer, db.ForeignKey('resources.id'))
@@ -34,12 +35,14 @@ class Job(db.Model):
                  owner_id=None,
                  resource_id=None,
                  user_script=None,
+                 script_type=None,
                  sub_date=None,
                  description=None):
         self.name = name
         self.owner_id = owner_id
         self.resource_id = resource_id
         self.user_script = user_script
+        self.script_type = script_type
         if sub_date is None:
             sub_date = datetime.datetime.utcnow()
         self.submit_date = sub_date

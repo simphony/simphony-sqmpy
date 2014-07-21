@@ -39,3 +39,11 @@ class FileRelation(Enum):
     error = 2
     script = 3
 
+
+@unique
+class ScriptType(Enum):
+    """
+    Defines script types such as shell and python
+    """
+    shell = 0
+    python = 1

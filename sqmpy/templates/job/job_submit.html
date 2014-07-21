@@ -11,6 +11,7 @@
   <dl>
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
     {{ render_field(form.name) }}
+    {{ render_field(form.script_type) }}
     {{ render_field(form.script) }}
     {{ render_field(form.input_file) }}
     {{ render_field(form.resource) }}

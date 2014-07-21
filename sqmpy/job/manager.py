@@ -30,15 +30,16 @@ class JobManager(SQMComponent):
         # Wrapper objects contain the job itself along with related saga objects.
         self.__jobs = {}
 
-    def submit_job(self, name, resource_id, script, input_files=None, description=None, **kwargs):
+    def submit_job(self, name, resource_id, script, script_type, input_files=None, description=None, **kwargs):
         """
         Submit a new job along with its input files. Input files will be moved under
             a new folder with this structure: <staging_dir>/<username>/<job_id>/input_files/
-        :name: job name
-        :resource_id: resource to submit job there
-        :script: user script
-        :input_files: a list of <filename, file_stream> for each given file.
-        :description: about the job
+        :param name: job name
+        :param resource_id: resource to submit job there
+        :param script_type: integer type of the script according to ScriptType enum
+        :param script: user script
+        :param input_files: a list of <filename, file_stream> for each given file.
+        :param description: about the job
         :return: job id
         """
         # Basic checks
@@ -58,6 +59,7 @@ class JobManager(SQMComponent):
         job.last_status = JobStatus.INIT
         job.owner_id = current_user.id
         job.user_script = script
+        job.script_type = script_type
         job.resource_id = resource_id
         job.description = description
 

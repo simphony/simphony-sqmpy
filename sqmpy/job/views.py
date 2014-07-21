@@ -19,7 +19,7 @@ import sqmpy.job.services as job_services
 
 __author__ = 'Mehdi Sadeghi'
 
-PER_PAGE = 20
+PER_PAGE = app.config.get('PER_PAGE', 20)
 
 
 @job_blueprint.route('/job/', methods=['GET'])
@@ -98,12 +98,14 @@ def submit(job_id=None):
             job_services.submit_job(form.name.data,
                                     form.resource.data,
                                     script,
+                                    form.script_type.data,
                                     input_files,
                                     form.description.data)
         # Redirect to list
         return redirect(url_for('.detail', job_id=job_id))
 
     return render_template('job/job_submit.html', form=form)
+
 
 # This route is expecting a parameter containing the name
 # of a file. Then it will locate that file on the upload
@@ -120,9 +122,6 @@ def uploaded_file(username, job_id, filename):
         abort(404)
     except FileNotFoundException:
         abort(404)
-
-    #if not os.path.isfile(os.path.join(upload_dir, filename)):
-    #    abort(404)
     return send_from_directory(upload_dir, filename)
 
 

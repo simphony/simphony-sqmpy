@@ -16,7 +16,7 @@ from sqmpy import app, db
 from sqmpy.security.models import User
 from sqmpy.job.exceptions import JobManagerException, JobNotFoundException, FileNotFoundException
 from sqmpy.job.models import Job, StagingFile
-from sqmpy.job.constants import FileRelation
+from sqmpy.job.constants import FileRelation, ScriptType
 
 __author__ = 'Mehdi Sadeghi'
 
@@ -91,8 +91,14 @@ class JobInputFileHandler(object):
 
         # Save script
         if job.user_script not in (None, ''):
-            #TODO: save as python script if the script is in python
-            file_name = 'job-{job_id}_script'.format(job_id=job.id)
+            # Save as python script if the script is in python or shell script if it is shell
+            script_extension = ''
+            if job.script_type == ScriptType.python.value:
+                script_extension = '.py'
+            if job.script_type == ScriptType.shell.value:
+                script_extension = '.sh'
+            file_name = 'job-{job_id}_script{extension}'.format(job_id=job.id,
+                                                                extension=script_extension)
             absolute_name = os.path.join(job_dir, file_name)
             f = open(absolute_name, 'wb')
             f.write(script)

@@ -7,7 +7,6 @@
 from flask import request, session, g, redirect, url_for, abort, \
     render_template, flash, send_from_directory
 from flask.ext.login import login_required, current_user
-from flask_sqlalchemy import Pagination
 
 from werkzeug import secure_filename
 
@@ -15,7 +14,7 @@ from sqmpy import app
 from sqmpy.job import job_blueprint
 from sqmpy.job.exceptions import JobNotFoundException, FileNotFoundException
 from sqmpy.job.forms import JobSubmissionForm
-from sqmpy.job.models import Resource
+from sqmpy.job.models import Job, Resource
 import sqmpy.job.services as job_services
 
 __author__ = 'Mehdi Sadeghi'
@@ -30,7 +29,6 @@ def index():
     :return:
     """
     return redirect(url_for('sqmpy.job.list_jobs'))
-
 
 def url_for_other_page(page):
     args = request.view_args.copy()
@@ -47,14 +45,10 @@ def list_jobs(page):
     Show list of jobs for current user
     :return:
     """
-    jobs = job_services.list_jobs()
-    if not jobs and page != 1:
-        abort(404)
-    count = len(jobs)
-    pagination = None#Pagination(page, PER_PAGE, count)
+    pagination = Job.query.paginate(page, PER_PAGE)
     return render_template('job/job_list.html',
                            pagination=pagination,
-                           jobs=job_services.list_jobs())
+                           jobs=pagination.items)
 
 
 @job_blueprint.route('/job/<int:job_id>', methods=['GET'])
@@ -130,3 +124,15 @@ def uploaded_file(username, job_id, filename):
     #if not os.path.isfile(os.path.join(upload_dir, filename)):
     #    abort(404)
     return send_from_directory(upload_dir, filename)
+
+
+def url_for_other_page(page):
+    """
+    Helper to create next page url
+    :param page:
+    :return:
+    """
+    args = request.view_args.copy()
+    args['page'] = page
+    return url_for(request.endpoint, **args)
+app.jinja_env.globals['url_for_other_page'] = url_for_other_page

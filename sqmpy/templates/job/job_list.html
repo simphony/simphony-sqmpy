@@ -1,4 +1,5 @@
 {% extends 'job/job_base.html' %}
+{% from "_paginationhelper.html" import render_pagination %}
 
 {% block head_tail%}
 {{super()}}
@@ -27,7 +28,7 @@
             </tr>
             </thead>
             <tbody data-link="row" class="rowlink">
-            {% for name, job in jobs.iteritems() %}
+            {% for job in jobs %}
             <tr>
                 <td><a href="{{url_for('.detail', job_id=job.id)}}"></a>{{ job.id }}</td>
                 <td>{{ job.name }}</td>
@@ -43,11 +44,11 @@
         </table>
     </div>
     <div>
-        <p><a type="button" class="btn btn-primary" role="button" href="{{url_for('.submit')}}">New Job</a></p>
+        <p><a type="button" class="btn btn-primary" role="button" href="{{url_for('.submit')}}">New Job</a>
+        {{render_pagination(pagination)}}</p>
     </div>
 
 {% endblock %}
-
 {% block body_tail %}
 {{super()}}
 <!-- Latest compiled and minified JavaScript -->

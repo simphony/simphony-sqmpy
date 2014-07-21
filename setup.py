@@ -1,15 +1,23 @@
-from setuptools import setup
+from setuptools import setup, find_packages
 
-
-setup(name='SimpleQueueManager',
-      version='0.1',
-      description='Simple Queue Manager',
+setup(name='sqmpy',
+      version='v1.0.0-alpha.1',
+      long_description='Simple Queue Manager, also sqmpy, is a web interface for submitting jobs to HPC resources.',
+      description='A Simple Queue Manager',
+      packages=find_packages(),
+      include_package_data=True,
+      zip_safe=False,
       author='Mehdi Sadeghi',
       author_email='sade@iwm.fraunhofer.de',
       url='',
-      requires=['Flask',
-                'Flask-SQLAlchemy',
-                'Flask-Login',
-                'Flask-Admin',
-                'Flask-WTF',
-                'py-bcrypt'])
+      data_files=[('config', ['config.py']),
+                  'sqmpy.db'],
+      install_requires=['Flask',
+                        'Flask-SQLAlchemy',
+                        'Flask-Login',
+                        'Flask-WTF',
+                        'Flask-Admin',
+                        'Flask-CSRF',
+                        'enum34',
+                        'saga-python',
+                        'py-bcrypt'])

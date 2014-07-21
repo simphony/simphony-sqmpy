@@ -7,5 +7,5 @@ Flask-Admin==1.0.8
 Flask-CSRF==0.9.2
 enum34==1.0
 saga-python==0.16
-bcrypt==1.0.1
+py-bcrypt==0.4
 

@@ -26,10 +26,10 @@ class SqmpyApplication(Flask):
     To wrap sqmpy stuff
     """
     def __init__(self):
-        super(SqmpyApplication, self).__init__(__name__, static_url_path='')
+        super(SqmpyApplication, self).__init__(__name__.split('.')[0], static_url_path='')
 
         # Import config module as configs
-        self.config.from_object('config')
+        self.config.from_object('config.DevelopmentConfig')
 
         # Override from environment variable
         self.config.from_envvar('SQMPY_SETTINGS', silent=True)

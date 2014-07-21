@@ -1,41 +1,60 @@
+"""
+    config
+    ~~~~~
+    This module contains configuration keys for the application.
+    See http://flask.pocoo.org/docs/config/ for more information.
+"""
 import os
 _basedir = os.path.abspath(os.path.dirname(__file__))
 
-DEBUG = True
 
-ADMINS = frozenset(['sade@iwm.fraunhofer.de'])
-SECRET_KEY = "This string will be replaced with a proper key in production."
+class Config(object):
+    """
+    Base config class for application
+    """
+    DEBUG = False
 
-SQLALCHEMY_DATABASE_URI = 'sqlite:///' + os.path.join(_basedir, 'sqmpy.db')
-DATABASE_CONNECT_OPTIONS = {}
+    # Server host and port. Supports subdomains myapp.dev:5000
+    #SERVER_NAME = '0.0.0.0:5001'
 
-THREADS_PER_PAGE = 8
+    ADMINS = frozenset(['sade@iwm.fraunhofer.de'])
+    SECRET_KEY = "This string will be replaced with a proper key in production."
 
-CSRF_ENABLED = True
-CSRF_SESSION_KEY = "somethingimpossibletoguess"
+    SQLALCHEMY_DATABASE_URI = 'sqlite:///' + os.path.join(_basedir, 'sqmpy.db')
+    DATABASE_CONNECT_OPTIONS = {}
 
-# Recaptcha for localhost
-RECAPTCHA_USE_SSL = False
-RECAPTCHA_PUBLIC_KEY = '6LeYIbsSAAAAACRPIllxA7wvXjIE411PfdB2gt2J'
-RECAPTCHA_PRIVATE_KEY = '6LeYIbsSAAAAAJezaIq3Ft_hSTo0YtyeFG-JgRtu'
-RECAPTCHA_OPTIONS = {'theme': 'white'}
+    THREADS_PER_PAGE = 8
+
+    CSRF_ENABLED = True
+    CSRF_SESSION_KEY = "somethingimpossibletoguess"
+
+    # Recaptcha for localhost
+    RECAPTCHA_USE_SSL = False
+    RECAPTCHA_PUBLIC_KEY = '6LeYIbsSAAAAACRPIllxA7wvXjIE411PfdB2gt2J'
+    RECAPTCHA_PRIVATE_KEY = '6LeYIbsSAAAAAJezaIq3Ft_hSTo0YtyeFG-JgRtu'
+    RECAPTCHA_OPTIONS = {'theme': 'white'}
 
 
-# Logging options
-LOG_FILE = os.path.join(_basedir, 'sqmpy.log')
+    # Logging options
+    LOG_FILE = os.path.join(_basedir, 'sqmpy.log')
 
-# Staging options
-STAGING_FOLDER = os.path.join(_basedir, 'staging')
+    # Staging options
+    STAGING_FOLDER = os.path.join(_basedir, 'staging')
 
-# SMTP Configs, uncomment any line to add it
-#TODO Right now only MAIL_SERVER is being read, fix others.
-MAIL_SERVER = 'iwmcas.iwm.fraunhofer.de'
-DEFAULT_MAIL_SENDER = 'sade@iwm.fraunhofer.de'
-#MAIL_SERVER = default 'localhost'
-#MAIL_PORT = 25
-#MAIL_USE_TLS = False
-#MAIL_USE_SSL = False
-#MAIL_DEBUG = app.debug
-#MAIL_USERNAME = 'sade'
-#MAIL_PASSWORD = 'tvhki,tv'
-#DEFAULT_MAIL_SENDER = None
+    # SMTP Configs, uncomment any line to add it
+    #TODO Right now only MAIL_SERVER is being read, fix others.
+    MAIL_SERVER = 'iwmcas.iwm.fraunhofer.de'
+    DEFAULT_MAIL_SENDER = 'sade@iwm.fraunhofer.de'
+
+
+class DevelopmentConfig(Config):
+    """
+    Development configuration
+    """
+    DEBUG = True
+
+
+class ProductionConfig(Config):
+    """
+    Development configuration
+    """

@@ -94,8 +94,7 @@ class StagingFile(db.Model):
         Return string representation for relation value
         :return:
         """
-        return FileRelation(self.relation).name.lower()
-        #FileRelation.tostring(self.relation)
+        return FileRelation(self.relation).name
 
     def __repr__(self):
         return '<File %s>' % self.name

@@ -80,7 +80,7 @@ class JobInputFileHandler(object):
                     f.close()
                     sf = StagingFile()
                     sf.name = file_name
-                    sf.relation = FileRelation.INPUT.value
+                    sf.relation = FileRelation.input.value
                     sf.original_name = file_name
                     sf.checksum = hashlib.md5(open(absolute_name).read()).hexdigest()
                     sf.location = job_dir
@@ -91,6 +91,7 @@ class JobInputFileHandler(object):
 
         # Save script
         if job.user_script not in (None, ''):
+            #TODO: save as python script if the script is in python
             file_name = 'job-{job_id}_script'.format(job_id=job.id)
             absolute_name = os.path.join(job_dir, file_name)
             f = open(absolute_name, 'wb')
@@ -98,7 +99,7 @@ class JobInputFileHandler(object):
             f.close()
             sf = StagingFile()
             sf.name = file_name
-            sf.relation = FileRelation.SCRIPT.value
+            sf.relation = FileRelation.script.value
             sf.checksum = hashlib.md5(open(absolute_name).read()).hexdigest()
             sf.location = job_dir
             sf.parent_id = job.id

@@ -225,7 +225,7 @@ class SagaJobWrapper(object):
         # Copy script and input files to remote host
         script_file = \
             StagingFile.query.filter(StagingFile.parent_id == self._job.id,
-                                     StagingFile.relation == FileRelation.SCRIPT.value).first()
+                                     StagingFile.relation == FileRelation.script.value).first()
         if script_file is None:
             raise JobManagerException('Script could not be empty')
         script_wrapper = \

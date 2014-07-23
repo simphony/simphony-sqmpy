@@ -14,6 +14,8 @@ from flask.ext.admin import Admin
 from flask.ext.sqlalchemy import SQLAlchemy
 from flask.ext.admin.contrib.sqla import ModelView
 
+from . import default_config
+
 __author__ = 'Mehdi Sadeghi'
 
 
@@ -28,10 +30,13 @@ class SqmpyApplication(Flask):
     def __init__(self):
         super(SqmpyApplication, self).__init__(__name__.split('.')[0], static_url_path='')
 
-        # Import config module as configs
-        self.config.from_object('config.DevelopmentConfig')
+        # Import default configs
+        self.config.from_object(default_config)
 
-        # Override from environment variable
+        # Import configs if exists
+        self.config.from_pyfile('config.py', silent=True)
+
+        # Override from environment variable if defined
         self.config.from_envvar('SQMPY_SETTINGS', silent=True)
 
         # Initialize db right after basic initialization
@@ -43,7 +48,6 @@ class SqmpyApplication(Flask):
         CsrfProtect(self)
         self.admin = Admin(self)
 #        self.mail = Mail(self)
-
 
     def _configure_logging(self):
         """
@@ -89,6 +93,10 @@ class SqmpyApplication(Flask):
 
         self.register_blueprint(security_blueprint)
         self.register_blueprint(job_blueprint)
+
+        # If there is no database file, prepare in memory database
+        if self.config.get('SQLALCHEMY_DATABASE_URI') == default_config.SQLALCHEMY_DATABASE_URI:
+            self.db.create_all()
 
 
 def __init_app():

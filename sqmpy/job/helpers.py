@@ -39,9 +39,9 @@ def send_state_change_email(job_id, old_state, new_state):
                                                         new=new_state)
         message = MIMEText(message)
         message['Subject'] = 'Change in job number [{job_id}]'.format(job_id=job_id)
-        message['From'] = 'monitor@sqmpy'
+        message['From'] = app.config.get('DEFAULT_MAIL_SENDER')
         message['To'] = owner_email
-        smtp_server.sendmail('sade@iwm.fraunhofer.de',
+        smtp_server.sendmail(app.config.get('DEFAULT_MAIL_SENDER'),
                              [owner_email],
                              message.as_string())
         smtp_server.quit()
@@ -128,7 +128,7 @@ class JobFileHandler(object):
         job_owner = \
             User.query.filter(User.id == Job.owner_id,
                               Job.id == job_id).first_or_404()
-        job_owner_dir = os.path.join(app.config['STAGING_FOLDER'], job_owner.name)
+        job_owner_dir = os.path.join(app.config.get('STAGING_FOLDER'), job_owner.name)
         if not os.path.exists(job_owner_dir):
             os.makedirs(job_owner_dir)
         job_dir = os.path.join(job_owner_dir, str(job_id))

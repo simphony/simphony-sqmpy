@@ -8,4 +8,3 @@ Flask-CSRF==0.9.2
 enum34==1.0
 saga-python==0.16
 py-bcrypt==0.4
-

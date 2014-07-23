@@ -33,6 +33,7 @@ def send_state_change_email(job_id, old_state, new_state):
 
     try:
         smtp_server = smtplib.SMTP(app.config.get('MAIL_SERVER'))
+        # TODO: Add download links for each output file to message.
         message = \
             'Status changed from {old} to {new}'.format(old=old_state,
                                                         new=new_state)
@@ -48,7 +49,7 @@ def send_state_change_email(job_id, old_state, new_state):
         app.logger.debug("Callback: Failed to send mail: %s" % ex)
 
 
-class JobInputFileHandler(object):
+class JobFileHandler(object):
     """
     To save input files of the job in appropriate folders and insert records for them.
     """
@@ -62,7 +63,7 @@ class JobInputFileHandler(object):
         :return:
         """
         # Get or create job directory
-        job_dir = JobInputFileHandler._get_job_file_directory(job.id)
+        job_dir = JobFileHandler.get_job_file_directory(job.id)
 
         # Save staging data before running the job
         # Input files will be moved under a new folder with this structure:
@@ -115,18 +116,26 @@ class JobInputFileHandler(object):
         db.session.commit()
 
     @staticmethod
-    def _get_job_file_directory(job_id):
+    def get_job_file_directory(job_id, make_sftp_url=False):
         """
         Returns the directory which contains job files
+
         :param job_id:
-        :return:
+        :param make_sftp_url: return as sftp address
+        :return: file system path
+        :rtype : str
         """
-        user_dir = os.path.join(app.config['STAGING_FOLDER'], current_user.name)
-        if not os.path.exists(user_dir):
-            os.makedirs(user_dir)
-        job_dir = os.path.join(user_dir, str(job_id))
+        job_owner = \
+            User.query.filter(User.id == Job.owner_id,
+                              Job.id == job_id).first_or_404()
+        job_owner_dir = os.path.join(app.config['STAGING_FOLDER'], job_owner.name)
+        if not os.path.exists(job_owner_dir):
+            os.makedirs(job_owner_dir)
+        job_dir = os.path.join(job_owner_dir, str(job_id))
         if not os.path.exists(job_dir):
             os.makedirs(job_dir)
+        if make_sftp_url:
+            job_dir = 'sftp://localhost{job_dir}'.format(job_dir=job_dir)
         return job_dir
 
     @staticmethod
@@ -142,5 +151,5 @@ class JobInputFileHandler(object):
             raise JobNotFoundException('Job number %s does not exist.' % job_id)
         for f in job.files:
             if f.name == file_name:
-                return JobInputFileHandler._get_job_file_directory(job.id)
+                return JobFileHandler.get_job_file_directory(job.id)
         raise FileNotFoundException('Job number %s does not have any file called %s' % (job_id, file_name))

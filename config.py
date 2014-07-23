@@ -60,3 +60,4 @@ class ProductionConfig(Config):
     """
     Development configuration
     """
+    SECRET_KEY = '\x94\xb2\xf2</6\xd7+Op\xc5\x97v)\x83\xda\xff)\xd0UD\xd4NB'

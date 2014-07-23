@@ -11,9 +11,9 @@ from flask.ext.login import current_user
 from sqmpy import db
 from sqmpy.core import SQMComponent
 from sqmpy.job.exceptions import JobManagerException
-from sqmpy.job.helpers import JobInputFileHandler
+from sqmpy.job.helpers import JobFileHandler
 from sqmpy.job.models import Job
-from sqmpy.job.constants import JOB_MANAGER, JobStatus
+from sqmpy.job.constants import JOB_MANAGER, JobStatus, ScriptType
 from sqmpy.job.saga_helper import SagaJobWrapper
 
 __author__ = 'Mehdi Sadeghi'
@@ -50,7 +50,7 @@ class JobManager(SQMComponent):
             raise JobManagerException("Resource is not defined.")
 
         if script in (None, ''):
-            raise JobManagerException("Script is not valid.")
+            raise JobManagerException('Script could not be empty')
 
         # Store the job
         job = Job()
@@ -59,6 +59,13 @@ class JobManager(SQMComponent):
         job.last_status = JobStatus.INIT
         job.owner_id = current_user.id
         job.user_script = script
+        # TODO: Hook to proper script handler, see issue #13 on github
+        try:
+            # Control if the script_type is known by system, otherwise throw error.
+            ScriptType(script_type)
+        except ValueError:
+            # TODO: May be we could try to guess script type before throwing an error?
+            raise JobManagerException('Script type {script_type} is not known'.format(script_type=script_type))
         job.script_type = script_type
         job.resource_id = resource_id
         job.description = description
@@ -70,7 +77,7 @@ class JobManager(SQMComponent):
         # Input files will be moved under a new folder with this structure:
         #   <staging_dir>/<username>/<job_id>/
         # This will also save script file in the mentioned job folder as `job-[JOB_ID]_script'
-        JobInputFileHandler.save_input_files(job, input_files, script)
+        JobFileHandler.save_input_files(job, input_files, script)
 
         # Create saga wrapper
         saga_wrapper = SagaJobWrapper(job)
@@ -133,4 +140,4 @@ class JobManager(SQMComponent):
         :param file_name:
         :return:
         """
-        return JobInputFileHandler.get_file_location(job_id, file_name)
+        return JobFileHandler.get_file_location(job_id, file_name)

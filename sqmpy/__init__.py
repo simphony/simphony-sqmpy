@@ -34,7 +34,7 @@ class SqmpyApplication(Flask):
         self.config.from_object(default_config)
 
         # Import developer configs if exist
-        self.config.from_object('config')
+        self.config.from_pyfile('config', silent=True)
 
         # Import configs if exists
         self.config.from_pyfile('config.py', silent=True)
@@ -56,17 +56,24 @@ class SqmpyApplication(Flask):
         """
         Logging settings
         """
-        # Setup logging.
         import logging
-        from logging import Formatter
-        from logging.handlers import RotatingFileHandler
-        file_handler = RotatingFileHandler(self.config.get('LOG_FILE'))
-        file_handler.setLevel(logging.DEBUG)
-        file_handler.setFormatter(Formatter(
-            '%(asctime)s %(levelname)s: %(message)s '
-            '[in %(pathname)s:%(lineno)d]'
-        ))
-        self.logger.addHandler(file_handler)
+        import sys
+        handler = None
+        if not self.config.get('LOG_FILE'):
+            handler = logging.StreamHandler(sys.stdout)
+            handler.setLevel(logging.DEBUG)
+            formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+            handler.setFormatter(formatter)
+        else:
+            # Setup logging.
+            from logging.handlers import RotatingFileHandler
+            handler = RotatingFileHandler(self.config.get('LOG_FILE'))
+            handler.setLevel(logging.DEBUG)
+            handler.setFormatter(logging.Formatter(
+                '%(asctime)s %(levelname)s: %(message)s '
+                '[in %(pathname)s:%(lineno)d]'
+            ))
+        self.logger.addHandler(handler)
 
     def register_admin_views(self):
         """

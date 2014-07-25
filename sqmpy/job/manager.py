@@ -7,12 +7,13 @@
 import datetime
 
 from flask.ext.login import current_user
+from saga.exceptions import BadParameter
 
 from sqmpy import db
 from sqmpy.core import SQMComponent
 from sqmpy.job.exceptions import JobManagerException
 from sqmpy.job.helpers import JobFileHandler
-from sqmpy.job.models import Job
+from sqmpy.job.models import Job, Resource
 from sqmpy.job.constants import JOB_MANAGER, JobStatus, ScriptType
 from sqmpy.job.saga_helper import SagaJobWrapper
 
@@ -30,12 +31,12 @@ class JobManager(SQMComponent):
         # Wrapper objects contain the job itself along with related saga objects.
         self.__jobs = {}
 
-    def submit_job(self, name, resource_id, script, script_type, input_files=None, description=None, **kwargs):
+    def submit_job(self, name, resource_url, script, script_type, input_files=None, description=None, **kwargs):
         """
         Submit a new job along with its input files. Input files will be moved under
             a new folder with this structure: <staging_dir>/<username>/<job_id>/input_files/
         :param name: job name
-        :param resource_id: resource to submit job there
+        :param resource_url: resource to submit job there
         :param script_type: integer type of the script according to ScriptType enum
         :param script: user script
         :param input_files: a list of <filename, file_stream> for each given file.
@@ -46,7 +47,7 @@ class JobManager(SQMComponent):
         if name is None:
             raise JobManagerException("Job name is not defined.")
 
-        if resource_id is None:
+        if resource_url in (None, ''):
             raise JobManagerException("Resource is not defined.")
 
         if script in (None, ''):
@@ -67,9 +68,14 @@ class JobManager(SQMComponent):
             # TODO: May be we could try to guess script type before throwing an error?
             raise JobManagerException('Script type {script_type} is not known'.format(script_type=script_type))
         job.script_type = script_type
-        job.resource_id = resource_id
-        job.description = description
 
+        # Insert a new record for url if it does not exist already
+        resource = Resource.query.filter(Resource.url == resource_url).first()
+        if not resource:
+            resource = Resource(resource_url, resource_url)
+            db.session.add(resource)
+        job.resource_id = resource.id
+        job.description = description
         db.session.add(job)
         db.session.commit()
 
@@ -79,18 +85,15 @@ class JobManager(SQMComponent):
         # This will also save script file in the mentioned job folder as `job-[JOB_ID]_script'
         JobFileHandler.save_input_files(job, input_files, script)
 
+        #TODO: I should find a way to either save state or not to save state when error happen.
         # Create saga wrapper
         saga_wrapper = SagaJobWrapper(job)
-
         # Add job to self
         self.__jobs[job.id] = saga_wrapper
-
         # Run the saga job
         saga_wrapper.run()
-
         # Submit the job to the queue
-#        self._run(job)
-
+        #self._run(job)
         return job.id
 
     # def _run(self, job):

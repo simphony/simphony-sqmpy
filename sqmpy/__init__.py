@@ -33,6 +33,9 @@ class SqmpyApplication(Flask):
         # Import default configs
         self.config.from_object(default_config)
 
+        # Import developer configs if exist
+        self.config.from_object('config')
+
         # Import configs if exists
         self.config.from_pyfile('config.py', silent=True)
 

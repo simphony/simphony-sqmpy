@@ -76,7 +76,7 @@ def submit(job_id=None):
         pass
 
     form = JobSubmissionForm()
-    form.resource.choices = [(h.id, h.url) for h in Resource.query.all()]
+    form.resource.choices = [(h.url, h.name) for h in Resource.query.all()]
 
     if request.method == 'POST' and form.validate():
         f = request.files['input_file']
@@ -93,10 +93,14 @@ def submit(job_id=None):
         if form.script.data is not None:
             script = form.script.data.replace('\r\n', '\n')
 
+        # Check if user has filled `new_resource' field
+        resource_url = form.resource.data
+        # if form.new_resource.data not in (None, ''):
+        #     resource_url = form.new_resource.data
         # Submit the job
         job_id = \
             job_services.submit_job(form.name.data,
-                                    form.resource.data,
+                                    resource_url,
                                     script,
                                     form.script_type.data,
                                     input_files,

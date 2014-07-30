@@ -4,9 +4,7 @@
     This module contains configuration keys for the application.
     See http://flask.pocoo.org/docs/config/ for more information.
 """
-import os
 import tempfile
-#_basedir = os.path.abspath(os.path.dirname(__file__))
 
 
 DEBUG = False
@@ -31,9 +29,8 @@ RECAPTCHA_PUBLIC_KEY = '6LeYIbsSAAAAACRPIllxA7wvXjIE411PfdB2gt2J'
 RECAPTCHA_PRIVATE_KEY = '6LeYIbsSAAAAAJezaIq3Ft_hSTo0YtyeFG-JgRtu'
 RECAPTCHA_OPTIONS = {'theme': 'white'}
 
-
 # Logging options
-LOG_FILE = None#os.path.join(_basedir, 'sqmpy.log')
+LOG_FILE = None
 
 # Staging options
 STAGING_FOLDER = tempfile.gettempdir()
@@ -42,4 +39,5 @@ STAGING_FOLDER = tempfile.gettempdir()
 MAIL_SERVER = 'localhost'
 DEFAULT_MAIL_SENDER = 'monitor@sqmpy'
 
+# Number of results to show at each page
 PER_PAGE = 20

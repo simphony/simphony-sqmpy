@@ -33,10 +33,13 @@ class SqmpyApplication(Flask):
         # Import default configs
         self.config.from_object(default_config)
 
-        # Import developer configs if exist
-        self.config.from_pyfile('config', silent=True)
+        # Import config module if exist
+        try:
+            self.config.from_object('config')
+        except ImportError:
+            pass
 
-        # Import configs if exists
+        # Import config file if exists
         self.config.from_pyfile('config.py', silent=True)
 
         # Override from environment variable if defined

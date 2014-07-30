@@ -70,50 +70,36 @@ class JobManager(SQMComponent):
         job.script_type = script_type
 
         # Insert a new record for url if it does not exist already
-        resource = Resource.query.filter(Resource.url == resource_url).first()
-        if not resource:
-            resource = Resource(resource_url, resource_url)
-            db.session.add(resource)
-        job.resource_id = resource.id
-        job.description = description
-        db.session.add(job)
+        #db.session.begin()
+        try:
+            resource = Resource.query.filter(Resource.url == resource_url).first()
+            if not resource:
+                resource = Resource(resource_url, resource_url)
+                db.session.add(resource)
+                db.session.flush()
+            job.resource_id = resource.id
+            job.description = description
+            db.session.add(job)
+            db.session.flush()
+
+            # Save staging data before running the job
+            # Input files will be moved under a new folder with this structure:
+            #   <staging_dir>/<username>/<job_id>/
+            # This will also save script file in the mentioned job folder as `job-[JOB_ID]_script'
+            JobFileHandler.save_input_files(job, input_files, script)
+
+            #TODO: I should find a way to either save state or not to save state when error happen.
+            # Create saga wrapper
+            saga_wrapper = SagaJobWrapper(job)
+            # Keep the created job
+            self.__jobs[job.id] = saga_wrapper
+            # Run the saga job
+            saga_wrapper.run()
+        except:
+            db.session.rollback()
+            raise
         db.session.commit()
-
-        # Save staging data before running the job
-        # Input files will be moved under a new folder with this structure:
-        #   <staging_dir>/<username>/<job_id>/
-        # This will also save script file in the mentioned job folder as `job-[JOB_ID]_script'
-        JobFileHandler.save_input_files(job, input_files, script)
-
-        #TODO: I should find a way to either save state or not to save state when error happen.
-        # Create saga wrapper
-        saga_wrapper = SagaJobWrapper(job)
-        # Add job to self
-        self.__jobs[job.id] = saga_wrapper
-        # Run the saga job
-        saga_wrapper.run()
-        # Submit the job to the queue
-        #self._run(job)
         return job.id
-
-    # def _run(self, job):
-    #     """
-    #     Run the given job on it's resource
-    #     :param job: job instance
-    #     :return: None
-    #     """
-    #     assert isinstance(job, Job)
-    #
-    #     # Use SAGA to submit the job
-    #     try:
-    #         # Get saga wrapper
-    #         saga_wrapper = self.__jobs[job.id]
-    #
-    #         # Run the saga job
-    #         saga_wrapper.run()
-    #
-    #     except saga.SagaException, ex:
-    #         raise JobManagerException(ex.message)
 
     def get_job(self, job_id, *args, **kwargs):
         """

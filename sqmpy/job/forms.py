@@ -30,7 +30,7 @@ class JobSubmissionForm(Form):
     script = TextAreaField('Script', [validators.Required()])
     input_file = FileField('Input file', [validators.Optional()])
     # choices will be filled at runtime
-    resource = SelectField('Existing Resource', [validators.Required()], coerce=str)
+    resource = SelectField('Existing Resource', [validators.Optional()], coerce=str)
     new_resource = StringField('New Resources URL', [validators.Optional()])
     description = TextAreaField('Description', [validators.Optional()])
     #url = URLField(validators=[validators.url()])

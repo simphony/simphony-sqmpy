@@ -112,8 +112,8 @@ class JobFileHandler(object):
             sf.parent_id = job.id
             db.session.add(sf)
 
-        # Commit db session
-        db.session.commit()
+        # Flush db session
+        #db.session.flush()
 
     @staticmethod
     def get_job_file_directory(job_id, make_sftp_url=False):

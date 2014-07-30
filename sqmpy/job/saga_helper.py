@@ -31,6 +31,7 @@ class SagaJobWrapper(object):
         :param job: an instance of job model class
         :return:
         """
+        self._job_id = job.id
         self._job = job
         self._security_context = None
         self._session = None
@@ -158,6 +159,10 @@ class SagaJobWrapper(object):
         Copies output and error files along with any other output files back to server.
         :return:
         """
+        # Check if object is bound to session
+        # TODO: temporary, maybe i should make all this static to avoid problems
+        self._job = Job.query.get(self._job.id)
+
         # Get or create job directory
         local_job_dir = JobFileHandler.get_job_file_directory(self._job.id)
         local_job_dir_sftp = JobFileHandler.get_job_file_directory(self._job.id, make_sftp_url=True)
@@ -256,7 +261,7 @@ class JobStateChangeMonitor(threading.Thread):
     """
     A timer thread to check job status changes.
     """
-    def __init__(self, job_id, saga_job, job_wrapper):
+    def __init__(self, job_id, saga_job, job_wrapper, db_session=None):
         """
         Initialize the time and job instance
         :param job_id: sqmpy job id
@@ -268,6 +273,7 @@ class JobStateChangeMonitor(threading.Thread):
         self._job_id = job_id
         self._job_wrapper = job_wrapper
         self._logger = app.logger
+        self._db_session = db_session
 
     def run(self):
         """
@@ -294,6 +300,7 @@ class JobStateChangeMonitor(threading.Thread):
                 if job.last_status != new_state:
                     send_state_change_email(self._job_id, job.last_status, new_state)
                     job.last_status = new_state
+                    #TODO: Which session this really is?
                     db.session.commit()
 
                 # If there are new files, transfer them back, along with output and error files

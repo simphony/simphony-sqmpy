@@ -95,8 +95,8 @@ def submit(job_id=None):
 
         # Check if user has filled `new_resource' field
         resource_url = form.resource.data
-        # if form.new_resource.data not in (None, ''):
-        #     resource_url = form.new_resource.data
+        if form.new_resource.data not in (None, ''):
+            resource_url = form.new_resource.data
         # Submit the job
         job_id = \
             job_services.submit_job(form.name.data,

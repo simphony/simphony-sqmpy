@@ -19,6 +19,20 @@ Sqmpy has a few dependencies which will be installed while installing with _pyth
 * py-bcrypt
 
 ## Installation
+I suggest to install a virtaul environment to try sqmpy or if you want to run it on your local machine. If you have
+virtual-env installed then:
+   
+    $ virtual-env --no-site-packages sqmpy-env
+    $ . sqmpy-env/bin/activate
+    
+If you don't have virutal-env on your machine then try to download it. **Please be aware that this is outdated since new versions of virtualenv do not download and install pip and setuptools for security reasons**:
+
+    $ wget https://raw.githubusercontent.com/pypa/virtualenv/1.9.X/virtualenv.py
+    $ python virtualenv.py --no-site-packages sqmpy-env
+    $ . sqmpy-env/bin/activate
+    
+
+    
 To install sqmpy from pypi:
 
     pip install sqmpy

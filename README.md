@@ -3,7 +3,8 @@ Simple Queue Manager
 
  sqmpy stands for simple queue manager written in python and is a web application which is based on Flask miroframework
  and SAGA-Python distributed computing access layer.
- Sqmpy lets user to submit simple python or shell scripts on remote machines. Then user can monitor the running job in job detail page. The notification system will send emails after status changes to the user.
+ Sqmpy lets user to submit simple python or shell scripts on remote machines. Then user can monitor the running job in job detail page. The notification system will send emails after status changes to the user. Moreover sqmpy lets user
+ to have a history of previous jobs and all files related to those jobs.
 
 ## Dependencies
 Sqmpy has a few dependencies which will be installed while installing with _python setup_ or _pip_:
@@ -33,6 +34,10 @@ There are a few settings which sqmpy can read from a configuration file. There i
 
     export SQMPY_CONFIG = /path/to/config/file/config.py
     python run.py
+
+### Run With No Configuration
+In this case sqmpy will user in-memory sqlite db, logging to stdout, and a temp folder for staging files. State
+will lost after restarting the application.
 
 ## Using Sqmpy
 Sqmpy is a flask web application therefor it runs like any other flask applications. Put the following code in apython file called run.py and run it:

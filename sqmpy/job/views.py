@@ -45,7 +45,7 @@ def list_jobs(page):
     Show list of jobs for current user
     :return:
     """
-    pagination = Job.query.paginate(page, PER_PAGE)
+    pagination = job_services.list_jobs(page=page)
     return render_template('job/job_list.html',
                            pagination=pagination,
                            jobs=pagination.items)

@@ -10,11 +10,12 @@ from sqmpy.job.constants import JOB_MANAGER
 __author__ = 'Mehdi Sadeghi'
 
 
-def list_jobs():
+def list_jobs(page=None):
     """
     List current jobs
+    :param page: page number
     """
-    return core_services.get_component(JOB_MANAGER).list_jobs()
+    return core_services.get_component(JOB_MANAGER).list_jobs(page=page)
 
 
 def submit_job(name, resource_url, script, script_type, input_files=None, description=None, **kwargs):

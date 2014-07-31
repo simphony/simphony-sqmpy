@@ -9,7 +9,7 @@ import datetime
 from flask.ext.login import current_user
 from saga.exceptions import BadParameter
 
-from sqmpy import db
+from sqmpy import app, db
 from sqmpy.core import SQMComponent
 from sqmpy.job.exceptions import JobManagerException
 from sqmpy.job.helpers import JobFileHandler
@@ -111,16 +111,15 @@ class JobManager(SQMComponent):
             raise JobManagerException("Job not found.")
         return Job.query.get(job_id)
 
-    def list_jobs(self, *args, **kwargs):
+    def list_jobs(self, page=None, **kwargs):
         """
         List submitted jobs.
-        :return: jobs iterator
+        :param page: page number
+        :return: job pagination
         """
-        user_jobs = {}
-        for job in Job.query.filter(Job.owner_id == current_user.id):
-            user_jobs[job.id] = job
+        query = Job.query.filter(Job.owner_id == current_user.id).order_by(Job.submit_date.desc())
 
-        return user_jobs
+        return query.paginate(page, app.config['PER_PAGE'])
 
     def get_file_location(self, job_id, file_name):
         """

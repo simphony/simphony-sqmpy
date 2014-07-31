@@ -1,3 +1,4 @@
+====================
 Simple Queue Manager
 ====================
 
@@ -25,12 +26,16 @@ Installation
 ------------
 I suggest to install a virtaul environment to try sqmpy or if you want to run it on your local machine. If you have
 virtual-env installed then:
-   
+
+::
+
     $ virtual-env --no-site-packages sqmpy-env
     $ . sqmpy-env/bin/activate
     
 If you don't have virutal-env on your machine then try to download it. **Please be aware that this is outdated
 since new versions of virtualenv do not download and install pip and setuptools for security reasons**:
+
+::
 
     $ wget https://raw.githubusercontent.com/pypa/virtualenv/1.9.X/virtualenv.py
     $ python virtualenv.py --no-site-packages sqmpy-env
@@ -38,9 +43,13 @@ since new versions of virtualenv do not download and install pip and setuptools 
     
 To install sqmpy from pypi:
 
+::
+
     $ pip install sqmpy
     
 To install from git:
+
+::
 
     $ git clone git://github.com/mehdix/simple-queue-manager.git
     $ cd simple-queue-manager
@@ -51,6 +60,8 @@ Configuration
 There are a few settings which sqmpy can read from a configuration file. There is a *default_config* python module
 in sqmpy package that contains default configuration values. The same configurations can be read from a user defined
 config file via **SQMPY_CONFIG** environment variable:
+
+::
 
     $ export SQMPY_CONFIG = /path/to/config/file/config.py
     $ python run.py
@@ -64,6 +75,8 @@ Using Sqmpy
 -----------
 Sqmpy is a flask web application therefor it runs like any other flask applications. Put the following code in
 apython file called run.py and run it:
+
+::
 
     from sqmpy import app
     app.run('0.0.0.0', port=5001, debug=True)

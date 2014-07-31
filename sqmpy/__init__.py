@@ -17,7 +17,7 @@ from flask.ext.admin.contrib.sqla import ModelView
 from . import default_config
 
 __author__ = 'Mehdi Sadeghi'
-
+__version__ = 'v1.0.0-alpha.4'
 
 app = None
 db = None

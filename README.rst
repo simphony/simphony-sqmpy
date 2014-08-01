@@ -4,13 +4,13 @@ Simple Queue Manager
 
 sqmpy stands for simple queue manager written in python and is a web application which is based on Flask miroframework
 and SAGA-Python distributed computing access layer.
-Sqmpy lets user to submit simple python or shell scripts on remote machines. Then user can monitor the running job in
+sqmpy lets user to submit simple python or shell scripts on remote machines. Then user can monitor the running job in
 job detail page. The notification system will send emails after status changes to the user. Moreover sqmpy lets user
 to have a history of previous jobs and all files related to those jobs.
 
 Dependencies
 ------------
-Sqmpy has a few dependencies which will be installed while installing with *python setup* or *pip*:
+sqmpy has a few dependencies which will be installed while installing with *python setup* or *pip*:
 
 - SAGA-python
 - Flask
@@ -85,9 +85,9 @@ Run With No Configuration
 In this case sqmpy will user in-memory sqlite db, logging to stdout, and a temp folder for staging files. State
 will lost after restarting the application.
 
-Using Sqmpy
+Using sqmpy
 -----------
-Sqmpy is a flask web application therefor it runs like any other flask applications. Put the following code in
+sqmpy is a flask web application therefor it runs like any other flask applications. Put the following code in
 apython file called run.py and run it:
 
 ::
@@ -97,10 +97,10 @@ apython file called run.py and run it:
     
 About Files and Folders, Local or Remote
 ----------------------------------------
-Sqmpy will create a *sqmpy.log* and *sqmpy.db* and a staging folder called *staging*. The path to these files are
+sqmpy will create a *sqmpy.log* and *sqmpy.db* and a staging folder called *staging*. The path to these files are
 being read from config values: ``LOG_FILE``, ``SQLALCHEMY_DATABASE_URI`` and ``STAGING_FOLDER``.
 Staginf folder will contain uploaded files and script files created by sqmpy. Moreover on remote machiens
-Sqmpy will create another folder called *sqmpy* in user home directory and will upload files there before 
+sqmpy will create another folder called *sqmpy* in user home directory and will upload files there before
 running tasks. For each job one folder will be created and will be set as job working directory. This folder
 will contain input and output files as well as script file and any other files being produced or consumed by
 the remote job.

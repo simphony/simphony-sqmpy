@@ -125,6 +125,9 @@ def __init_app():
     app.load_blueprints()
     app.register_admin_views()
 
+    # After loading blueprints create db structure if not exists yet
+    app.db.create_all()
+
     from sqmpy.core import core_services
     from sqmpy.job.manager import JobManager
     from sqmpy.security.manager import SecurityManager

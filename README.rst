@@ -40,13 +40,7 @@ since new versions of virtualenv do not download and install pip and setuptools 
     $ wget https://raw.githubusercontent.com/pypa/virtualenv/1.9.X/virtualenv.py
     $ python virtualenv.py --no-site-packages sqmpy-env
     $ . sqmpy-env/bin/activate
-    
-To install sqmpy from pypi:
 
-::
-
-    $ pip install sqmpy
-    
 To install from git:
 
 ::
@@ -54,7 +48,27 @@ To install from git:
     $ git clone git://github.com/mehdix/simple-queue-manager.git
     $ cd simple-queue-manager
     $ python setup install
-    
+
+If you clone from github then you can easily install the requirements with pip and then run the program directly:
+
+::
+
+    $ git clone git://github.com/mehdix/simple-queue-manager.git
+    $ cd simple-queue-manager
+    $ pip install -r requirements.txt
+    $ python run.py
+
+**Make sure to change values inside config.py before running the program**
+
+To install sqmpy from pypi:
+
+::
+
+    $ pip install sqmpy
+
+Please remeber that installing from pypi will only install sqmpy package without config, database and run file. You have
+to make them yourself for now.
+
 Configuration
 -------------
 There are a few settings which sqmpy can read from a configuration file. There is a *default_config* python module

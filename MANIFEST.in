@@ -1,7 +1,2 @@
 recursive-include sqmpy/templates *
 recursive-include sqmpy/static *
-include run.py
-include config.py
-include LICENSE
-include README.md
-include sqmpy.db

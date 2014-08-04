@@ -7,11 +7,13 @@
 from flask import request, session, g, redirect, url_for, abort, \
     render_template, flash, send_from_directory
 from flask.ext.login import login_required, current_user
+from flask.ext.csrf import csrf_exempt
 
 from werkzeug import secure_filename
 
 from sqmpy import app
 from sqmpy.job import job_blueprint
+from sqmpy.job.constants import FileRelation
 from sqmpy.job.exceptions import JobNotFoundException, FileNotFoundException
 from sqmpy.job.forms import JobSubmissionForm
 from sqmpy.job.models import Job, Resource
@@ -29,6 +31,7 @@ def index():
     :return:
     """
     return redirect(url_for('sqmpy.job.list_jobs'))
+
 
 def url_for_other_page(page):
     args = request.view_args.copy()
@@ -64,34 +67,35 @@ def detail(job_id):
     return render_template('job/job_detail.html', job=job)
 
 
+@csrf_exempt
 @job_blueprint.route('/job/submit', methods=['GET', 'POST'])
-#@job_blueprint.route('/job/submit/<job_id>', methods=['GET'])
 @login_required
 def submit(job_id=None):
     """
     Submit a single job into the selected machine or queue
     :return:
     """
-    if job_id is not None:
-        pass
-
     form = JobSubmissionForm()
     form.resource.choices = [(h.url, h.name) for h in Resource.query.all()]
-
+    uploaded_files = []
     if request.method == 'POST' and form.validate():
-        f = request.files['input_file']
-        input_files = None
-        if f:
+        for f in request.files.getlist('input_files'):
             # Remove unsupported characters from filename
             safe_filename = secure_filename(f.filename)
             # Save file to upload folder under user's username
-            input_files = [(safe_filename, f.stream)]
-            #raise Exception('for fun')
+            uploaded_files.append((safe_filename, f.stream, FileRelation.input))
 
         # Correct line endings before sending the script content
-        script = ''
-        if form.script.data is not None:
-            script = form.script.data.replace('\r\n', '\n')
+        # script = ''
+        # if form.script.data is not None:
+        #     script = form.script.data.replace('\r\n', '\n')
+
+        # Read script file
+        script_safe_filename = secure_filename(request.files.get('script_file').filename)
+        script_file = (script_safe_filename,
+                       request.files.get('script_file').stream,
+                       FileRelation.script)
+        uploaded_files.append(script_file)
 
         # Check if user has filled `new_resource' field
         resource_url = form.resource.data
@@ -101,9 +105,7 @@ def submit(job_id=None):
         job_id = \
             job_services.submit_job(form.name.data,
                                     resource_url,
-                                    script,
-                                    form.script_type.data,
-                                    input_files,
+                                    uploaded_files,
                                     form.description.data)
         # Redirect to list
         return redirect(url_for('.detail', job_id=job_id))

@@ -9,8 +9,7 @@ import os
 import hashlib
 import smtplib
 from email.mime.text import MIMEText
-
-from flask.ext.login import current_user
+from shutil import copyfileobj
 
 from sqmpy import app, db
 from sqmpy.security.models import User
@@ -55,66 +54,79 @@ class JobFileHandler(object):
     To save input files of the job in appropriate folders and insert records for them.
     """
     @staticmethod
-    def save_input_files(job, input_files, script):
+    def make_staging_file_entry(job_id, job_dir, relation, file_name, file_contents, is_buffer=True):
+        """
+        Create an staging file entity
+        :param job_id: job id
+        :param job_dir: job directory
+        :param relation: type of given file, input, error or script
+        :param file_name: file name
+        :param file_contents: either a buffer or
+        :param is_buffer: is the file_content a buffer or text contents
+        :return:
+        """
+        absolute_name = os.path.join(job_dir, file_name)
+        f = open(absolute_name, 'wb')
+        if is_buffer:
+            # Copy file buffer into destination
+            copyfileobj(file_contents, f, 16384)
+        else:
+            f.write(file_contents)
+        f.close()
+        sf = StagingFile()
+        sf.name = file_name
+        sf.relation = relation
+        sf.original_name = file_name
+        sf.checksum = hashlib.md5(open(absolute_name).read()).hexdigest()
+        sf.location = job_dir
+        sf.parent_id = job_id
+
+        return sf
+
+    @staticmethod
+    def save_input_files(job, uploaded_files):
         """
         Saves input files of the given job in appropriate folders
         :param job:
-        :param input_files: list of (file_name, file_buffer)
-        :param script: given script to be run on remote machines
+        :param uploaded_files: list of (file_name, file_buffer, relation)
         :return:
         """
+        files_to_add = []
+
         # Get or create job directory
         job_dir = JobFileHandler.get_job_file_directory(job.id)
 
         # Save staging data before running the job
         # Input files will be moved under a new folder with this structure:
         #   <staging_dir>/<username>/<job_id>/input_files/
-        if input_files is not None:
-            for file_name, file_buffer in input_files:
-                if file_name is not None and file_buffer is not None:
-                    #file_uuid = str(uuid.uuid4())
-                    #absolute_name = os.path.join(job_dir, file_uuid)
-                    absolute_name = os.path.join(job_dir, file_name)
-                    f = open(absolute_name, 'wb')
-                    # Copy file buffer into destination
-                    from shutil import copyfileobj
-                    copyfileobj(file_buffer, f, 16384)
-                    f.close()
-                    sf = StagingFile()
-                    sf.name = file_name
-                    sf.relation = FileRelation.input.value
-                    sf.original_name = file_name
-                    sf.checksum = hashlib.md5(open(absolute_name).read()).hexdigest()
-                    sf.location = job_dir
-                    sf.parent_id = job.id
-                    db.session.add(sf)
-                else:
-                    raise JobManagerException("Invalid file name or path")
+        script_file = None
+        for file_name, file_buffer, relation in uploaded_files:
+            if file_name is not None and file_buffer is not None and relation is not None:
+                if relation == FileRelation.script:
+                    import copy
+                    script_filename = file_name
+                    script_file_buffer = copy.copy(file_buffer)
+                files_to_add.append((relation.value, file_name, file_buffer, True))
+            else:
+                raise JobManagerException("Invalid file name or path")
 
-        # Save script
-        if job.user_script not in (None, ''):
-            # Save as python script if the script is in python or shell script if it is shell
-            script_extension = ''
-            if job.script_type == ScriptType.python.value:
-                script_extension = '.py'
-            if job.script_type == ScriptType.shell.value:
-                script_extension = '.sh'
-            file_name = 'job-{job_id}_script{extension}'.format(job_id=job.id,
-                                                                extension=script_extension)
-            absolute_name = os.path.join(job_dir, file_name)
-            f = open(absolute_name, 'wb')
-            f.write(script)
-            f.close()
-            sf = StagingFile()
-            sf.name = file_name
-            sf.relation = FileRelation.script.value
-            sf.checksum = hashlib.md5(open(absolute_name).read()).hexdigest()
-            sf.location = job_dir
-            sf.parent_id = job.id
+        # fill job.script
+        job.user_script = script_file_buffer.getvalue()
+        if script_filename.endswith('.py'):
+            job.script_type = ScriptType.python.value
+        if script_filename.endswith('sh'):
+            job.script_type = ScriptType.shell.value
+
+        # Finally add all files
+        for relation, file_name, file_content, is_buffer in files_to_add:
+            sf = JobFileHandler.make_staging_file_entry(job.id,
+                                                        job_dir,
+                                                        relation,
+                                                        file_name,
+                                                        file_content,
+                                                        is_buffer=is_buffer)
             db.session.add(sf)
-
-        # Flush db session
-        #db.session.flush()
+        db.session.flush()
 
     @staticmethod
     def get_job_file_directory(job_id, make_sftp_url=False):

@@ -70,7 +70,6 @@ class JobManager(SQMComponent):
         job.script_type = script_type
 
         # Insert a new record for url if it does not exist already
-        #db.session.begin()
         try:
             resource = Resource.query.filter(Resource.url == resource_url).first()
             if not resource:
@@ -109,7 +108,7 @@ class JobManager(SQMComponent):
         job = Job.query.get(job_id)
         if not job:
             raise JobManagerException("Job not found.")
-        return Job.query.get(job_id)
+        return job
 
     def list_jobs(self, page=None, **kwargs):
         """

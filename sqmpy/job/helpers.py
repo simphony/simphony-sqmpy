@@ -21,15 +21,16 @@ from sqmpy.job.constants import FileRelation, ScriptType
 __author__ = 'Mehdi Sadeghi'
 
 
-def send_state_change_email(job_id, old_state, new_state):
+def send_state_change_email(job_id, owner_id, old_state, new_state):
     """
     A simple helper class to send smtp email for job state change
     :param job_id: Job id in database
+    :param owner_id: job's owner id
     :param old_state:
     :param new_state:
     :return:
     """
-    owner_email = db.session.query(User.email).filter(User.id == Job.owner_id, Job.id == job_id).one()[0]
+    owner_email, = db.session.query(User.email).filter(User.id == owner_id).one()
 
     try:
         smtp_server = smtplib.SMTP(app.config.get('MAIL_SERVER'))

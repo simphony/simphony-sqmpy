@@ -1,6 +1,13 @@
 body {
   padding-top: 50px;
 }
+
+textarea {
+  width: 400px;
+  height: 100px;
+  overflow: scroll;
+}
+
 .starter-template {
   padding: 40px 15px;
   text-align: left;

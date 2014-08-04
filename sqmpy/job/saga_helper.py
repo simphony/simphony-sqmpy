@@ -176,6 +176,7 @@ class SagaJobWrapper(object):
         """
         return self._session
 
+    #todo: change name to download and the variable to ignore and upload
     @staticmethod
     def move_files_back(job_id, job_description, session):
         """
@@ -213,7 +214,9 @@ class SagaJobWrapper(object):
 
         for file_url, relation in staging_files:
             # Copy physical file to local directory
+            #TODO: Send notification with download links
             remote_dir.copy(file_url, local_job_dir_sftp)
+            time.sleep(.5)
             # Insert appropriate record into db
             absolute_name = os.path.join(local_job_dir, file_url.path)
             sf = StagingFile()
@@ -256,18 +259,22 @@ class SagaJobWrapper(object):
         self._logger.debug("Job ID    : %s" % self._saga_job.id)
         self._logger.debug("Job State : %s" % self._saga_job.state)
 
-        # Run the job eventually
-        self._logger.debug("...starting job...")
-        self._saga_job.run()
+        try:
+            # Run the job eventually
+            self._logger.debug("...starting job...")
+            self._saga_job.run()
 
-        # Create the monitoring thread
-        self._monitor_thread = JobStateChangeMonitor(self._job.id, self._saga_job, self)
-        # Begin monitoring
-        self._monitor_thread.start()
+            # Create the monitoring thread
+            self._monitor_thread = JobStateChangeMonitor(self._job.id, self._saga_job, self)
+            # Begin monitoring
+            self._monitor_thread.start()
 
-        # Store remote pid
-        self._job.remote_pid = self._saga_job.get_id()
-        db.session.flush()
+            # Store remote pid
+            self._job.remote_pid = self._saga_job.get_id()
+            db.session.flush()
+        except:
+            # Todo: Find a way to gracefully stop the monitoring thread
+            pass
 
         self._logger.debug("Job ID    : %s" % self._saga_job.id)
         self._logger.debug("Job State : %s" % self._saga_job.state)
@@ -304,6 +311,8 @@ class JobStateChangeMonitor(threading.Thread):
         self._job_id = job_id
         self._job_wrapper = job_wrapper
         self._logger = app.logger
+        self._remote_dir = SagaJobWrapper._get_job_endpoint(job_id, self._job_wrapper.get_saga_session())
+        self._last_file_names = []
 
     def run(self):
         """
@@ -343,6 +352,20 @@ class JobStateChangeMonitor(threading.Thread):
                 #    print "Monitoring thread: Staging calling wrapper method"
                 #    SagaJobWrapper.move_files_back(self._job_wrapper.get_job_description())
                 return
+            else:
+                # Check if there are new files to process
+                #remote_dir = SagaJobWrapper._get_job_endpoint(job_id, session)
+                file_urls = self._remote_dir.list()
+                update_flag = False
+                for file_url in file_urls:
+                    if file_url.path not in self._last_file_names:
+                        self._last_file_names.append(file_url.path)
+                        update_flag = True
+                if update_flag:
+                    SagaJobWrapper.move_files_back(self._job_id,
+                                                   self._job_wrapper.get_job_description(),
+                                                   self._job_wrapper.get_saga_session())
+
 
             # Check every 3 seconds
             # TODO Read monitor interval period from application config

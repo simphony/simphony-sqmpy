@@ -21,7 +21,7 @@ SQLALCHEMY_DATABASE_URI = 'sqlite:///' + os.path.join(_basedir, 'sqmpy.db')
 #
 # THREADS_PER_PAGE = 8
 #
-# CSRF_ENABLED = True
+CSRF_ENABLED = True
 # CSRF_SESSION_KEY = "somethingimpossibletoguess"
 
 # Recaptcha for localhost

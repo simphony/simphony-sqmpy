@@ -51,7 +51,9 @@ class SqmpyApplication(Flask):
         self._configure_logging()
 
         # Activate other apps
-        CsrfProtect(self)
+        if self.config.get('CSRF_ENABLED'):
+            CsrfProtect(self)
+
         self.admin = Admin(self)
 #        self.mail = Mail(self)
 

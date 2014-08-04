@@ -20,7 +20,7 @@ DATABASE_CONNECT_OPTIONS = {}
 
 THREADS_PER_PAGE = 8
 
-CSRF_ENABLED = True
+CSRF_ENABLED = False
 CSRF_SESSION_KEY = "somethingimpossibletoguess"
 
 # Recaptcha for localhost

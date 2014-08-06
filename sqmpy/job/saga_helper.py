@@ -88,7 +88,7 @@ class SagaJobWrapper(object):
         return '{backend}://{remote_host}'.format(backend=backend,
                                                   remote_host=remote_host)
     @staticmethod
-    def _get_job_endpoint(job_id, session):
+    def get_job_endpoint(job_id, session):
         """
         Returns the remote job working directory. Creates the parent
         folders if they don't exist.
@@ -178,12 +178,13 @@ class SagaJobWrapper(object):
 
     #todo: change name to download and the variable to ignore and upload
     @staticmethod
-    def move_files_back(job_id, job_description, session):
+    def move_files_back(job_id, job_description, session, wipe=True):
         """
         Copies output and error files along with any other output files back to server.
         :param job_id: job id
         :param job_description:
         :param session: saga session to remote resource
+        :param wipe: if set to True will wipe files from remote machine.
         :return:
         """
         # Get a new object in this session
@@ -201,7 +202,7 @@ class SagaJobWrapper(object):
         # Convert tuple result to list
         uploaded_files = [file_name for file_name, in uploaded_files]
         #TODO: Check for extra created files and move them back if needed
-        remote_dir = SagaJobWrapper._get_job_endpoint(job_id, session)
+        remote_dir = SagaJobWrapper.get_job_endpoint(job_id, session)
         files = remote_dir.list()
         staging_files = []
         for file_url in files:
@@ -215,7 +216,10 @@ class SagaJobWrapper(object):
         for file_url, relation in staging_files:
             # Copy physical file to local directory
             #TODO: Send notification with download links
-            remote_dir.copy(file_url, local_job_dir_sftp)
+            if wipe:
+                remote_dir.move(file_url, local_job_dir_sftp)
+            else:
+                remote_dir.copy(file_url, local_job_dir_sftp)
             time.sleep(.5)
             # Insert appropriate record into db
             absolute_name = os.path.join(local_job_dir, file_url.path)
@@ -241,7 +245,7 @@ class SagaJobWrapper(object):
             resource = Resource.query.get(self._job.resource_id)
 
         # Set remote job working directory
-        remote_job_dir = SagaJobWrapper._get_job_endpoint(self._job.id, self._session)
+        remote_job_dir = SagaJobWrapper.get_job_endpoint(self._job.id, self._session)
 
         # Upload files and get the script file instance back
         self._upload_job_files(self._job.id, remote_job_dir.get_url())
@@ -259,13 +263,16 @@ class SagaJobWrapper(object):
         self._logger.debug("Job ID    : %s" % self._saga_job.id)
         self._logger.debug("Job State : %s" % self._saga_job.state)
 
+        # To be used for stopping the thread
+        stop_event = threading.Event()
+
         try:
             # Run the job eventually
             self._logger.debug("...starting job...")
             self._saga_job.run()
 
             # Create the monitoring thread
-            self._monitor_thread = JobStateChangeMonitor(self._job.id, self._saga_job, self)
+            self._monitor_thread = JobStateChangeMonitor(self._job.id, self._saga_job, self, stop_event)
             # Begin monitoring
             self._monitor_thread.start()
 
@@ -274,7 +281,8 @@ class SagaJobWrapper(object):
             db.session.flush()
         except:
             # Todo: Find a way to gracefully stop the monitoring thread
-            pass
+            stop_event.set()
+            raise
 
         self._logger.debug("Job ID    : %s" % self._saga_job.id)
         self._logger.debug("Job State : %s" % self._saga_job.state)
@@ -299,19 +307,21 @@ class JobStateChangeMonitor(threading.Thread):
     """
     A timer thread to check job status changes.
     """
-    def __init__(self, job_id, saga_job, job_wrapper):
+    def __init__(self, job_id, saga_job, job_wrapper, stop_event):
         """
         Initialize the time and job instance
         :param job_id: sqmpy job id
         :param saga_job: a saga job instance
         :param job_wrapper: job wrapper instance
+        :param stop_event: threading.Event instance for listning to it
         """
         super(JobStateChangeMonitor, self).__init__()
         self._saga_job = saga_job
         self._job_id = job_id
         self._job_wrapper = job_wrapper
+        self._stop_event = stop_event
         self._logger = app.logger
-        self._remote_dir = SagaJobWrapper._get_job_endpoint(job_id, self._job_wrapper.get_saga_session())
+        self._remote_dir = SagaJobWrapper.get_job_endpoint(job_id, self._job_wrapper.get_saga_session())
         self._last_file_names = []
 
     def run(self):
@@ -320,7 +330,7 @@ class JobStateChangeMonitor(threading.Thread):
         Right now this thread only reads the status and this cause the saga callbacks
         to be triggered.
         """
-        while True:
+        while not self._stop_event.is_set():
             new_state = self._saga_job.state
             self._logger.debug("Monitoring thread: Job ID    : %s" % self._saga_job.id)
             print "Monitoring thread: Job ID    : %s" % self._saga_job.id
@@ -365,7 +375,6 @@ class JobStateChangeMonitor(threading.Thread):
                     SagaJobWrapper.move_files_back(self._job_id,
                                                    self._job_wrapper.get_job_description(),
                                                    self._job_wrapper.get_saga_session())
-
 
             # Check every 3 seconds
             # TODO Read monitor interval period from application config

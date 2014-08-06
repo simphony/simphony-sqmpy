@@ -16,7 +16,7 @@ DEBUG = True
 # ADMINS = frozenset(['sade@iwm.fraunhofer.de'])
 SECRET_KEY = '\x94\xb2\xf2</6\xd7+Op\xc5\x97v)\x83\xda\xff)\xd0UD\xd4NB'
 #
-SQLALCHEMY_DATABASE_URI = 'sqlite:///' + os.path.join(_basedir, 'sqmpy.db')
+SQLALCHEMY_DATABASE_URI = 'sqlite:///' + os.path.join(_basedir, 'sqmpy.db') + '?check_same_thread=False'
 # DATABASE_CONNECT_OPTIONS = {}
 #
 # THREADS_PER_PAGE = 8

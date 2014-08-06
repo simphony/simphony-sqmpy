@@ -147,3 +147,7 @@ def __init_app():
 
 # Initialize app and db
 __init_app()
+
+@app.teardown_appcontext
+def shutdown_session(exception=None):
+    db.session.remove()

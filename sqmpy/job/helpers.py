@@ -84,11 +84,12 @@ class JobFileHandler(object):
         return sf
 
     @staticmethod
-    def save_input_files(job, uploaded_files):
+    def save_input_files(job, uploaded_files, silent=False):
         """
         Saves input files of the given job in appropriate folders
         :param job:
         :param uploaded_files: list of (file_name, file_buffer, relation)
+        :param silent: skip empty file names
         :return:
         """
         files_to_add = []
@@ -101,14 +102,15 @@ class JobFileHandler(object):
         #   <staging_dir>/<username>/<job_id>/input_files/
         script_file = None
         for file_name, file_buffer, relation in uploaded_files:
-            if file_name is not None and file_buffer is not None and relation is not None:
+            if file_name and file_buffer and relation:
                 if relation == FileRelation.script:
                     import copy
                     script_filename = file_name
                     script_file_buffer = copy.copy(file_buffer)
                 files_to_add.append((relation.value, file_name, file_buffer, True))
             else:
-                raise JobManagerException("Invalid file name or path")
+                if not silent:
+                    raise JobManagerException("Invalid file name or path")
 
         # fill job.script
         job.user_script = script_file_buffer.getvalue()

@@ -12,6 +12,8 @@ import threading
 
 import saga
 
+from flask.ext.login import current_user
+
 from sqmpy import app, db
 from sqmpy.job.constants import FileRelation, ScriptType
 from sqmpy.job.helpers import JobFileHandler, send_state_change_email
@@ -20,6 +22,10 @@ from sqmpy.job import services as job_services
 from sqmpy.security import services as security_services
 
 __author__ = 'Mehdi Sadeghi'
+
+
+# To be used with url and user as key and service object as value, I know it is dirty.
+_service_cache = {}
 
 
 class SagaJobWrapper(object):
@@ -48,9 +54,14 @@ class SagaJobWrapper(object):
 
         # Creating the job service object which represents a machine
         # which we connect to it using ssh (either local or remote)
-        self._job_service = \
-            saga.job.Service(self._get_resource_endpoint(),
-                             session=self._session)
+        endpoint = self._get_resource_endpoint()
+        if (current_user.name, endpoint) in _service_cache:
+            self._job_service = _service_cache[(current_user.name, endpoint)]
+        else:
+            self._job_service = \
+                saga.job.Service(self._get_resource_endpoint(),
+                                 session=self._session)
+            _service_cache[(current_user, endpoint)] = self._job_service
 
     def _initialize(self):
         """
@@ -75,6 +86,7 @@ class SagaJobWrapper(object):
         # This callback should store output files locally and store new status in db
         self._saga_job.add_callback(saga.STATE, JobStateChangeCallback(self._job))
 
+    # TODO: remember to make this function static with parameters as input values to be able to cache it
     def _get_resource_endpoint(self):
         """
         Get ssh URI of remote host
@@ -239,6 +251,7 @@ class SagaJobWrapper(object):
         Run the job on remote resource
         :return:
         """
+        self._logger.debug("...very beginning...")
         # Get resource address
         resource = None
         if self._job.resource_id and self._job.resource_id > 0:

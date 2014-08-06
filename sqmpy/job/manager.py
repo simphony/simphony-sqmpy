@@ -50,7 +50,7 @@ class JobManager(SQMComponent):
 
         if uploaded_files in (None, ()):
             raise JobManagerException('At least script files should be uploaded')
-
+        print "in submit...."
         # Store the job
         job = Job()
         job.name = name
@@ -74,15 +74,20 @@ class JobManager(SQMComponent):
             # Input files will be moved under a new folder with this structure:
             #   <staging_dir>/<username>/<job_id>/
             # This will also save script file in the mentioned job folder as `job-[JOB_ID]_script'
-            JobFileHandler.save_input_files(job, uploaded_files)
+            # Set to silent because some ghost files are uploaded with no name and empty value, don't know why.
+            JobFileHandler.save_input_files(job, uploaded_files, silent=True)
 
             #TODO: I should find a way to either save state or not to save state when error happen.
             # Create saga wrapper
+            print "in submit.... before wrapper initialization"
             saga_wrapper = SagaJobWrapper(job)
+            print "in submit.... after wrapper initialization"
             # Keep the created job
             self.__jobs[job.id] = saga_wrapper
             # Run the saga job
+            print "in submit.... before wrapper run"
             saga_wrapper.run()
+            print "in submit.... after wrapper run"
         except:
             db.session.rollback()
             raise

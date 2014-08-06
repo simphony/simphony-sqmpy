@@ -42,15 +42,15 @@ class JobManager(SQMComponent):
         :return: job id
         """
         # Basic checks
-        if name is None:
+        if not name:
             raise JobManagerException("Job name is not defined.")
 
-        if resource_url in (None, ''):
+        if not resource_url:
             raise JobManagerException("Resource is not defined.")
 
-        if uploaded_files in (None, ()):
+        if not uploaded_files:
             raise JobManagerException('At least script files should be uploaded')
-        print "in submit...."
+
         # Store the job
         job = Job()
         job.name = name

@@ -5,6 +5,7 @@
     Provides ways to interact with saga classes
 """
 import os
+import socket
 import hashlib
 import time
 import datetime
@@ -54,14 +55,15 @@ class SagaJobWrapper(object):
 
         # Creating the job service object which represents a machine
         # which we connect to it using ssh (either local or remote)
-        endpoint = self._get_resource_endpoint()
+        endpoint = self._get_resource_endpoint(job.resource.url)
         if (current_user.name, endpoint) in _service_cache:
             self._job_service = _service_cache[(current_user.name, endpoint)]
         else:
             self._job_service = \
-                saga.job.Service(self._get_resource_endpoint(),
+                saga.job.Service(endpoint,
                                  session=self._session)
             _service_cache[(current_user, endpoint)] = self._job_service
+        print "end of init...."
 
     def _initialize(self):
         """
@@ -86,19 +88,33 @@ class SagaJobWrapper(object):
         # This callback should store output files locally and store new status in db
         self._saga_job.add_callback(saga.STATE, JobStateChangeCallback(self._job))
 
-    # TODO: remember to make this function static with parameters as input values to be able to cache it
-    def _get_resource_endpoint(self):
+    @staticmethod
+    def _is_localhost(host):
         """
-        Get ssh URI of remote host
+        Return true if is localhost
+        :param host: url
         :return:
         """
-        backend = 'fork'
-        remote_host = 'localhost'
-        if self._job.resource_id > 0:
-            backend = 'ssh'
-            remote_host = self._job.resource.url
+        if host in ('localhost',
+                    '127.0.0.1',
+                    socket.gethostname(),
+                    socket.gethostbyname(socket.gethostname())):
+            return True
+        return False
+
+    # TODO: move this function into a helper module
+    def _get_resource_endpoint(self, host):
+        """
+        Get ssh URI of remote host
+        :param host: host to make url for it
+        :return:
+        """
+        backend = 'ssh'
+        if SagaJobWrapper._is_localhost(host):
+            backend = 'fork'
         return '{backend}://{remote_host}'.format(backend=backend,
-                                                  remote_host=remote_host)
+                                                  remote_host=host)
+
     @staticmethod
     def get_job_endpoint(job_id, session):
         """
@@ -115,13 +131,14 @@ class SagaJobWrapper(object):
         # TODO: Let user give a working directory for the job or a resource
         # FIXME: Use proper ssh name to find home folder. Currently it is current user_name
         owner = security_services.get_user(job.owner_id)
-        remote_host = 'localhost'
-        if job.resource_id > 0:
-            remote_host = job.resource.url
+        adapter = 'sftp'
+        if SagaJobWrapper._is_localhost(job.resource.url):
+            adapter = 'file'
         remote_address = \
-            'sftp://{remote_host}/home/{user_name}/sqmpy/{job_id}'.format(remote_host=remote_host,
-                                                                          user_name=owner.name,
-                                                                          job_id=job.id)
+            '{adapter}://{remote_host}/home/{user_name}/sqmpy/{job_id}'.format(adapter=adapter,
+                                                                               remote_host=job.resource.url,
+                                                                               user_name=owner.name,
+                                                                               job_id=job.id)
         return \
             saga.filesystem.Directory(remote_address,
                                       saga.filesystem.CREATE_PARENTS,
@@ -204,7 +221,11 @@ class SagaJobWrapper(object):
 
         # Get or create job directory
         local_job_dir = JobFileHandler.get_job_file_directory(job_id)
-        local_job_dir_sftp = JobFileHandler.get_job_file_directory(job_id, make_sftp_url=True)
+        local_job_dir_url = None
+        if SagaJobWrapper._is_localhost(job.resource.url):
+            local_job_dir_url = local_job_dir
+        else:
+            local_job_dir_url = JobFileHandler.get_job_file_directory(job_id, make_sftp_url=True)
 
         # Get staging file names for this job which are already uploaded
         # we don't need to download them since we have them already
@@ -229,9 +250,9 @@ class SagaJobWrapper(object):
             # Copy physical file to local directory
             #TODO: Send notification with download links
             if wipe:
-                remote_dir.move(file_url, local_job_dir_sftp)
+                remote_dir.move(file_url, local_job_dir_url)
             else:
-                remote_dir.copy(file_url, local_job_dir_sftp)
+                remote_dir.copy(file_url, local_job_dir_url)
             time.sleep(.5)
             # Insert appropriate record into db
             absolute_name = os.path.join(local_job_dir, file_url.path)
@@ -430,23 +451,28 @@ class JobStateChangeCallback(saga.Callback):
         #if val in (saga.DONE, saga.FAILED, saga.EXCEPTION, saga):
         #    pass
 
-        # Update job status
-        if self._sqmpy_job.last_status != val:
-            # TODO: Make notification an abstract layer which allows adding further means such as twitter
-            send_state_change_email(self._sqmpy_job.id, self._sqmpy_job.owner_id, self._sqmpy_job.last_status, val)
-            # Insert history record
-            history_record = JobStateHistory()
-            history_record.change_time = datetime.datetime.now()
-            history_record.old_state = self._sqmpy_job.last_status
-            history_record.new_state = val
-            history_record.job_id = self._sqmpy_job.id
-            db.session.add(history_record)
+        with db.session.begin_nested:
 
-            # Keep the new value
-            self._sqmpy_job.last_status = val
+            # Avoid threading errors
             if self._sqmpy_job not in db.session:
                 db.session.merge(self._sqmpy_job)
-            db.session.flush()
+
+            # Update job status
+            if self._sqmpy_job.last_status != val:
+                # TODO: Make notification an abstract layer which allows adding further means such as twitter
+                send_state_change_email(self._sqmpy_job.id, self._sqmpy_job.owner_id, self._sqmpy_job.last_status, val)
+                # Insert history record
+                history_record = JobStateHistory()
+                history_record.change_time = datetime.datetime.now()
+                history_record.old_state = self._sqmpy_job.last_status
+                history_record.new_state = val
+                history_record.job_id = self._sqmpy_job.id
+                db.session.add(history_record)
+
+                # Keep the new value
+                self._sqmpy_job.last_status = val
+
+                db.session.flush()
 
         # Remain registered
         return True

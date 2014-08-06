@@ -31,5 +31,9 @@
             <dd>{{job.description}}</dd>
         </dl>
     </div>
-
+    <div>
+        {% if job.last_status == 'Running' %}
+        <a type="button" class="btn btn-lg btn-danger" role="button" href="{{url_for('.cancel', job_id=job.id)}}">Cancel</a>
+        {% endif %}
+    </div>
 {% endblock %}

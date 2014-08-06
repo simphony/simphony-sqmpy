@@ -112,6 +112,19 @@ def submit(job_id=None):
 
     return render_template('job/job_submit.html', form=form)
 
+@csrf_exempt
+@job_blueprint.route('/job/<int:job_id>/cancel', methods=['GET', 'POST'])
+@login_required
+def cancel(job_id):
+    """
+    Cancel a running job
+    :param job_id:
+    :return:
+    """
+    if job_id:
+        job_services.cancel_job(job_id)
+    return redirect(url_for('.detail', job_id=job_id))
+
 
 # This route is expecting a parameter containing the name
 # of a file. Then it will locate that file on the upload
@@ -140,4 +153,5 @@ def url_for_other_page(page):
     args = request.view_args.copy()
     args['page'] = page
     return url_for(request.endpoint, **args)
+
 app.jinja_env.globals['url_for_other_page'] = url_for_other_page

@@ -34,6 +34,15 @@ def submit_job(name, resource_url, uploaded_files, description=None, **kwargs):
                                                                description, **kwargs)
 
 
+def cancel_job(job_id):
+    """
+    Cancel a job
+    :param job_id:
+    :return:
+    """
+    return core_services.get_component(JOB_MANAGER).cancel_job(job_id)
+
+
 def get_job(job_id, *args, **kwargs):
     """
     Get a job

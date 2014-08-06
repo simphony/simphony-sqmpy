@@ -17,6 +17,7 @@ from flask.ext.login import current_user
 
 from sqmpy import app, db
 from sqmpy.job.constants import FileRelation, ScriptType
+from sqmpy.job.exceptions import JobManagerException
 from sqmpy.job.helpers import JobFileHandler, send_state_change_email
 from sqmpy.job.models import Resource, StagingFile, JobStateHistory, Job
 from sqmpy.job import services as job_services
@@ -312,7 +313,7 @@ class SagaJobWrapper(object):
 
             # Store remote pid
             self._job.remote_pid = self._saga_job.get_id()
-            db.session.flush()
+            db.session.commit()
         except:
             # Todo: Find a way to gracefully stop the monitoring thread
             stop_event.set()
@@ -335,6 +336,17 @@ class SagaJobWrapper(object):
         Returns job description object
         """
         return self._job_description
+
+    def cancel(self):
+        """
+        Cancel the job
+        """
+        if self._job.remote_pid:
+            self._saga_job.cancel()
+            #self._job.status = self._saga_job.state
+            #db.session.flush()
+        else:
+            raise JobManagerException('Job PID unknown')
 
 
 class JobStateChangeMonitor(threading.Thread):
@@ -384,7 +396,7 @@ class JobStateChangeMonitor(threading.Thread):
                     send_state_change_email(self._job_id, job.owner_id, job.last_status, new_state)
                     job.last_status = new_state
                     #TODO: Which session this really is?
-                    db.session.flush()
+                    db.session.commit()
 
                 # If there are new files, transfer them back, along with output and error files
                 SagaJobWrapper.move_files_back(self._job_id,
@@ -437,42 +449,38 @@ class JobStateChangeCallback(saga.Callback):
         :return:
         """
         saga_job = obj
-        app.logger.debug("### Job State Change Report")
-        app.logger.debug("Callback: Job ID   : %s" % self._sqmpy_job.id)
-        app.logger.debug("Callback: Job Name   : %s" % self._sqmpy_job.name)
-        app.logger.debug("Callback: Job Current State   : %s" % saga_job.state)
-        app.logger.debug("Callback: Exitcode    : %s" % saga_job.exit_code)
-        app.logger.debug("Callback: Exec. hosts : %s" % saga_job.execution_hosts)
-        app.logger.debug("Callback: Create time : %s" % saga_job.created)
-        app.logger.debug("Callback: Start time  : %s" % saga_job.started)
-        app.logger.debug("Callback: End time    : %s" % saga_job.finished)
+        try:
+            app.logger.debug("### Job State Change Report")
+            app.logger.debug("Callback: Job ID   : %s" % self._sqmpy_job.id)
+            app.logger.debug("Callback: Job Name   : %s" % self._sqmpy_job.name)
+            app.logger.debug("Callback: Job Current State   : %s" % val)
+            app.logger.debug("Callback: Exitcode    : %s" % saga_job.exit_code)
+            app.logger.debug("Callback: Exec. hosts : %s" % saga_job.execution_hosts)
+            app.logger.debug("Callback: Create time : %s" % saga_job.created)
+            app.logger.debug("Callback: Start time  : %s" % saga_job.started)
+            app.logger.debug("Callback: End time    : %s" % saga_job.finished)
+        except:
+            pass
 
-        # If the job is complete transfer files if any
-        #if val in (saga.DONE, saga.FAILED, saga.EXCEPTION, saga):
-        #    pass
+        # Update job status
+        if self._sqmpy_job.last_status != val:
+            # TODO: Make notification an abstract layer which allows adding further means such as twitter
+            send_state_change_email(self._sqmpy_job.id, self._sqmpy_job.owner_id, self._sqmpy_job.last_status, val)
+            # Insert history record
+            history_record = JobStateHistory()
+            history_record.change_time = datetime.datetime.now()
+            history_record.old_state = self._sqmpy_job.last_status
+            history_record.new_state = val
+            history_record.job_id = self._sqmpy_job.id
+            db.session.add(history_record)
 
-        with db.session.begin_nested:
-
-            # Avoid threading errors
+            # Update last status
             if self._sqmpy_job not in db.session:
+                db.session.add(self._sqmpy_job)
+            else:
                 db.session.merge(self._sqmpy_job)
-
-            # Update job status
-            if self._sqmpy_job.last_status != val:
-                # TODO: Make notification an abstract layer which allows adding further means such as twitter
-                send_state_change_email(self._sqmpy_job.id, self._sqmpy_job.owner_id, self._sqmpy_job.last_status, val)
-                # Insert history record
-                history_record = JobStateHistory()
-                history_record.change_time = datetime.datetime.now()
-                history_record.old_state = self._sqmpy_job.last_status
-                history_record.new_state = val
-                history_record.job_id = self._sqmpy_job.id
-                db.session.add(history_record)
-
-                # Keep the new value
-                self._sqmpy_job.last_status = val
-
-                db.session.flush()
+            self._sqmpy_job.last_status = val
+            db.session.commit()
 
         # Remain registered
         return True

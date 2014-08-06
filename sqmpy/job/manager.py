@@ -122,3 +122,15 @@ class JobManager(SQMComponent):
         :return:
         """
         return JobFileHandler.get_file_location(job_id, file_name)
+
+    def cancel_job(self, job_id):
+        """
+        Cancel a job
+        :param job_id:
+        :return:
+        """
+        if job_id in self.__jobs:
+            wrapper = self.__jobs[job_id]
+            wrapper.cancel()
+        else:
+            raise JobManagerException("Detached or non-existing job.")

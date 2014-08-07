@@ -1,0 +1,160 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <title>Simple-queue-manager by mehdix</title>
+
+    <link rel="stylesheet" href="stylesheets/styles.css">
+    <link rel="stylesheet" href="stylesheets/pygment_trac.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+    <!--[if lt IE 9]>
+    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+  </head>
+  <body>
+    <div class="wrapper">
+      <header>
+        <h1>Simple-queue-manager</h1>
+        <p>A simple queue manager to submit and monitor jobs on computing resources. Based on SAGA-Python and Flask microframework.</p>
+
+        <p class="view"><a href="https://github.com/mehdix/simple-queue-manager">View the Project on GitHub <small>mehdix/simple-queue-manager</small></a></p>
+
+
+        <ul>
+          <li><a href="https://github.com/mehdix/simple-queue-manager/zipball/master">Download <strong>ZIP File</strong></a></li>
+          <li><a href="https://github.com/mehdix/simple-queue-manager/tarball/master">Download <strong>TAR Ball</strong></a></li>
+          <li><a href="https://github.com/mehdix/simple-queue-manager">View On <strong>GitHub</strong></a></li>
+        </ul>
+      </header>
+      <section>
+        <h1></h1>
+
+<h1>
+<a name="simple-queue-manager" class="anchor" href="#simple-queue-manager"><span class="octicon octicon-link"></span></a>Simple Queue Manager</h1>
+
+<p>sqmpy stands for simple queue manager written in python and is a web application which is based on Flask miroframework
+and SAGA-Python distributed computing access layer.
+sqmpy lets user to submit simple python or shell scripts on remote machines. Then user can monitor the running job in
+job detail page. The notification system will send emails after status changes to the user. Moreover sqmpy lets user
+to have a history of previous jobs and all files related to those jobs.</p>
+
+<h2>
+<a name="dependencies" class="anchor" href="#dependencies"><span class="octicon octicon-link"></span></a>Dependencies</h2>
+
+<p>sqmpy has a few dependencies which will be installed while installing with <em>python setup</em> or <em>pip</em>:</p>
+
+<ul>
+<li>SAGA-python</li>
+<li>Flask</li>
+<li>Flask-SQLAlchemy</li>
+<li>Flask-Login</li>
+<li>Flask-WTF</li>
+<li>Flask-Admin</li>
+<li>Flask-CSRF</li>
+<li>enum34</li>
+<li>py-bcrypt</li>
+</ul><h2>
+<a name="installation" class="anchor" href="#installation"><span class="octicon octicon-link"></span></a>Installation</h2>
+
+<p>I suggest to install a virtaul environment to try sqmpy or if you want to run it on your local machine. If you have
+virtual-env installed then:</p>
+
+<p>::</p>
+
+<pre><code>$ virtual-env --no-site-packages sqmpy-env
+$ . sqmpy-env/bin/activate
+</code></pre>
+
+<p>If you don't have virutal-env on your machine then try to download it. <strong>Please be aware that this is outdated
+since new versions of virtualenv do not download and install pip and setuptools for security reasons</strong>:</p>
+
+<p>::</p>
+
+<pre><code>$ wget https://raw.githubusercontent.com/pypa/virtualenv/1.9.X/virtualenv.py
+$ python virtualenv.py --no-site-packages sqmpy-env
+$ . sqmpy-env/bin/activate
+</code></pre>
+
+<p>To install from git:</p>
+
+<p>::</p>
+
+<pre><code>$ git clone git://github.com/mehdix/simple-queue-manager.git
+$ cd simple-queue-manager
+$ python setup install
+</code></pre>
+
+<p>If you clone from github then you can easily install the requirements with pip and then run the program directly:</p>
+
+<p>::</p>
+
+<pre><code>$ git clone git://github.com/mehdix/simple-queue-manager.git
+$ cd simple-queue-manager
+$ pip install -r requirements.txt
+$ python run.py
+</code></pre>
+
+<p><strong>Make sure to change values inside config.py before running the program</strong></p>
+
+<p>To install sqmpy from pypi:</p>
+
+<p>::</p>
+
+<pre><code>$ pip install sqmpy
+</code></pre>
+
+<p>Please remeber that installing from pypi will only install sqmpy package without config, database and run file. You have
+to make them yourself for now.</p>
+
+<h2>
+<a name="configuration" class="anchor" href="#configuration"><span class="octicon octicon-link"></span></a>Configuration</h2>
+
+<p>There are a few settings which sqmpy can read from a configuration file. There is a <em>default_config</em> python module
+in sqmpy package that contains default configuration values. The same configurations can be read from a user defined
+config file via <strong>SQMPY_CONFIG</strong> environment variable:</p>
+
+<p>::</p>
+
+<pre><code>$ export SQMPY_CONFIG = /path/to/config/file/config.py
+$ python run.py
+</code></pre>
+
+<h2>
+<a name="run-with-no-configuration" class="anchor" href="#run-with-no-configuration"><span class="octicon octicon-link"></span></a>Run With No Configuration</h2>
+
+<p>In this case sqmpy will user in-memory sqlite db, logging to stdout, and a temp folder for staging files. State
+will lost after restarting the application.</p>
+
+<h2>
+<a name="using-sqmpy" class="anchor" href="#using-sqmpy"><span class="octicon octicon-link"></span></a>Using sqmpy</h2>
+
+<p>sqmpy is a flask web application therefor it runs like any other flask applications. Put the following code in
+apython file called run.py and run it:</p>
+
+<p>::</p>
+
+<pre><code>from sqmpy import app
+app.run('0.0.0.0', port=5001, debug=True)
+</code></pre>
+
+<h2>
+<a name="about-files-and-folders-local-or-remote" class="anchor" href="#about-files-and-folders-local-or-remote"><span class="octicon octicon-link"></span></a>About Files and Folders, Local or Remote</h2>
+
+<p>sqmpy will create a <em>sqmpy.log</em> and <em>sqmpy.db</em> and a staging folder called <em>staging</em>. The path to these files are
+being read from config values: <code>LOG_FILE</code>, <code>SQLALCHEMY_DATABASE_URI</code> and <code>STAGING_FOLDER</code>.
+Staginf folder will contain uploaded files and script files created by sqmpy. Moreover on remote machiens
+sqmpy will create another folder called <em>sqmpy</em> in user home directory and will upload files there before
+running tasks. For each job one folder will be created and will be set as job working directory. This folder
+will contain input and output files as well as script file and any other files being produced or consumed by
+the remote job.</p>
+      </section>
+      <footer>
+        <p>This project is maintained by <a href="https://github.com/mehdix">mehdix</a></p>
+        <p><small>Hosted on GitHub Pages &mdash; Theme by <a href="https://github.com/orderedlist">orderedlist</a></small></p>
+      </footer>
+    </div>
+    <script src="javascripts/scale.fix.js"></script>
+    
+  </body>
+</html>

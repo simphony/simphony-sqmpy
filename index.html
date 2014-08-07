@@ -52,6 +52,7 @@ to have a history of previous jobs and all files related to those jobs.</p>
 <li>Flask-WTF</li>
 <li>Flask-Admin</li>
 <li>Flask-CSRF</li>
+<li>Flask-Uploads</li>
 <li>enum34</li>
 <li>py-bcrypt</li>
 </ul><h2>
@@ -76,15 +77,6 @@ $ python virtualenv.py --no-site-packages sqmpy-env
 $ . sqmpy-env/bin/activate
 </code></pre>
 
-<p>To install from git:</p>
-
-<p>::</p>
-
-<pre><code>$ git clone git://github.com/mehdix/simple-queue-manager.git
-$ cd simple-queue-manager
-$ python setup install
-</code></pre>
-
 <p>If you clone from github then you can easily install the requirements with pip and then run the program directly:</p>
 
 <p>::</p>
@@ -95,7 +87,15 @@ $ pip install -r requirements.txt
 $ python run.py
 </code></pre>
 
-<p><strong>Make sure to change values inside config.py before running the program</strong></p>
+<p><strong>Make sure to change values inside config.py before running the program</strong>
+To install from git:</p>
+
+<p>::</p>
+
+<pre><code>$ git clone git://github.com/mehdix/simple-queue-manager.git
+$ cd simple-queue-manager
+$ python setup install
+</code></pre>
 
 <p>To install sqmpy from pypi:</p>
 
@@ -104,7 +104,7 @@ $ python run.py
 <pre><code>$ pip install sqmpy
 </code></pre>
 
-<p>Please remeber that installing from pypi will only install sqmpy package without config, database and run file. You have
+<p>Please remember that installing from pypi will only install sqmpy package without config, database and run file. You have
 to make them yourself for now.</p>
 
 <h2>

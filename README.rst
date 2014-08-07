@@ -19,6 +19,7 @@ sqmpy has a few dependencies which will be installed while installing with *pyth
 - Flask-WTF
 - Flask-Admin
 - Flask-CSRF
+- Flask-Uploads
 - enum34
 - py-bcrypt
 
@@ -41,14 +42,6 @@ since new versions of virtualenv do not download and install pip and setuptools 
     $ python virtualenv.py --no-site-packages sqmpy-env
     $ . sqmpy-env/bin/activate
 
-To install from git:
-
-::
-
-    $ git clone git://github.com/mehdix/simple-queue-manager.git
-    $ cd simple-queue-manager
-    $ python setup install
-
 If you clone from github then you can easily install the requirements with pip and then run the program directly:
 
 ::
@@ -59,6 +52,13 @@ If you clone from github then you can easily install the requirements with pip a
     $ python run.py
 
 **Make sure to change values inside config.py before running the program**
+To install from git:
+
+::
+
+    $ git clone git://github.com/mehdix/simple-queue-manager.git
+    $ cd simple-queue-manager
+    $ python setup install
 
 To install sqmpy from pypi:
 
@@ -66,7 +66,7 @@ To install sqmpy from pypi:
 
     $ pip install sqmpy
 
-Please remeber that installing from pypi will only install sqmpy package without config, database and run file. You have
+Please remember that installing from pypi will only install sqmpy package without config, database and run file. You have
 to make them yourself for now.
 
 Configuration

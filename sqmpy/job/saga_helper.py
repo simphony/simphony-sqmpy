@@ -464,8 +464,11 @@ class JobStateChangeCallback(saga.Callback):
 
         # Update job status
         if self._sqmpy_job.last_status != val:
-            # TODO: Make notification an abstract layer which allows adding further means such as twitter
-            send_state_change_email(self._sqmpy_job.id, self._sqmpy_job.owner_id, self._sqmpy_job.last_status, val)
+            try:
+                # TODO: Make notification an abstract layer which allows adding further means such as twitter
+                send_state_change_email(self._sqmpy_job.id, self._sqmpy_job.owner_id, self._sqmpy_job.last_status, val)
+            except Exception, ex:
+                app.logger.debug("Callback: Failed to send mail: %s" % ex)
             # Insert history record
             history_record = JobStateHistory()
             history_record.change_time = datetime.datetime.now()

@@ -30,23 +30,19 @@ def send_state_change_email(job_id, owner_id, old_state, new_state):
     :return:
     """
     owner_email, = db.session.query(User.email).filter(User.id == owner_id).one()
-
-    try:
-        smtp_server = smtplib.SMTP(app.config.get('MAIL_SERVER'))
-        # TODO: Add download links for each output file to message.
-        message = \
-            'Status changed from {old} to {new}'.format(old=old_state,
-                                                        new=new_state)
-        message = MIMEText(message)
-        message['Subject'] = 'Change in job number [{job_id}]'.format(job_id=job_id)
-        message['From'] = app.config.get('DEFAULT_MAIL_SENDER')
-        message['To'] = owner_email
-        smtp_server.sendmail(app.config.get('DEFAULT_MAIL_SENDER'),
-                             [owner_email],
-                             message.as_string())
-        smtp_server.quit()
-    except smtplib.SMTPException, ex:
-        app.logger.debug("Callback: Failed to send mail: %s" % ex)
+    smtp_server = smtplib.SMTP(app.config.get('MAIL_SERVER'))
+    # TODO: Add download links for each output file to message.
+    message = \
+        'Status changed from {old} to {new}'.format(old=old_state,
+                                                    new=new_state)
+    message = MIMEText(message)
+    message['Subject'] = 'Change in job number [{job_id}]'.format(job_id=job_id)
+    message['From'] = app.config.get('DEFAULT_MAIL_SENDER')
+    message['To'] = owner_email
+    smtp_server.sendmail(app.config.get('DEFAULT_MAIL_SENDER'),
+                         [owner_email],
+                         message.as_string())
+    smtp_server.quit()
 
 
 class JobFileHandler(object):

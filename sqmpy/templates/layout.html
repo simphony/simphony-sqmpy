@@ -61,18 +61,8 @@
         <div class="container starter-template">
             {% block container%}
             {% endblock %}
-{% with messages = get_flashed_messages(with_categories=True) %}
-{% if messages %}
-<ul class="flashes" style="list-style:none; width:40%">
-{% for category, message in messages %}
-<li class="alert alert-info {{ category }}">
-<a href="javascript:void(0)" class="close" data-dismiss="alert">x</a>
-{{ message }}
-</li>
-{% endfor %}
-</ul>
-{% endif %}
-{% endwith %}
+            {% from "_formhelpers.html" import render_messages with context%}
+            {{render_messages()}}
         </div>
         <!-- /.container -->
         {% endblock %}

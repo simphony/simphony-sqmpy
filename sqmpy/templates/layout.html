@@ -12,14 +12,14 @@
         <!-- Bootstrap -->
         <link href="{{ url_for('static', filename='css/bootstrap.min.css')  }}" rel="stylesheet">
         <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
-        <link rel="stylesheet" href="http://netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap-theme.min.css" />
-        <link rel="stylesheet" href="http://code.jquery.com/ui/1.10.3/themes/smoothness/jquery-ui.css" />
+        <link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap-theme.min.css') }}" />
+        <link rel="stylesheet" href="{{ url_for('static', filename='css/jquery-ui-smoothness-1.10.3.css') }}" />
 
         <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
         <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
         <!--[if lt IE 9]>
-        <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
-        <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+        <script src="{{ url_for('static', filename='js/html5shiv-3.7.0.js') }}"></script>
+        <script src="{{ url_for('static', filename='js/respond-1.4.2.min.js') }}"></script>
         <![endif]-->
         {% block head_tail%}
         {% endblock %}
@@ -69,10 +69,10 @@
 
         {% block body_tail%}
             <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
-            <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>
+            <script src="{{ url_for('static', filename='js/jquery-1.11.1.min.js') }}"></script>
             <!-- Include all compiled plugins (below), or include individual files as needed -->
             <script src="{{ url_for('static', filename='js/bootstrap.min.js') }}"></script>
-            <script src="http://gregpike.net/demos/bootstrap-file-input/bootstrap.file-input.js"></script>
+            <script src="{{ url_for('static', filename='js/bootstrap.file-input.js') }}"></script>
         {% endblock %}
     </body>
 </html>

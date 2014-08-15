@@ -11,7 +11,7 @@ from flask.ext.wtf.file import FileField, FileAllowed, FileRequired
 #from flask.ext.uploads import UploadSet, IMAGES,SCRIPTS
 #from flask.ext.wtf.html5 import URLField
 
-#from sqmpy.job.constants import ScriptType
+from sqmpy.job.constants import Adaptor
 
 __author__ = 'Mehdi Sadeghi'
 
@@ -36,4 +36,8 @@ class JobSubmissionForm(Form):
     # choices will be filled at runtime
     resource = SelectField('Existing Resource', [validators.Optional()], coerce=str)
     new_resource = StringField('New Resources URL', [validators.Optional()])
+    submit_type = SelectField('Submit Type',
+                              validators=[validators.Optional()],
+                              choices=[(entry.value, entry.name) for entry in Adaptor],
+                              coerce=int)
     description = TextAreaField('Description', [validators.Optional()])

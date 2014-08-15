@@ -14,7 +14,7 @@ from sqmpy.core import SQMComponent
 from sqmpy.job.exceptions import JobManagerException
 from sqmpy.job.helpers import JobFileHandler
 from sqmpy.job.models import Job, Resource
-from sqmpy.job.constants import JOB_MANAGER, JobStatus
+from sqmpy.job.constants import JOB_MANAGER, JobStatus, Adaptor
 from sqmpy.job.saga_helper import SagaJobWrapper
 
 __author__ = 'Mehdi Sadeghi'
@@ -31,13 +31,14 @@ class JobManager(SQMComponent):
         # Wrapper objects contain the job itself along with related saga objects.
         self.__jobs = {}
 
-    def submit_job(self, name, resource_url, uploaded_files, description=None, **kwargs):
+    def submit_job(self, name, resource_url, uploaded_files, adaptor=Adaptor.shell.value, description=None, **kwargs):
         """
         Submit a new job along with its input files. Input files will be moved under
             a new folder with this structure: <staging_dir>/<username>/<job_id>/input_files/
         :param name: job name
         :param resource_url: resource to submit job there
         :param uploaded_files: a list of <filename, file_stream, relation> for each given file.
+        :param adaptor: the backend to be used, should be 'shell' or 'sge'
         :param description: about the job
         :return: job id
         """
@@ -55,6 +56,7 @@ class JobManager(SQMComponent):
         job = Job()
         job.name = name
         job.submit_date = datetime.datetime.now()
+        job.submit_adaptor = adaptor
         job.last_status = JobStatus.INIT
         job.owner_id = current_user.id
 

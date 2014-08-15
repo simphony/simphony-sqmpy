@@ -16,7 +16,7 @@ import saga
 from flask.ext.login import current_user
 
 from sqmpy import app, db
-from sqmpy.job.constants import FileRelation, ScriptType
+from sqmpy.job.constants import FileRelation, ScriptType, Adaptor
 from sqmpy.job.exceptions import JobManagerException
 from sqmpy.job.helpers import JobFileHandler, send_state_change_email
 from sqmpy.job.models import Resource, StagingFile, JobStateHistory, Job
@@ -56,7 +56,7 @@ class SagaJobWrapper(object):
 
         # Creating the job service object which represents a machine
         # which we connect to it using ssh (either local or remote)
-        endpoint = self._get_resource_endpoint(job.resource.url)
+        endpoint = self._get_resource_endpoint(job.resource.url, job.submit_adaptor)
         if (current_user.name, endpoint) in _service_cache:
             self._job_service = _service_cache[(current_user.name, endpoint)]
         else:
@@ -104,15 +104,18 @@ class SagaJobWrapper(object):
         return False
 
     # TODO: move this function into a helper module
-    def _get_resource_endpoint(self, host):
+    def _get_resource_endpoint(self, host, adaptor):
         """
         Get ssh URI of remote host
         :param host: host to make url for it
+        :param adaptor: adaptor integer value according to Adaptor enum
         :return:
         """
         backend = 'ssh'
         if SagaJobWrapper._is_localhost(host):
             backend = 'fork'
+        elif adaptor == Adaptor.sge.value:
+            backend = 'sge+ssh'
         return '{backend}://{remote_host}'.format(backend=backend,
                                                   remote_host=host)
 

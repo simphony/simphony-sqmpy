@@ -21,6 +21,8 @@ class Job(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(50))
     submit_date = db.Column(db.DateTime)
+    # Value of this column should be selected according to constants.Adaptor
+    submit_adaptor = db.Column(db.Integer, nullable=False)
     last_status = db.Column(db.String(50))
     remote_pid = db.Column(db.Integer)
     user_script = db.Column(db.Text())
@@ -36,16 +38,18 @@ class Job(db.Model):
                  resource_id=None,
                  user_script=None,
                  script_type=None,
-                 sub_date=None,
+                 submit_date=None,
+                 submit_adaptor=None,
                  description=None):
         self.name = name
         self.owner_id = owner_id
         self.resource_id = resource_id
         self.user_script = user_script
         self.script_type = script_type
-        if sub_date is None:
-            sub_date = datetime.datetime.utcnow()
-        self.submit_date = sub_date
+        if submit_date is None:
+            submit_date = datetime.datetime.utcnow()
+        self.submit_date = submit_date
+        self.submit_adaptor = submit_adaptor
         self.description = description
 
     def __repr__(self):

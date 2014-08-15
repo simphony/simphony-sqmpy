@@ -47,3 +47,11 @@ class ScriptType(Enum):
     """
     shell = 0
     python = 1
+
+
+class Adaptor(Enum):
+    """
+    Represent adaptors on resource backends, such as shell, sge and etc.
+    """
+    shell = 0
+    sge = 1

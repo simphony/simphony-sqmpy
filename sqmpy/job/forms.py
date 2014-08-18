@@ -1,5 +1,5 @@
 """
-    sqmpy.scheduling.forms
+    sqmpy.job.forms
     ~~~~~~~~~~~~~~~~
 
     Implements job management forms.
@@ -29,7 +29,7 @@ class JobSubmissionForm(Form):
     """
     Form to handle job submission.
     """
-    name = StringField('Name', [validators.Required(), validators.Length(min=1, max=50)])
+    name = StringField('Name', [validators.DataRequired(), validators.Length(min=1, max=50)])
     script_file = FileField('Script File', validators=[FileRequired(),
                                                        FileAllowed(['py', 'sh'], 'Python and Shell scripts only!')])
     input_files = FileField('Input Files', [validators.Optional()])

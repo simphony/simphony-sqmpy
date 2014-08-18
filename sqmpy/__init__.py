@@ -13,6 +13,7 @@ from flask.ext.admin import Admin
 #from flask.ext.mail import Mail
 from flask.ext.sqlalchemy import SQLAlchemy
 from flask.ext.admin.contrib.sqla import ModelView
+from flask.ext.login import current_user
 
 from . import default_config
 
@@ -21,6 +22,14 @@ __version__ = 'v1.0.0-alpha.4'
 
 app = None
 db = None
+
+
+class SqmpyModelView(ModelView):
+    """
+    Base admin pages view
+    """
+    def is_accessible(self):
+        return current_user.is_authenticated()
 
 
 class SqmpyApplication(Flask):
@@ -86,13 +95,13 @@ class SqmpyApplication(Flask):
         """
         # Add security admin views
         from sqmpy.security import models as security_models
-        self.admin.add_view(ModelView(security_models.User, self.db.session))
+        self.admin.add_view(SqmpyModelView(security_models.User, self.db.session))
 
         # Adding job admin views
         from sqmpy.job import models as job_models
-        self.admin.add_view(ModelView(job_models.Job, self.db.session))
-        self.admin.add_view(ModelView(job_models.Resource, self.db.session))
-        self.admin.add_view(ModelView(job_models.JobStateHistory, self.db.session))
+        self.admin.add_view(SqmpyModelView(job_models.Job, self.db.session))
+        self.admin.add_view(SqmpyModelView(job_models.Resource, self.db.session))
+        self.admin.add_view(SqmpyModelView(job_models.JobStateHistory, self.db.session))
 
     def load_blueprints(self):
         """

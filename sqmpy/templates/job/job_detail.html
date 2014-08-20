@@ -9,12 +9,12 @@
             <dd>{{job.id}}</dd>
             <dt>Name</dt>
             <dd>{{job.name}}</dd>
-            <dt>Submit Date</dt>
+            <dt>Submit date</dt>
             <dd>{{job.submit_date}}</dd>
             <dt>Resource</dt>
             <dd>{{job.resource.url}}</dd>
             {% if job.files|length > 0 %}
-                <dt>Related Files</dt>
+                <dt>Related files</dt>
                 <ul>
                 {% for file in job.files %}
                     <li>{{file.get_relation_str()|title}}: {{file.get_path()}}
@@ -23,8 +23,16 @@
                 {% endfor %}
                 </ul>
             {% endif %}
-            <dt>Last Status</dt>
+            <dt>Last status</dt>
             <dd>{{job.last_status}}</dd>
+            {% if job.submit_adaptor %}
+            <dt>Total number of CPUs</dt>
+            <dd>{{job.total_cpu_count}}</dd>
+            <dt>SPMD variation</dt>
+            <dd>{{job.spmd_variation}}</dd>
+            <dt>Walltime limit</dt>
+            <dd>{{job.walltime_limit}}</dd>
+            {% endif %}
             <dt>Script</dt>
             <dd><textarea readonly="readonly">{{job.user_script}}</textarea></dd>
             <dt>Description</dt>

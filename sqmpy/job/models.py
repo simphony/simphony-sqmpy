@@ -28,29 +28,15 @@ class Job(db.Model):
     user_script = db.Column(db.Text())
     script_type = db.Column(db.Integer)
     description = db.Column(db.Text())
+    total_cpu_count = db.Column(db.Integer)
+    spmd_variation = db.Column(db.String(50))
+    walltime_limit = db.Column(db.Integer)
     owner_id = db.Column(db.Integer, db.ForeignKey('users.id'))
     resource_id = db.Column(db.Integer, db.ForeignKey('resources.id'))
     files = db.relationship('StagingFile')
 
-    def __init__(self,
-                 name=None,
-                 owner_id=None,
-                 resource_id=None,
-                 user_script=None,
-                 script_type=None,
-                 submit_date=None,
-                 submit_adaptor=None,
-                 description=None):
-        self.name = name
-        self.owner_id = owner_id
-        self.resource_id = resource_id
-        self.user_script = user_script
-        self.script_type = script_type
-        if submit_date is None:
-            submit_date = datetime.datetime.utcnow()
-        self.submit_date = submit_date
-        self.submit_adaptor = submit_adaptor
-        self.description = description
+    def __init__(self):
+        self.submit_date = datetime.datetime.utcnow()
 
     def __repr__(self):
         return '<Job %s>' % self.id

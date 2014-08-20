@@ -18,22 +18,24 @@ def list_jobs(page=None):
     return core_services.get_component(JOB_MANAGER).list_jobs(page=page)
 
 
-def submit_job(name, resource_url, uploaded_files, adaptor='shell', description=None, **kwargs):
+def submit_job(job_name, resource_url, uploaded_files, **kwargs):
     """
     Submit a new job along with its input files. Input files will be moved under
         a new folder with this structure: <staging_dir>/<username>/<job_id>/input_files/
     :param name: job name
     :param resource_url: resource to submit job there
     :param uploaded_files: a list of <filename, file_stream, relation> for each given file.
-    :param adaptor: the backend to be used, should be 'shell' or 'sge'
-    :param description: about the job
+    :param kwargs::
+        :param total_cpu_count:
+        :param spmd_variation:
+        :param walltime_limit:
+        :param adaptor: the backend to be used, should be 'shell' or 'sge'
+        :param description: about the job
     :return: job id
     """
-    return core_services.get_component(JOB_MANAGER).submit_job(name,
+    return core_services.get_component(JOB_MANAGER).submit_job(job_name,
                                                                resource_url,
                                                                uploaded_files,
-                                                               adaptor=adaptor,
-                                                               description=description,
                                                                **kwargs)
 
 

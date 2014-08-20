@@ -31,19 +31,23 @@ class JobManager(SQMComponent):
         # Wrapper objects contain the job itself along with related saga objects.
         self.__jobs = {}
 
-    def submit_job(self, name, resource_url, uploaded_files, adaptor=Adaptor.shell.value, description=None, **kwargs):
+    def submit_job(self, job_name, resource_url, uploaded_files, **kwargs):
         """
         Submit a new job along with its input files. Input files will be moved under
             a new folder with this structure: <staging_dir>/<username>/<job_id>/input_files/
         :param name: job name
         :param resource_url: resource to submit job there
         :param uploaded_files: a list of <filename, file_stream, relation> for each given file.
-        :param adaptor: the backend to be used, should be 'shell' or 'sge'
-        :param description: about the job
+        :param kwargs::
+            :param total_cpu_count:
+            :param spmd_variation:
+            :param walltime_limit:
+            :param adaptor: the backend to be used, should be 'shell' or 'sge'
+            :param description: about the job
         :return: job id
         """
         # Basic checks
-        if not name:
+        if not job_name:
             raise JobManagerException("Job name is not defined.")
 
         if not resource_url:
@@ -54,11 +58,15 @@ class JobManager(SQMComponent):
 
         # Store the job
         job = Job()
-        job.name = name
+        job.name = job_name
         job.submit_date = datetime.datetime.now()
-        job.submit_adaptor = adaptor
+        job.submit_adaptor = kwargs.get('adaptor') or Adaptor.shell.value
         job.last_status = JobStatus.INIT
         job.owner_id = current_user.id
+        job.total_cpu_count = kwargs.get('total_cpu_count')
+        job.walltime_limit = kwargs.get('walltime_limit')
+        job.spmd_variation = kwargs.get('spmd_variation')
+        job.description = kwargs.get('description')
 
         # Insert a new record for url if it does not exist already
         try:
@@ -68,7 +76,6 @@ class JobManager(SQMComponent):
                 db.session.add(resource)
                 db.session.flush()
             job.resource_id = resource.id
-            job.description = description
             db.session.add(job)
             db.session.flush()
 
@@ -79,17 +86,13 @@ class JobManager(SQMComponent):
             # Set to silent because some ghost files are uploaded with no name and empty value, don't know why.
             JobFileHandler.save_input_files(job, uploaded_files, silent=True)
 
-            #TODO: I should find a way to either save state or not to save state when error happen.
+            #TODO: I should find a way to either save state or not to save state when error happens.
             # Create saga wrapper
-            print "in submit.... before wrapper initialization"
             saga_wrapper = SagaJobWrapper(job)
-            print "in submit.... after wrapper initialization"
             # Keep the created job
             self.__jobs[job.id] = saga_wrapper
             # Run the saga job
-            print "in submit.... before wrapper run"
             saga_wrapper.run()
-            print "in submit.... after wrapper run"
         except:
             db.session.rollback()
             raise

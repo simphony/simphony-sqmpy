@@ -106,8 +106,7 @@ def submit(job_id=None):
             job_services.submit_job(form.name.data,
                                     resource_url,
                                     uploaded_files,
-                                    adaptor=form.submit_type.data,
-                                    description=form.description.data)
+                                    **form.data)
         # Redirect to list
         return redirect(url_for('.detail', job_id=job_id))
 

@@ -15,7 +15,10 @@
     {{ render_field(form.input_files, multiple="True") }}
     {{ render_field(form.resource) }}
     {{ render_field(form.new_resource) }}
-    {{ render_field(form.submit_type) }}
+    {{ render_field(form.adaptor) }}
+    {{ render_field(form.total_cpu_count) }}
+    {{ render_field(form.spmd_variation) }}
+    {{ render_field(form.walltime_limit) }}
     {{ render_field(form.description) }}
   </dl>
   <button type="submit" class="btn btn-default">Submit</button>

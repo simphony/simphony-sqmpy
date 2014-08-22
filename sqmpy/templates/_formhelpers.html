@@ -36,7 +36,15 @@
 {% if messages %}
 <ul class="flashes" style="list-style:none; width:40%">
 {% for category, message in messages %}
-<li class="alert alert-info {{ category }}">
+{% if category == 'message' %}
+<li class="alert alert-info">
+{% endif %}
+{% if category == 'warning' %}
+<li class="alert alert-warning">
+{% endif %}
+{% if category == 'error' %}
+<li class="alert alert-danger">
+{% endif %}
 <a href="javascript:void(0)" class="close" data-dismiss="alert">x</a>
 {{ message }}
 </li>

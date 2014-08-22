@@ -25,6 +25,7 @@ class Job(db.Model):
     submit_adaptor = db.Column(db.Integer, nullable=False)
     last_status = db.Column(db.String(50))
     remote_pid = db.Column(db.Integer)
+    remote_dir = db.Column(db.String(150))
     user_script = db.Column(db.Text())
     script_type = db.Column(db.Integer)
     description = db.Column(db.Text())

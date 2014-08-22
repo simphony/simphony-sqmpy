@@ -67,6 +67,7 @@ class JobManager(SQMComponent):
         job.walltime_limit = kwargs.get('walltime_limit')
         job.spmd_variation = kwargs.get('spmd_variation')
         job.description = kwargs.get('description')
+        job.remote_dir = kwargs.get('working_directory')
 
         # Insert a new record for url if it does not exist already
         try:
@@ -98,6 +99,24 @@ class JobManager(SQMComponent):
             raise
         db.session.commit()
         return job.id
+
+    def get_job_status(self, job_id):
+        """
+        Get job updated status
+        :param job_id:
+        :return:
+        """
+        job = self.get_job(job_id)
+        if job.id not in self.__jobs:
+            if job.last_status not in [JobStatus.CANCELED,
+                                       JobStatus.DONE,
+                                       JobStatus.FAILED]:
+                # If there is not wrapper for the job and the job is not either cancelled, done, or failed,
+                # then we don't know what has happened to the job.
+                return JobStatus.UNKNOWN
+
+        # If we have the wrapper we trust him to update last_status and we sent the object's status.
+        return job.last_status
 
     def get_job(self, job_id, *args, **kwargs):
         """

@@ -14,7 +14,7 @@ from werkzeug import secure_filename
 from sqmpy import app
 from sqmpy.job import job_blueprint
 from sqmpy.job.constants import FileRelation
-from sqmpy.job.exceptions import JobNotFoundException, FileNotFoundException
+from sqmpy.job.exceptions import JobNotFoundException, FileNotFoundException, JobManagerException
 from sqmpy.job.forms import JobSubmissionForm
 from sqmpy.job.models import Job, Resource
 import sqmpy.job.services as job_services
@@ -64,7 +64,9 @@ def detail(job_id):
     job = \
         job_services.get_job(job_id)
 
-    return render_template('job/job_detail.html', job=job)
+    return render_template('job/job_detail.html',
+                           job=job,
+                           status=job_services.get_job_status(job_id))
 
 
 @csrf_exempt
@@ -78,6 +80,7 @@ def submit(job_id=None):
     form = JobSubmissionForm()
     form.resource.choices = [(h.url, h.name) for h in Resource.query.all()]
     uploaded_files = []
+    error = None
     if request.method == 'POST' and form.validate():
         for f in request.files.getlist('input_files'):
             # Remove unsupported characters from filename
@@ -101,16 +104,21 @@ def submit(job_id=None):
         resource_url = form.resource.data
         if form.new_resource.data not in (None, ''):
             resource_url = form.new_resource.data
-        # Submit the job
-        job_id = \
-            job_services.submit_job(form.name.data,
-                                    resource_url,
-                                    uploaded_files,
-                                    **form.data)
-        # Redirect to list
-        return redirect(url_for('.detail', job_id=job_id))
+        job_id = None
+        try:
+            # Submit the job
+            job_id = \
+                job_services.submit_job(form.name.data,
+                                        resource_url,
+                                        uploaded_files,
+                                        **form.data)
+            # Redirect to list
+            return redirect(url_for('.detail', job_id=job_id))
+        except JobManagerException, ex:
+            flash(str(ex), category='error')
+            error = str(ex)
 
-    return render_template('job/job_submit.html', form=form)
+    return render_template('job/job_submit.html', form=form, error=error)
 
 @csrf_exempt
 @job_blueprint.route('/job/<int:job_id>/cancel', methods=['GET', 'POST'])
@@ -141,6 +149,10 @@ def uploaded_file(username, job_id, filename):
         abort(404)
     except FileNotFoundException:
         abort(404)
+    # Add proper mimetypes
+    import mimetypes
+    mimetypes.add_type('text/plain', '.lammps')
+    mimetypes.add_type('text/plain', '.couette')
     return send_from_directory(upload_dir, filename)
 
 

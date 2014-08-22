@@ -128,20 +128,21 @@ class SagaJobWrapper(object):
         :return:
         """
         job = job_services.get_job(job_id)
-        # Job directory would resist inside sqmpy folder. sqmpy folder
-        # Job directory name would be job id. The sqmpy folder will be
         # created in user home folder.
         # TODO: Let user give a working directory for the job or a resource
         # FIXME: Use proper ssh name to find home folder. Currently it is current user_name
-        owner = security_services.get_user(job.owner_id)
+        if not job.remote_dir:
+            owner = security_services.get_user(job.owner_id)
+            job.remote_dir = '/home/{user_name}/sqmpy/{job_id}'.format(user_name=owner.name,
+                                                                       job_id=job.id)
         adapter = 'sftp'
         if SagaJobWrapper._is_localhost(job.resource.url):
             adapter = 'file'
         remote_address = \
-            '{adapter}://{remote_host}/home/{user_name}/sqmpy/{job_id}'.format(adapter=adapter,
-                                                                               remote_host=job.resource.url,
-                                                                               user_name=owner.name,
-                                                                               job_id=job.id)
+            '{adapter}://{remote_host}/{working_directory}'.format(adapter=adapter,
+                                                                   remote_host=job.resource.url,
+                                                                   working_directory=job.remote_dir)
+        # Appropriate folders will be created
         return \
             saga.filesystem.Directory(remote_address,
                                       saga.filesystem.CREATE_PARENTS,
@@ -160,7 +161,9 @@ class SagaJobWrapper(object):
                                      StagingFile.relation == FileRelation.script.value).first()
 
         jd = saga.job.Description()
-        # TODO: Add queue name, cpu count, project and other params
+        # TODO: Add queue name, project and other params
+        print '###### working directory is %s ' % remote_job_dir.get_url().path
+        print '###### job.remote_dir is %s' % job.remote_dir
         jd.working_directory = remote_job_dir.get_url().path
         jd.total_cpu_count = job.total_cpu_count
         jd.wall_time_limit = job.walltime_limit
@@ -292,6 +295,8 @@ class SagaJobWrapper(object):
 
         # Set remote job working directory
         remote_job_dir = SagaJobWrapper.get_job_endpoint(self._job.id, self._session)
+        if remote_job_dir.list():
+            raise JobManagerException('Remote directory is not empty')
 
         # Upload files and get the script file instance back
         self._upload_job_files(self._job.id, remote_job_dir.get_url())
@@ -506,7 +511,7 @@ class JobStateChangeCallback(saga.Callback):
         if self._job.last_status != val:
             try:
                 # TODO: Make notification an abstract layer which allows adding further means such as twitter
-                send_state_change_email(self._sqmpy_job.id, self._sqmpy_job.owner_id, self._sqmpy_job.last_status, val)
+                send_state_change_email(self._job.id, self._job.owner_id, self._job.last_status, val)
             except Exception, ex:
                 app.logger.debug("Callback: Failed to send mail: %s" % ex)
             # Insert history record
@@ -525,8 +530,7 @@ class JobStateChangeCallback(saga.Callback):
             if self._job not in db.session:
                 db.session.merge(self._job)
             self._job.last_status = val
-            app.logger.debug('######Before commit the new value is %s '%val)
-            app.logger.debug('######Before commit the new value is %s '%val)
+            app.logger.debug('######Before commit the new value is %s ' % val)
             db.session.commit()
 
         if val in (saga.DONE,

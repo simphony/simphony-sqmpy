@@ -25,6 +25,8 @@
             {% endif %}
             <dt>Last status</dt>
             <dd>{{job.last_status}}</dd>
+            <dt>Current status</dt>
+            <dd>{{status}}</dd>
             {% if job.submit_adaptor %}
             <dt>Total number of CPUs</dt>
             <dd>{{job.total_cpu_count}}</dd>
@@ -40,7 +42,7 @@
         </dl>
     </div>
     <div>
-        {% if job.last_status == 'Running' %}
+        {% if status in ('Running' ,'Pending')%}
         <a type="button" class="btn btn-lg btn-danger" role="button" href="{{url_for('.cancel', job_id=job.id)}}">Cancel</a>
         {% endif %}
     </div>

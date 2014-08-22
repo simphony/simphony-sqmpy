@@ -64,3 +64,12 @@ def get_file_location(job_id, file_name):
     :return:
     """
     return core_services.get_component(JOB_MANAGER).get_file_location(job_id, file_name)
+
+
+def get_job_status(job_id):
+    """
+    Get job updated status
+    :param job_id:
+    :return:
+    """
+    return core_services.get_component(JOB_MANAGER).get_job_status(job_id)

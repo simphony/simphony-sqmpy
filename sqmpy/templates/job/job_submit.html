@@ -7,6 +7,10 @@
 
 {% from "_formhelpers.html" import render_field with context%}
 <h3>Submit a new    job</h3>
+            {% block flash_messages2 %}
+            {% from "_formhelpers.html" import render_messages with context%}
+            {{render_messages()}}
+            {% endblock%}
 <form class="form-horizontal"  role="form" enctype=multipart/form-data action="{{url_for('.submit')}}" method="POST">
   <dl>
     {{ form.csrf_token }}
@@ -15,6 +19,7 @@
     {{ render_field(form.input_files, multiple="True") }}
     {{ render_field(form.resource) }}
     {{ render_field(form.new_resource) }}
+    {{ render_field(form.working_directory) }}
     {{ render_field(form.adaptor) }}
     {{ render_field(form.total_cpu_count) }}
     {{ render_field(form.spmd_variation) }}
@@ -78,3 +83,6 @@
 
 </form-->
 {% endblock %}
+
+{% block flash_messages %}
+{% endblock%}

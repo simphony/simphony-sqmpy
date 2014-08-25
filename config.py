@@ -10,8 +10,9 @@ _basedir = os.path.abspath(os.path.dirname(__file__))
 
 DEBUG = True
 
-# Server host and port. Supports subdomains myapp.dev:5000
-# SERVER_NAME = '0.0.0.0:5001'
+# Server host and port. This is to support subdomains such as myapp.dev:5000
+# Port will be used if it is not provided when calling app.run()
+SERVER_NAME = 'localhost:5001'
 
 # ADMINS = frozenset(['sade@iwm.fraunhofer.de'])
 SECRET_KEY = '\x94\xb2\xf2</6\xd7+Op\xc5\x97v)\x83\xda\xff)\xd0UD\xd4NB'

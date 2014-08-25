@@ -162,8 +162,6 @@ class SagaJobWrapper(object):
 
         jd = saga.job.Description()
         # TODO: Add queue name, project and other params
-        print '###### working directory is %s ' % remote_job_dir.get_url().path
-        print '###### job.remote_dir is %s' % job.remote_dir
         jd.working_directory = remote_job_dir.get_url().path
         jd.total_cpu_count = job.total_cpu_count
         jd.wall_time_limit = job.walltime_limit
@@ -393,9 +391,12 @@ class JobStateChangeMonitor(threading.Thread):
         to be triggered.
         """
         while not self._stop_event.is_set():
+            # Get new saga job state. This will trigger a call to the backend and callbacks
             new_state = self._saga_job.state
+
             self._logger.debug("Monitoring thread: Job ID    : %s" % self._saga_job.id)
             # print "Monitoring thread: Job ID    : %s" % self._saga_job.id
+
             self._logger.debug("Monitoring thread: Job State : %s" % new_state)
             # print "Monitoring thread: Job State : %s" % new_state
 
@@ -404,6 +405,7 @@ class JobStateChangeMonitor(threading.Thread):
             # the registered callbacks would not be called. So I wait here for a
             # few seconds and afterwards I check the last status and update it if
             # necessary.
+
             # Repeat every 3 seconds
             time.sleep(3)
 
@@ -433,34 +435,6 @@ class JobStateChangeMonitor(threading.Thread):
                              saga.FAILED,
                              saga.CANCELED):
                 return
-            #     # If there are new files, transfer them back, along with output and error files
-            #     SagaJobWrapper.move_files_back(self._job_id,
-            #                                    self._job_wrapper.get_job_description(),
-            #                                    self._job_wrapper.get_saga_session())
-            #
-            #     # TODO: I should run this in main thread
-            #     #with app.app_context():
-            #     #    print "Monitoring thread: Staging calling wrapper method"
-            #     #    SagaJobWrapper.move_files_back(self._job_wrapper.get_job_description())
-            #     return
-            # else:
-            #     # Check if there are new files to process
-            #     #remote_dir = SagaJobWrapper._get_job_endpoint(job_id, session)
-            #     file_urls = self._remote_dir.list()
-            #     update_flag = False
-            #     for file_url in file_urls:
-            #         if file_url.path not in self._last_file_names:
-            #             self._last_file_names.append(file_url.path)
-            #             update_flag = True
-            #     if update_flag:
-            #         SagaJobWrapper.move_files_back(self._job_id,
-            #                                        self._job_wrapper.get_job_description(),
-            #                                        self._job_wrapper.get_saga_session())
-            #
-
-            # Check every 3 seconds
-            # TODO Read monitor interval period from application config
-            #time.sleep(5)
 
 
 class JobStateChangeCallback(saga.Callback):

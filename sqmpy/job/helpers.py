@@ -9,6 +9,7 @@ import os
 import hashlib
 import smtplib
 from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
 from shutil import copyfileobj
 
 from sqmpy import app, db
@@ -31,12 +32,46 @@ def send_state_change_email(job_id, owner_id, old_state, new_state):
     """
     owner_email, = db.session.query(User.email).filter(User.id == owner_id).one()
     smtp_server = smtplib.SMTP(app.config.get('MAIL_SERVER'))
-    # TODO: Add download links for each output file to message.
-    message = \
+    job_link = ''
+    text_message = \
         'Status changed from {old} to {new}'.format(old=old_state,
                                                     new=new_state)
-    message = MIMEText(message)
-    message['Subject'] = 'Change in job number [{job_id}]'.format(job_id=job_id)
+
+    server_name = app.config.get('SERVER_NAME')
+    port = None
+    if server_name and ':' in server_name:
+        port = int(server_name.rsplit(':', 1)[1])
+        server_name = server_name.rsplit(':', 1)[0]
+    else:
+        port = 5001
+
+    job_link = 'http://{host_name}:{port}/job/{job_id}'.format(host_name=server_name,
+                                                               port=port,
+                                                               job_id=job_id)
+    html_message = \
+        """<DOCTYPE html>
+        <html>
+        <head></head>
+        <body>
+             <h3>Job status change alert</h3>
+             <p>
+             {text_message}
+
+             <a href="{link}">Job #{job_id} detail page</a>
+             </p>
+        </body>
+        </html>""".format(text_message=text_message,
+                          job_id=job_id,
+                          link=job_link)
+
+    part1 = MIMEText(text_message, 'plain')
+    part2 = MIMEText(html_message, 'html')
+
+    #message = MIMEText(message)
+    message = MIMEMultipart('alternative')
+    message.attach(part1)
+    message.attach(part2)
+    message['Subject'] = 'State changed in job #{job_id}'.format(job_id=job_id)
     message['From'] = app.config.get('DEFAULT_MAIL_SENDER')
     message['To'] = owner_email
     smtp_server.sendmail(app.config.get('DEFAULT_MAIL_SENDER'),

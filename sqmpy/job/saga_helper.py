@@ -166,6 +166,9 @@ class SagaJobWrapper(object):
         jd.total_cpu_count = job.total_cpu_count
         jd.wall_time_limit = job.walltime_limit
         jd.spmd_variation = job.spmd_variation
+        jd.queue = job.queue or None
+        jd.total_physical_memory = job.total_physical_memory or None
+        jd.project = job.project or None
 
         # TODO: Add proper arguments for each input file
         jd.arguments = [script_file.name]

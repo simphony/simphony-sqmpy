@@ -67,6 +67,9 @@ class JobManager(SQMComponent):
         job.walltime_limit = kwargs.get('walltime_limit')
         job.spmd_variation = kwargs.get('spmd_variation')
         job.description = kwargs.get('description')
+        job.queue = kwargs.get('queue') or None
+        job.project = kwargs.get('project') or None
+        job.total_physical_memory = kwargs.get('total_physical_memory') or None
         job.remote_dir = kwargs.get('working_directory')
 
         # Insert a new record for url if it does not exist already

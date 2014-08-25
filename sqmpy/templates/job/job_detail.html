@@ -28,12 +28,20 @@
             <dt>Current status</dt>
             <dd>{{status}}</dd>
             {% if job.submit_adaptor %}
+            <dt>Queue name</dt>
+            <dd>{{job.queue}}</dd>
+            <dt>Project name</dt>
+            <dd>{{ job.project }}</dd>
             <dt>Total number of CPUs</dt>
             <dd>{{job.total_cpu_count}}</dd>
             <dt>SPMD variation</dt>
             <dd>{{job.spmd_variation}}</dd>
             <dt>Walltime limit</dt>
             <dd>{{job.walltime_limit}}</dd>
+            <dt>Total physical memory</dt>
+            <dd>{{ job.total_physical_memory }}</dd>
+            <dt>Working directory</dt>
+            <dd>{{ job.remote_dir }}</dd>
             {% endif %}
             <dt>Script</dt>
             <dd><textarea readonly="readonly">{{job.user_script}}</textarea></dd>

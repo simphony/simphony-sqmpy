@@ -94,6 +94,11 @@ class JobSubmissionForm(Form):
                               validators=[wtf.validators.Optional()],
                               choices=[(entry.value, entry.name) for entry in Adaptor],
                               coerce=int)
+    queue = wtf.StringField('Queue name', [wtf.validators.Optional(),
+                                           wtf.validators.Length(min=1, max=150)])
+    project = wtf.StringField('Project name', [wtf.validators.Optional(),
+                                               wtf.validators.Length(min=1, max=150)])
+    total_physical_memory = wtf.IntegerField('Total physical memory', [wtf.validators.Optional()])
     total_cpu_count = wtf.IntegerField('Total number of CPUs',
                                        [OptionalIfFieldEqualTo('adaptor',
                                                                Adaptor.shell.value)])

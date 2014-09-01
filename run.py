@@ -21,5 +21,5 @@ if __name__ == '__main__':
         # Pleae note that SERVER_NAME is used for subdomains only and has no effect here.
     """
     # This line added to support heroku deployment
-    port = int(os.environ.get("PORT", 5001))
+    port = int(os.environ.get("PORT", 5000))
     app.run(host='localhost', port=port)

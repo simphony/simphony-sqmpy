@@ -111,3 +111,4 @@ class JobSubmissionForm(Form):
                                       [OptionalIfFieldEqualTo('adaptor',
                                                               Adaptor.shell.value)])
     description = wtf.TextAreaField('Description', [wtf.validators.Optional()])
+    submit = wtf.SubmitField('Submit')

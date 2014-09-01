@@ -1,4 +1,12 @@
+"""
+Entry point for running the sqmpy application standalone
+"""
+import os
+
 from sqmpy import app
+
+__author__ = 'Mehdi Sadeghi'
+
 
 if __name__ == '__main__':
     """
@@ -12,4 +20,6 @@ if __name__ == '__main__':
 
         # Pleae note that SERVER_NAME is used for subdomains only and has no effect here.
     """
-    app.run(host='localhost')
+    # This line added to support heroku deployment
+    port = int(os.environ.get("PORT", 5001))
+    app.run(host='localhost', port=port)

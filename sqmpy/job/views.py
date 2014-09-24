@@ -81,7 +81,7 @@ def submit(job_id=None):
     form.resource.choices = [(h.url, h.name) for h in Resource.query.all()]
     uploaded_files = []
     error = None
-    if request.method == 'POST' and form.validate():
+    if form.validate_on_submit():
         for f in request.files.getlist('input_files'):
             # Remove unsupported characters from filename
             safe_filename = secure_filename(f.filename)

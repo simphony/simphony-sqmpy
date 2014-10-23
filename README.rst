@@ -5,9 +5,6 @@ Simple Queue Manager
 .. image:: https://travis-ci.org/mehdisadeghi/simple-queue-manager.svg
     :target: https://travis-ci.org/mehdisadeghi/simple-queue-manager
 
-.. image:: https://www.herokucdn.com/deploy/button.png
-    :target: https://heroku.com/deploy
-
 sqmpy stands for simple queue manager written in python and is a web application which is based on Flask miroframework
 and SAGA-Python distributed computing access layer.
 sqmpy lets user to submit simple python or shell scripts on remote machines. Then user can monitor the running job in
@@ -110,3 +107,6 @@ sqmpy will create another folder called *sqmpy* in user home directory and will 
 running tasks. For each job one folder will be created and will be set as job working directory. This folder
 will contain input and output files as well as script file and any other files being produced or consumed by
 the remote job.
+
+.. image:: https://www.herokucdn.com/deploy/button.png
+    :target: https://heroku.com/deploy

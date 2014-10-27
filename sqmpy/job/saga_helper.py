@@ -309,7 +309,7 @@ class SagaJobWrapper(object):
         self._saga_job = self._job_service.create_job(self._job_description)
 
         # Register call backs
-        self._register_callbacks()
+        #self._register_callbacks()
 
         # Check our job's id and state
         self._logger.debug("Job ID    : %s" % self._saga_job.id)

@@ -3,8 +3,9 @@
 "description": "A simple queue manager to submit and monitor jobs on computing resources. Based on SAGA-Python and Flask microframework.",
 "keywords": [
 "sqmpy",
-"HTML5",
-"python"
+"flask",
+"python",
+"SAGA-Python"
 ],
 "website": "http://mehdisadeghi.github.io/simple-queue-manager/",
 "repository": "https://github.com/mehdisadeghi/simple-queue-manager",
@@ -14,6 +15,6 @@
 "BUILDPACK_URL": "https://github.com/ddollar/heroku-buildpack-multi.git"
 },
 "addons": [
-"redistogo"
+""
 ]
 }

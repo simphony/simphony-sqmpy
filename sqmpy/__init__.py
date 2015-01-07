@@ -112,15 +112,26 @@ class SqmpyApplication(Flask):
         import sqmpy.views
         import sqmpy.security.views
         import sqmpy.job.views
+        import sqmpy.net.views
         from sqmpy.security import security_blueprint
         from sqmpy.job import job_blueprint
+        from sqmpy.net import net_blueprint
 
         self.register_blueprint(security_blueprint)
         self.register_blueprint(job_blueprint)
+        self.register_blueprint(net_blueprint)
+
+        # Page names are the same as `request.blueprint` and will be compared during template rendering
+        self.jinja_env.globals['pages'] = {job_blueprint.name: {'name': 'Job',
+                                                                'index': 'sqmpy.job.index'},
+                                           net_blueprint.name: {'name': 'Network',
+                                                                'index': 'sqmpy.net.index'}}
 
         # If there is no database file, prepare in memory database
         if self.config.get('SQLALCHEMY_DATABASE_URI') == default_config.SQLALCHEMY_DATABASE_URI:
             self.db.create_all()
+
+
 
 
 def __init_app():

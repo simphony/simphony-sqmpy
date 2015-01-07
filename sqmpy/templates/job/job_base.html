@@ -1,9 +1,5 @@
 {% extends 'layout.html' %}
 
-{% block navbar_links %}
-    <li class="active"><a href="{{ url_for('sqmpy.job.index') }}">Jobs</a></li>
-{% endblock %}
-
 {% block body_tail %}
     {{ super() }}
     <script>

@@ -10,6 +10,7 @@ from flask.ext.login import login_required, current_user
 from flask.ext.csrf import csrf_exempt
 
 from sqmpy.net import net_blueprint
+from sqmpy.net.services import list_peers
 
 __author__ = 'Mehdi Sadeghi'
 
@@ -22,4 +23,4 @@ def index():
     :return:
     """
     return render_template('net/netmap.html',
-                           net={})
+                           peers=list_peers())

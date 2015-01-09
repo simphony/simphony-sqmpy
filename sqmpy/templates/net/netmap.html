@@ -17,9 +17,9 @@
             </tr>
             </thead>
             <tbody data-link="row" class="rowlink">
-            {% for peer in peers %}
+            {% for peer_key, peer in peers.iteritems() %}
             <tr>
-                <td><a href="{{url_for('.detail', peer_id=peer.id)}}"></a>{{ peer.id }}</td>
+                <td>{{ peer.id }}</td>
                 <td>{{ peer.address }}</td>
                 <td>{{ peer.status }}</td>
             </tr>

@@ -44,3 +44,6 @@ MAIL_SERVER = 'iwmcas.iwm.fraunhofer.de'
 
 # Number of job records per page
 PER_PAGE = 5
+
+# Consensus server
+CONSENSUS_SERVER = 'tcp://127.0.0.1:4242'

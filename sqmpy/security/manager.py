@@ -4,7 +4,7 @@
 
     Provides user management
 """
-#import bcrypt
+import bcrypt
 
 from ..core import SQMComponent
 from .constants import SECURITY_MANAGER

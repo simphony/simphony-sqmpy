@@ -7,7 +7,9 @@
 from flask import Blueprint
 from flask.ext.login import LoginManager
 
+from ..core import core_services
 from .models import User
+from .manager import SecurityManager
 
 __author__ = 'Mehdi Sadeghi'
 
@@ -25,3 +27,6 @@ def on_load(state):
     @login_manager.user_loader
     def load_user(id):
         return User.query.get(id)
+
+#Register the component in core
+core_services.register(SecurityManager())

@@ -7,156 +7,50 @@
     to remote resources.
     `sqm' stands for Simple Queue Manager.
 """
-import sys
-import logging
-
 from flask import Flask
 from flask.ext.wtf.csrf import CsrfProtect
 from flask.ext.sqlalchemy import SQLAlchemy
-#from flask.ext.admin import Admin
-#from flask.ext.admin.contrib.sqla import ModelView
-#from flask.ext.login import current_user
 
 from . import default_config
 
 __author__ = 'Mehdi Sadeghi'
 __version__ = 'v0.2'
 
-app = None
-db = None
+# Initialize flask app
+app = Flask(__name__.split('.')[0], static_url_path='')
 
+# Import default configs
+app.config.from_object(default_config)
 
-# class SqmpyModelView(ModelView):
-#     """
-#     Base admin pages view
-#     """
-#     def is_accessible(self):
-#         return current_user.is_authenticated()
+# Import config module from working directory if exists
+try:
+    app.config.from_object('config')
+except ImportError:
+    pass
 
+# Create database
+db = SQLAlchemy(app)
 
-class SqmpyApplication(Flask):
-    """
-    To wrap sqmpy stuff
-    """
-    def __init__(self):
-        super(SqmpyApplication, self).__init__(__name__.split('.')[0], static_url_path='')
+# Activate CSRF protection
+if app.config.get('CSRF_ENABLED'):
+    CsrfProtect(app)
 
-        # Import default configs
-        self.config.from_object(default_config)
+# Registering blueprints,
+# IMPORTANT: views should be imported before registering blueprints and
+# after initializing app and db objects. Forgive me if it isn't super cool.
+import sqmpy.views
+import sqmpy.security.views
+import sqmpy.job.views
 
-        # Import config module if exist
-        try:
-            self.config.from_object('config')
-        except ImportError:
-            pass
+# Register blueprints
+from .security import security_blueprint
+from .job import job_blueprint
+app.register_blueprint(security_blueprint)
+app.register_blueprint(job_blueprint)
 
-        # Import config file if exists
-        self.config.from_pyfile('config.py', silent=True)
-
-        # Override from environment variable if defined
-        self.config.from_envvar('SQMPY_SETTINGS', silent=True)
-
-        # Initialize db right after basic initialization
-        self.db = SQLAlchemy(self)
-
-        self._configure_logging()
-
-        # Activate CSRF protection
-        if self.config.get('CSRF_ENABLED'):
-            CsrfProtect(self)
-
-        #self.admin = Admin(self)
-#        self.mail = Mail(self)
-
-    def _configure_logging(self):
-        """
-        Logging settings
-        """
-        handler = None
-        level = self.config.get('DEBUG', logging.DEBUG)
-        if not self.config.get('LOG_FILE'):
-            handler = logging.StreamHandler(sys.stdout)
-            handler.setLevel(level)
-            formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-            handler.setFormatter(formatter)
-        else:
-            # Setup logging.
-            from logging.handlers import RotatingFileHandler
-            handler = RotatingFileHandler(self.config.get('LOG_FILE'))
-            handler.setLevel(level)
-            handler.setFormatter(logging.Formatter(
-                '%(asctime)s %(levelname)s: %(message)s '
-                '[in %(pathname)s:%(lineno)d]'
-            ))
-        self.logger.addHandler(handler)
-
-    # def register_admin_views(self):
-    #     """
-    #     Register admin views from different modules.
-    #     """
-    #     # Add security admin views
-    #     from sqmpy.security import models as security_models
-    #     self.admin.add_view(SqmpyModelView(security_models.User, self.db.session))
-    #
-    #     # Adding job admin views
-    #     from sqmpy.job import models as job_models
-    #     self.admin.add_view(SqmpyModelView(job_models.Job, self.db.session))
-    #     self.admin.add_view(SqmpyModelView(job_models.Resource, self.db.session))
-    #     self.admin.add_view(SqmpyModelView(job_models.JobStateHistory, self.db.session))
-
-    def load_blueprints(self):
-        """
-        Load blueprints
-        """
-        # Registering blueprints,
-        # IMPORTANT: views should be imported before registering blueprints
-        import sqmpy.views
-        import sqmpy.security.views
-        import sqmpy.job.views
-        from sqmpy.security import security_blueprint
-        from sqmpy.job import job_blueprint
-
-        self.register_blueprint(security_blueprint)
-        self.register_blueprint(job_blueprint)
-
-        # If there is no database file, prepare in memory database
-        if self.config.get('SQLALCHEMY_DATABASE_URI') == default_config.SQLALCHEMY_DATABASE_URI:
-            self.db.create_all()
-
-
-def __init_app():
-    """
-    Initializes app variable with Flask application.
-    I wrap initialization here to avoid import errors
-    :return:
-    """
-    global app
-    app = SqmpyApplication()
-    global db
-    db = app.db
-    app.load_blueprints()
-    #app.register_admin_views()
-
-    # After loading blueprints create db structure if not exists yet
-    app.db.create_all()
-
-    from sqmpy.core import core_services
-    from sqmpy.job.manager import JobManager
-    from sqmpy.security.manager import SecurityManager
-
-    #Register the component in core
-    #@TODO: This should be dynamic later
-    core_services.register(SecurityManager())
-
-    #Register the component in core
-    #TODO: This should be dynamic later
-    core_services.register(JobManager())
-
-    return app
-
-
-# Initialize app and db
-__init_app()
+# Create every registered model. BTW `create_all' will check for existence of tables before running CREATE queries.
+if app.debug:
+    db.create_all()
 
 @app.teardown_appcontext
 def shutdown_session(exception=None):

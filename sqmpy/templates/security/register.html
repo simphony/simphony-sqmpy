@@ -7,7 +7,9 @@
 <h3>Register</h3>
 <form class="form-horizontal"  role="form" action="{{url_for('.register')}}" method="POST">
   <dl>
+      {% if csrf_token %}
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+      {% endif %}
     {{ render_field(form.user_name) }}
     {{ render_field(form.email) }}
     {{ render_field(form.password) }}

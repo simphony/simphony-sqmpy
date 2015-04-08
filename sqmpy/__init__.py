@@ -9,27 +9,26 @@
 """
 from flask import Flask
 from flask.ext.wtf.csrf import CsrfProtect
-from flask.ext.admin import Admin
-#from flask.ext.mail import Mail
+#from flask.ext.admin import Admin
 from flask.ext.sqlalchemy import SQLAlchemy
-from flask.ext.admin.contrib.sqla import ModelView
+#from flask.ext.admin.contrib.sqla import ModelView
 from flask.ext.login import current_user
 
 from . import default_config
 
 __author__ = 'Mehdi Sadeghi'
-__version__ = 'v1.0.0-alpha.4'
+__version__ = 'v0.2'
 
 app = None
 db = None
 
 
-class SqmpyModelView(ModelView):
-    """
-    Base admin pages view
-    """
-    def is_accessible(self):
-        return current_user.is_authenticated()
+# class SqmpyModelView(ModelView):
+#     """
+#     Base admin pages view
+#     """
+#     def is_accessible(self):
+#         return current_user.is_authenticated()
 
 
 class SqmpyApplication(Flask):
@@ -63,7 +62,7 @@ class SqmpyApplication(Flask):
         if self.config.get('CSRF_ENABLED'):
             CsrfProtect(self)
 
-        self.admin = Admin(self)
+        #self.admin = Admin(self)
 #        self.mail = Mail(self)
 
     def _configure_logging(self):
@@ -89,19 +88,19 @@ class SqmpyApplication(Flask):
             ))
         self.logger.addHandler(handler)
 
-    def register_admin_views(self):
-        """
-        Register admin views from different modules.
-        """
-        # Add security admin views
-        from sqmpy.security import models as security_models
-        self.admin.add_view(SqmpyModelView(security_models.User, self.db.session))
-
-        # Adding job admin views
-        from sqmpy.job import models as job_models
-        self.admin.add_view(SqmpyModelView(job_models.Job, self.db.session))
-        self.admin.add_view(SqmpyModelView(job_models.Resource, self.db.session))
-        self.admin.add_view(SqmpyModelView(job_models.JobStateHistory, self.db.session))
+    # def register_admin_views(self):
+    #     """
+    #     Register admin views from different modules.
+    #     """
+    #     # Add security admin views
+    #     from sqmpy.security import models as security_models
+    #     self.admin.add_view(SqmpyModelView(security_models.User, self.db.session))
+    #
+    #     # Adding job admin views
+    #     from sqmpy.job import models as job_models
+    #     self.admin.add_view(SqmpyModelView(job_models.Job, self.db.session))
+    #     self.admin.add_view(SqmpyModelView(job_models.Resource, self.db.session))
+    #     self.admin.add_view(SqmpyModelView(job_models.JobStateHistory, self.db.session))
 
     def load_blueprints(self):
         """
@@ -134,7 +133,7 @@ def __init_app():
     global db
     db = app.db
     app.load_blueprints()
-    app.register_admin_views()
+    #app.register_admin_views()
 
     # After loading blueprints create db structure if not exists yet
     app.db.create_all()

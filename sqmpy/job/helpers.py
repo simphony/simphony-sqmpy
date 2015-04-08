@@ -12,11 +12,11 @@ from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from shutil import copyfileobj
 
-from sqmpy import app, db
-from sqmpy.security.models import User
-from sqmpy.job.exceptions import JobManagerException, JobNotFoundException, FileNotFoundException
-from sqmpy.job.models import Job, StagingFile
-from sqmpy.job.constants import FileRelation, ScriptType
+from .. import app, db
+from ..security.models import User
+from .exceptions import JobManagerException, JobNotFoundException, FileNotFoundException
+from .models import Job, StagingFile
+from .constants import FileRelation, ScriptType
 
 __author__ = 'Mehdi Sadeghi'
 

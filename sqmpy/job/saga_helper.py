@@ -12,16 +12,15 @@ import datetime
 import threading
 
 import saga
-
 from flask.ext.login import current_user
 
-from sqmpy import app, db
-from sqmpy.job.constants import FileRelation, ScriptType, Adaptor
-from sqmpy.job.exceptions import JobManagerException
-from sqmpy.job.helpers import JobFileHandler, send_state_change_email
-from sqmpy.job.models import Resource, StagingFile, JobStateHistory, Job
-from sqmpy.job import services as job_services
-from sqmpy.security import services as security_services
+from .. import app, db
+from .constants import FileRelation, ScriptType, Adaptor
+from .exceptions import JobManagerException
+from .helpers import JobFileHandler, send_state_change_email
+from .models import Resource, StagingFile, JobStateHistory, Job
+from . import services as job_services
+from ..security import services as security_services
 
 __author__ = 'Mehdi Sadeghi'
 

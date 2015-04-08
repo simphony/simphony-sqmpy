@@ -4,8 +4,8 @@
 
     Interface to job manager.
 """
-from sqmpy.core import core_services
-from sqmpy.job.constants import JOB_MANAGER
+from ..core import core_services
+from .constants import JOB_MANAGER
 
 __author__ = 'Mehdi Sadeghi'
 

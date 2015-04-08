@@ -6,7 +6,7 @@
 """
 from flask import Blueprint
 
-from sqmpy.job.manager import JobManager
+from .manager import JobManager
 
 __author__ = 'Mehdi Sadeghi'
 

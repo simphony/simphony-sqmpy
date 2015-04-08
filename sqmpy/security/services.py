@@ -4,8 +4,8 @@
 
     Interface to security manager.
 """
-from sqmpy.core import core_services
-from sqmpy.security.constants import SECURITY_MANAGER
+from ..core import core_services
+from .constants import SECURITY_MANAGER
 
 __author__ = 'Mehdi Sadeghi'
 

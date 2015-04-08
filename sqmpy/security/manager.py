@@ -4,12 +4,12 @@
 
     Provides user management
 """
-import bcrypt
+#import bcrypt
 
-from sqmpy.core import SQMComponent
-from sqmpy.security.constants import SECURITY_MANAGER
-from sqmpy.security.exceptions import SecurityManagerException
-from sqmpy.security.models import User
+from ..core import SQMComponent
+from .constants import SECURITY_MANAGER
+from .exceptions import SecurityManagerException
+from .models import User
 
 __author__ = 'Mehdi Sadeghi'
 

@@ -1,7 +1,13 @@
+"""
+    sqmpy.views
+    ~~~~~~~~~~~~~~~
+
+    View functions
+"""
 from flask import render_template
 from flask.ext.login import login_required
 
-from sqmpy import app
+from . import app
 
 
 @app.route('/', methods=['GET'])

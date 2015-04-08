@@ -7,7 +7,7 @@
 from flask import Blueprint
 from flask.ext.login import LoginManager
 
-from sqmpy.security.models import User
+from .models import User
 
 __author__ = 'Mehdi Sadeghi'
 

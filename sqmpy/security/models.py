@@ -6,8 +6,8 @@
 """
 import datetime
 
-from sqmpy import db
-from sqmpy.security import constants
+from .. import db
+from . import constants
 
 __author__ = 'Mehdi Sadeghi'
 

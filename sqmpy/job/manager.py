@@ -7,15 +7,14 @@
 import datetime
 
 from flask.ext.login import current_user
-from saga.exceptions import BadParameter
 
-from sqmpy import app, db
-from sqmpy.core import SQMComponent
-from sqmpy.job.exceptions import JobManagerException
-from sqmpy.job.helpers import JobFileHandler
-from sqmpy.job.models import Job, Resource
-from sqmpy.job.constants import JOB_MANAGER, JobStatus, Adaptor
-from sqmpy.job.saga_helper import SagaJobWrapper
+from .. import app, db
+from ..core import SQMComponent
+from .exceptions import JobManagerException
+from .helpers import JobFileHandler
+from .models import Job, Resource
+from .constants import JOB_MANAGER, JobStatus, Adaptor
+from .saga_helper import SagaJobWrapper
 
 __author__ = 'Mehdi Sadeghi'
 

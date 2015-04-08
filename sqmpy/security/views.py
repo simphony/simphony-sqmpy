@@ -7,12 +7,12 @@
 from flask import flash, url_for, request, redirect, render_template, abort
 from flask.ext.login import login_user, logout_user, login_required
 
-from sqmpy import db
-from sqmpy.security import security_blueprint
-from sqmpy.security.forms import LoginForm, RegisterForm
-from sqmpy.security.manager import get_password_digest
-from sqmpy.security.models import User
-import sqmpy.security.services as security_services
+from .. import db
+from . import security_blueprint
+from .forms import LoginForm, RegisterForm
+from .manager import get_password_digest
+from .models import User
+from . import services as security_services
 
 __author__ = 'Mehdi Sadeghi'
 

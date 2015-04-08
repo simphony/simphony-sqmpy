@@ -13,7 +13,7 @@ import wtforms as wtf
 #from wtforms.ext.sqlalchemy.fields import QuerySelectField
 from wtforms.fields.core import FieldList, SelectMultipleField
 
-from sqmpy.job.constants import Adaptor
+from .constants import Adaptor
 
 __author__ = 'Mehdi Sadeghi'
 

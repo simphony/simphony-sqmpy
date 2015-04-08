@@ -8,16 +8,15 @@ from flask import request, session, g, redirect, url_for, abort, \
     render_template, flash, send_from_directory
 from flask.ext.login import login_required, current_user
 from flask.ext.csrf import csrf_exempt
-
 from werkzeug import secure_filename
 
-from sqmpy import app
-from sqmpy.job import job_blueprint
-from sqmpy.job.constants import FileRelation
-from sqmpy.job.exceptions import JobNotFoundException, FileNotFoundException, JobManagerException
-from sqmpy.job.forms import JobSubmissionForm
-from sqmpy.job.models import Job, Resource
-import sqmpy.job.services as job_services
+from .. import app
+from . import job_blueprint
+from .constants import FileRelation
+from .exceptions import JobNotFoundException, FileNotFoundException, JobManagerException
+from .forms import JobSubmissionForm
+from .models import Job, Resource
+from . import services as job_services
 
 __author__ = 'Mehdi Sadeghi'
 

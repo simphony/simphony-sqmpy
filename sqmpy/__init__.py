@@ -7,12 +7,15 @@
     to remote resources.
     `sqm' stands for Simple Queue Manager.
 """
+import sys
+import logging
+
 from flask import Flask
 from flask.ext.wtf.csrf import CsrfProtect
-#from flask.ext.admin import Admin
 from flask.ext.sqlalchemy import SQLAlchemy
+#from flask.ext.admin import Admin
 #from flask.ext.admin.contrib.sqla import ModelView
-from flask.ext.login import current_user
+#from flask.ext.login import current_user
 
 from . import default_config
 
@@ -58,7 +61,7 @@ class SqmpyApplication(Flask):
 
         self._configure_logging()
 
-        # Activate other apps
+        # Activate CSRF protection
         if self.config.get('CSRF_ENABLED'):
             CsrfProtect(self)
 
@@ -69,19 +72,18 @@ class SqmpyApplication(Flask):
         """
         Logging settings
         """
-        import logging
-        import sys
         handler = None
+        level = self.config.get('DEBUG', logging.DEBUG)
         if not self.config.get('LOG_FILE'):
             handler = logging.StreamHandler(sys.stdout)
-            handler.setLevel(logging.DEBUG)
+            handler.setLevel(level)
             formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
             handler.setFormatter(formatter)
         else:
             # Setup logging.
             from logging.handlers import RotatingFileHandler
             handler = RotatingFileHandler(self.config.get('LOG_FILE'))
-            handler.setLevel(logging.DEBUG)
+            handler.setLevel(level)
             handler.setFormatter(logging.Formatter(
                 '%(asctime)s %(levelname)s: %(message)s '
                 '[in %(pathname)s:%(lineno)d]'

@@ -11,9 +11,9 @@ from sqmpy.security.models import User
 
 __author__ = 'Mehdi Sadeghi'
 
-
 # Create security blueprint
 security_blueprint = Blueprint('sqmpy.security', __name__)
+
 
 @security_blueprint.record_once
 def on_load(state):

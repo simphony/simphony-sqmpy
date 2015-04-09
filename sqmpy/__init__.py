@@ -45,8 +45,10 @@ import sqmpy.job.views
 # Register blueprints
 from .security import security_blueprint
 from .job import job_blueprint
+from .views import main_blueprint
 app.register_blueprint(security_blueprint)
 app.register_blueprint(job_blueprint)
+app.register_blueprint(main_blueprint)
 
 # Create every registered model. BTW `create_all' will check for existence of tables before running CREATE queries.
 if app.debug:

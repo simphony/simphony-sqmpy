@@ -4,13 +4,13 @@
 
     View functions for jobs mudule
 """
+from flask import current_app
 from flask import request, session, g, redirect, url_for, abort, \
     render_template, flash, send_from_directory
 from flask.ext.login import login_required, current_user
 from flask.ext.csrf import csrf_exempt
 from werkzeug import secure_filename
 
-from .. import app
 from . import job_blueprint
 from .constants import FileRelation
 from .exceptions import JobNotFoundException, FileNotFoundException, JobManagerException
@@ -20,8 +20,6 @@ from . import services as job_services
 
 __author__ = 'Mehdi Sadeghi'
 
-PER_PAGE = app.config.get('PER_PAGE', 20)
-
 
 @job_blueprint.route('/job/', methods=['GET'])
 def index():
@@ -30,13 +28,6 @@ def index():
     :return:
     """
     return redirect(url_for('sqmpy.job.list_jobs'))
-
-
-def url_for_other_page(page):
-    args = request.view_args.copy()
-    args['page'] = page
-    return url_for(request.endpoint, **args)
-app.jinja_env.globals['url_for_other_page'] = url_for_other_page
 
 
 @job_blueprint.route('/jobs/', methods=['GET'], defaults={'page': 1})
@@ -154,7 +145,7 @@ def uploaded_file(username, job_id, filename):
     mimetypes.add_type('text/plain', '.couette')
     return send_from_directory(upload_dir, filename)
 
-
+@job_blueprint.app_template_global(name='url_for_other_page')
 def url_for_other_page(page):
     """
     Helper to create next page url
@@ -164,5 +155,3 @@ def url_for_other_page(page):
     args = request.view_args.copy()
     args['page'] = page
     return url_for(request.endpoint, **args)
-
-app.jinja_env.globals['url_for_other_page'] = url_for_other_page

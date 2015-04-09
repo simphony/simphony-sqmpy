@@ -12,7 +12,9 @@ from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from shutil import copyfileobj
 
-from .. import app, db
+from flask import current_app
+
+from .. import db
 from ..security.models import User
 from .exceptions import JobManagerException, JobNotFoundException, FileNotFoundException
 from .models import Job, StagingFile
@@ -31,13 +33,13 @@ def send_state_change_email(job_id, owner_id, old_state, new_state):
     :return:
     """
     owner_email, = db.session.query(User.email).filter(User.id == owner_id).one()
-    smtp_server = smtplib.SMTP(app.config.get('MAIL_SERVER'))
+    smtp_server = smtplib.SMTP(current_app.config.get('MAIL_SERVER'))
     job_link = ''
     text_message = \
         'Status changed from {old} to {new}'.format(old=old_state,
                                                     new=new_state)
 
-    server_name = app.config.get('SERVER_NAME')
+    server_name = current_app.config.get('SERVER_NAME')
     port = None
     if server_name and ':' in server_name:
         port = int(server_name.rsplit(':', 1)[1])
@@ -72,9 +74,9 @@ def send_state_change_email(job_id, owner_id, old_state, new_state):
     message.attach(part1)
     message.attach(part2)
     message['Subject'] = 'State changed in job #{job_id}'.format(job_id=job_id)
-    message['From'] = app.config.get('DEFAULT_MAIL_SENDER')
+    message['From'] = current_app.config.get('DEFAULT_MAIL_SENDER')
     message['To'] = owner_email
-    smtp_server.sendmail(app.config.get('DEFAULT_MAIL_SENDER'),
+    smtp_server.sendmail(current_app.config.get('DEFAULT_MAIL_SENDER'),
                          [owner_email],
                          message.as_string())
     smtp_server.quit()
@@ -174,7 +176,7 @@ class JobFileHandler(object):
         job_owner = \
             User.query.filter(User.id == Job.owner_id,
                               Job.id == job_id).first()
-        job_owner_dir = os.path.join(app.config.get('STAGING_FOLDER'), job_owner.username)
+        job_owner_dir = os.path.join(current_app.config.get('STAGING_FOLDER'), job_owner.username)
         if not os.path.exists(job_owner_dir):
             os.makedirs(job_owner_dir)
         job_dir = os.path.join(job_owner_dir, str(job_id))

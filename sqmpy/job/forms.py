@@ -6,12 +6,8 @@
 """
 from flask.ext.wtf import Form
 from flask.ext.wtf.file import FileField, FileAllowed, FileRequired
-#from flask.ext.uploads import UploadSet, IMAGES,SCRIPTS
-#from flask.ext.wtf.html5 import URLField
 
 import wtforms as wtf
-#from wtforms.ext.sqlalchemy.fields import QuerySelectField
-from wtforms.fields.core import FieldList, SelectMultipleField
 
 from .constants import Adaptor
 
@@ -39,8 +35,6 @@ class JobSubmissionForm(Form):
     """
     Form to handle job submission.
     """
-
-    #job_name = QuerySelectField('Query', query_factory=get_jobs)
     name = wtf.StringField('Name', [wtf.validators.DataRequired(), wtf.validators.Length(min=1, max=50)])
     script_file = FileField('Script file', validators=[FileRequired(),
                                                        FileAllowed(['py', 'sh'], 'Python and shell scripts only!')])
@@ -63,7 +57,6 @@ class JobSubmissionForm(Form):
     total_cpu_count = wtf.IntegerField('Total number of CPUs',
                                        [OptionalIfFieldEqualTo('adaptor',
                                                                Adaptor.shell.value)])
-    #Single Program Multiple Data
     spmd_variation = wtf.StringField('SPMD variation',
                                      [OptionalIfFieldEqualTo('adaptor',
                                                              Adaptor.shell.value),
@@ -73,45 +66,3 @@ class JobSubmissionForm(Form):
                                                               Adaptor.shell.value)])
     description = wtf.TextAreaField('Description', [wtf.validators.Optional()])
     submit = wtf.SubmitField('Submit')
-
-
-# class InputFileForm(Form):
-#     """
-#     To get list of input files
-#     """
-
-
-#scripts = UploadSet('scripts', SCRIPTS)
-
-
-# class RequiredIf(Required):
-#     # a validator which makes a field required if
-#     # another field is set and has a truthy value
-#     # http://stackoverflow.com/a/8464478/157216
-#
-#     def __init__(self, other_field_name, *args, **kwargs):
-#         self.other_field_name = other_field_name
-#         super(RequiredIf, self).__init__(*args, **kwargs)
-#
-#     def __call__(self, form, field):
-#         other_field = form._fields.get(self.other_field_name)
-#         if other_field is None:
-#             raise Exception('no field named "%s" in form' % self.other_field_name)
-#         if bool(other_field.data):
-#             super(RequiredIf, self).__call__(form, field)
-
-# class RequiredIfFieldNotEqualTo(wtf.validators.DataRequired):
-#     # a validator which makes a field required if
-#     # another field is set and has a truthy value
-#
-#     def __init__(self, other_field_name, value, *args, **kwargs):
-#         self.other_field_name = other_field_name
-#         self.value = value
-#         super(RequiredIfFieldNotEqualTo, self).__init__(*args, **kwargs)
-#
-#     def __call__(self, form, field):
-#         other_field = form._fields.get(self.other_field_name)
-#         if other_field is None:
-#             raise Exception('no field named "%s" in form' % self.other_field_name)
-#         if other_field.data != self.value:
-#             super(RequiredIfFieldNotEqualTo, self).__call__(form, field)

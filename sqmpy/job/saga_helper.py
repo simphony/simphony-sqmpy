@@ -12,9 +12,10 @@ import datetime
 import threading
 
 import saga
+from flask import current_app
 from flask.ext.login import current_user
 
-from .. import app, db
+from .. import db
 from .constants import FileRelation, ScriptType, Adaptor
 from .exceptions import JobManagerException
 from .helpers import JobFileHandler, send_state_change_email
@@ -48,7 +49,7 @@ class SagaJobWrapper(object):
         self._saga_job = None
         # Keep the instance of job monitoring thread
         self._monitor_thread = None
-        self._logger = app.logger
+        self._logger = current_app.logger
         self._script_staging_file = None
         #Init everything
         self._initialize()
@@ -382,7 +383,7 @@ class JobStateChangeMonitor(threading.Thread):
         self._job_id = job_id
         self._job_wrapper = job_wrapper
         self._stop_event = stop_event
-        self._logger = app.logger
+        self._logger = current_app.logger
         self._remote_dir = SagaJobWrapper.get_job_endpoint(job_id, self._job_wrapper.get_saga_session())
         self._last_file_names = []
 
@@ -463,7 +464,7 @@ class JobStateChangeCallback(saga.Callback):
         """
         saga_job = obj
         try:
-            app.logger.debug("### Job State Change Report\n"\
+            current_app.logger.debug("### Job State Change Report\n"\
                              "ID: {id}\n"\
                              "Name: {name}\n"\
                              "State Trnsition from {old} ---> {new}\n"\
@@ -489,7 +490,7 @@ class JobStateChangeCallback(saga.Callback):
                 # TODO: Make notification an abstract layer which allows adding further means such as twitter
                 send_state_change_email(self._job.id, self._job.owner_id, self._job.last_status, val)
             except Exception, ex:
-                app.logger.debug("Callback: Failed to send mail: %s" % ex)
+                current_app.logger.debug("Callback: Failed to send mail: %s" % ex)
             # Insert history record
             history_record = JobStateHistory()
             history_record.change_time = datetime.datetime.now()
@@ -506,18 +507,18 @@ class JobStateChangeCallback(saga.Callback):
             if self._job not in db.session:
                 db.session.merge(self._job)
             self._job.last_status = val
-            app.logger.debug('######Before commit the new value is %s ' % val)
+            current_app.logger.debug('######Before commit the new value is %s ' % val)
             db.session.commit()
 
         if val in (saga.DONE,
                    saga.FAILED,
                    saga.CANCELED):
             # Unregister
-            app.logger.debug("Callback: I unregister myself since job number {no} is {state}".format(no=self._job.id,
+            current_app.logger.debug("Callback: I unregister myself since job number {no} is {state}".format(no=self._job.id,
                                                                                                      state=val))
             return False
 
         # Remain registered
-        app.logger.debug("Callback: I listen further since job number {no} is {state}".format(no=self._job.id,
+        current_app.logger.debug("Callback: I listen further since job number {no} is {state}".format(no=self._job.id,
                                                                                               state=val))
         return True

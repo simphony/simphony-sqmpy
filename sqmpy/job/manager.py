@@ -6,9 +6,10 @@
 """
 import datetime
 
+from flask import current_app
 from flask.ext.login import current_user
 
-from .. import app, db
+from .. import db
 from ..core import SQMComponent
 from .exceptions import JobManagerException
 from .helpers import JobFileHandler
@@ -138,7 +139,7 @@ class JobManager(SQMComponent):
         """
         query = Job.query.filter(Job.owner_id == current_user.id).order_by(Job.submit_date.desc())
 
-        return query.paginate(page, app.config['PER_PAGE'])
+        return query.paginate(page, current_app.config['PER_PAGE'])
 
     def get_file_location(self, job_id, file_name):
         """

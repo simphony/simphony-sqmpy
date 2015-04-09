@@ -4,13 +4,12 @@
 
     View functions
 """
-from flask import render_template
+from flask import current_app, Blueprint, render_template
 from flask.ext.login import login_required
 
-from . import app
+main_blueprint = Blueprint('sqmpy', __name__)
 
-
-@app.route('/', methods=['GET'])
+@main_blueprint.route('/', methods=['GET'])
 @login_required
 def index():
     """

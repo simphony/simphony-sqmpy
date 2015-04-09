@@ -32,10 +32,10 @@ def login():
                 remember = True
             user = User.query.filter_by(username=username).one()
             login_user(user, remember=remember)
-            flash("Logged in successfully.")
+            flash('Successfully logged in.')
             return redirect(request.args.get('next') or url_for('index'))
         else:
-            error = "Invalid username/password"
+            error = 'Invalid username/password'
     return render_template('security/login.html', form=form, error=error)
 
 
@@ -62,7 +62,10 @@ def register():
                             form.email.data,)
                 db.session.add(user)
                 db.session.commit()
-                return redirect('/security/login')
-            except IntegrityError, error:
-                error = 'User with similar information already exists.'
+                # After a successful register log in the user and go to home page.
+                login_user(user)
+                flash('Successfully registered')
+                return redirect('/')
+            except IntegrityError:
+                error = 'User with similar information already exists'
     return render_template('security/register.html', form=form, error=error)

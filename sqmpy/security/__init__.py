@@ -15,7 +15,7 @@ __author__ = 'Mehdi Sadeghi'
 
 
 # Create security blueprint
-security_blueprint = Blueprint('sqmpy.security', __name__)
+security_blueprint = Blueprint('sqmpy.security', __name__, url_prefix='/security')
 
 @security_blueprint.record_once
 def on_load(state):

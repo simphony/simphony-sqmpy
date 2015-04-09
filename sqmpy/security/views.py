@@ -18,7 +18,7 @@ from . import services as security_services
 __author__ = 'Mehdi Sadeghi'
 
 
-@security_blueprint.route('/security/login', methods=['GET', 'POST'])
+@security_blueprint.route('/login', methods=['GET', 'POST'])
 def login():
     form = LoginForm(request.form)
     error = None
@@ -39,14 +39,14 @@ def login():
     return render_template('security/login.html', form=form, error=error)
 
 
-@security_blueprint.route('/security/logout')
+@security_blueprint.route('/logout')
 @login_required
 def logout():
     logout_user()
     return redirect('/')
 
 
-@security_blueprint.route('/security/register', methods=['GET', 'POST'])
+@security_blueprint.route('/register', methods=['GET', 'POST'])
 def register():
     """
     Register a new user

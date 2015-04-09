@@ -88,7 +88,7 @@ class JobManager(SQMComponent):
             #   <staging_dir>/<username>/<job_id>/
             # This will also save script file in the mentioned job folder as `job-[JOB_ID]_script'
             # Set to silent because some ghost files are uploaded with no name and empty value, don't know why.
-            JobFileHandler.save_input_files(job, uploaded_files, silent=True)
+            JobFileHandler.save_input_files(job, uploaded_files, current_app.config, silent=True)
 
             #TODO: I should find a way to either save state or not to save state when error happens.
             # Create saga wrapper

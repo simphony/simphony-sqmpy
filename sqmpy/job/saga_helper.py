@@ -224,7 +224,7 @@ class SagaJobWrapper(object):
 
     #todo: change name to download and the variable to ignore and upload
     @staticmethod
-    def move_files_back(job_id, job_description, session, wipe=True):
+    def move_files_back(job_id, job_description, session, config, wipe=True):
         """
         Copies output and error files along with any other output files back to server.
         :param job_id: job id
@@ -237,12 +237,12 @@ class SagaJobWrapper(object):
         job = Job.query.get(job_id)
 
         # Get or create job directory
-        local_job_dir = JobFileHandler.get_job_file_directory(job_id)
+        local_job_dir = JobFileHandler.get_job_file_directory(job_id, config)
         local_job_dir_url = None
         if SagaJobWrapper._is_localhost(job.resource.url):
             local_job_dir_url = local_job_dir
         else:
-            local_job_dir_url = JobFileHandler.get_job_file_directory(job_id, make_sftp_url=True)
+            local_job_dir_url = JobFileHandler.get_job_file_directory(job_id, config, make_sftp_url=True)
 
         # Get staging file names for this job which are already uploaded
         # we don't need to download them since we have them already
@@ -324,7 +324,10 @@ class SagaJobWrapper(object):
             self._saga_job.run()
 
             # Create the monitoring thread
-            self._monitor_thread = JobStateChangeMonitor(self._job.id, self._saga_job, self, stop_event)
+            self._monitor_thread = JobStateChangeMonitor(self._job.id,
+                                                         self._saga_job,
+                                                         self, stop_event,
+                                                         current_app.config)
             # Begin monitoring
             self._monitor_thread.start()
 
@@ -370,7 +373,7 @@ class JobStateChangeMonitor(threading.Thread):
     """
     A timer thread to check job status changes.
     """
-    def __init__(self, job_id, saga_job, job_wrapper, stop_event):
+    def __init__(self, job_id, saga_job, job_wrapper, stop_event, config):
         """
         Initialize the time and job instance
         :param job_id: sqmpy job id
@@ -379,6 +382,7 @@ class JobStateChangeMonitor(threading.Thread):
         :param stop_event: threading.Event instance for listning to it
         """
         super(JobStateChangeMonitor, self).__init__()
+        self._config = config
         self._saga_job = saga_job
         self._job_id = job_id
         self._job_wrapper = job_wrapper
@@ -414,7 +418,7 @@ class JobStateChangeMonitor(threading.Thread):
 
             job = job_services.get_job(self._job_id)
             if job.last_status != new_state:
-                send_state_change_email(self._job_id, job.owner_id, job.last_status, new_state)
+                send_state_change_email(self._job_id, job.owner_id, job.last_status, new_state, self._config)
                 job.last_status = new_state
                 self._logger.debug("Monitoring thread: Commiting new status: %s" % new_state)
                 #TODO: Which session this really is?
@@ -432,7 +436,8 @@ class JobStateChangeMonitor(threading.Thread):
             if update_flag:
                 SagaJobWrapper.move_files_back(self._job_id,
                                                self._job_wrapper.get_job_description(),
-                                               self._job_wrapper.get_saga_session())
+                                               self._job_wrapper.get_saga_session(),
+                                               self._config)
 
             if new_state in (saga.DONE,
                              saga.FAILED,
@@ -465,24 +470,24 @@ class JobStateChangeCallback(saga.Callback):
         saga_job = obj
         try:
             current_app.logger.debug("### Job State Change Report\n"\
-                             "ID: {id}\n"\
-                             "Name: {name}\n"\
-                             "State Trnsition from {old} ---> {new}\n"\
-                             "Exit Code: {exit_code}\n"\
-                             "Exec. Hosts: {exec_host}\n"\
-                             "Create Time: {create_time}\n"\
-                             "Start Time: {start_time}\n"\
-                             "End Time: {end_time}\n".format(id=self._job.id,
-                                                             name=self._job.name,
-                                                             old=self._job.last_status,
-                                                             new=val,
-                                                             exit_code=saga_job.exit_code,
-                                                             exec_host=saga_job.execution_hosts,
-                                                             create_time=saga_job.created,
-                                                             start_time=saga_job.started,
-                                                             end_time=saga_job.finished))
+                                     "ID: {id}\n"\
+                                     "Name: {name}\n"\
+                                     "State Trnsition from {old} ---> {new}\n"\
+                                     "Exit Code: {exit_code}\n"\
+                                     "Exec. Hosts: {exec_host}\n"\
+                                     "Create Time: {create_time}\n"\
+                                     "Start Time: {start_time}\n"\
+                                     "End Time: {end_time}\n".format(id=self._job.id,
+                                                                     name=self._job.name,
+                                                                     old=self._job.last_status,
+                                                                     new=val,
+                                                                     exit_code=saga_job.exit_code,
+                                                                     exec_host=saga_job.execution_hosts,
+                                                                     create_time=saga_job.created,
+                                                                     start_time=saga_job.started,
+                                                                     end_time=saga_job.finished))
         except Exception, ex:
-            app.logger.debug('Error querying the saga job: %s' % ex)
+            current_app.logger.debug('Error querying the saga job: %s' % ex)
 
         # Update job status
         if self._job.last_status != val:

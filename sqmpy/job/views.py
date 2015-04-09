@@ -30,8 +30,8 @@ def index():
     return redirect(url_for('sqmpy.job.list_jobs'))
 
 
-@job_blueprint.route('/jobs/', methods=['GET'], defaults={'page': 1})
-@job_blueprint.route('/jobs/page/<int:page>', methods=['GET'])
+@job_blueprint.route('/', methods=['GET'], defaults={'page': 1})
+@job_blueprint.route('/page/<int:page>', methods=['GET'])
 @login_required
 def list_jobs(page):
     """
@@ -60,7 +60,7 @@ def detail(job_id):
 
 
 @csrf_exempt
-@job_blueprint.route('/job/submit', methods=['GET', 'POST'])
+@job_blueprint.route('/submit', methods=['GET', 'POST'])
 @login_required
 def submit(job_id=None):
     """
@@ -111,7 +111,7 @@ def submit(job_id=None):
     return render_template('job/job_submit.html', form=form, error=error)
 
 @csrf_exempt
-@job_blueprint.route('/job/<int:job_id>/cancel', methods=['GET', 'POST'])
+@job_blueprint.route('/<int:job_id>/cancel', methods=['GET', 'POST'])
 @login_required
 def cancel(job_id):
     """

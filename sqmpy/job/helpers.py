@@ -23,7 +23,7 @@ from .constants import FileRelation, ScriptType
 __author__ = 'Mehdi Sadeghi'
 
 
-def send_state_change_email(job_id, owner_id, old_state, new_state):
+def send_state_change_email(job_id, owner_id, old_state, new_state, mail_config):
     """
     A simple helper class to send smtp email for job state change
     :param job_id: Job id in database
@@ -33,13 +33,13 @@ def send_state_change_email(job_id, owner_id, old_state, new_state):
     :return:
     """
     owner_email, = db.session.query(User.email).filter(User.id == owner_id).one()
-    smtp_server = smtplib.SMTP(current_app.config.get('MAIL_SERVER'))
+    smtp_server = smtplib.SMTP(mail_config.get('MAIL_SERVER'))
     job_link = ''
     text_message = \
         'Status changed from {old} to {new}'.format(old=old_state,
                                                     new=new_state)
 
-    server_name = current_app.config.get('SERVER_NAME')
+    server_name = mail_config.get('SERVER_NAME')
     port = None
     if server_name and ':' in server_name:
         port = int(server_name.rsplit(':', 1)[1])
@@ -74,9 +74,9 @@ def send_state_change_email(job_id, owner_id, old_state, new_state):
     message.attach(part1)
     message.attach(part2)
     message['Subject'] = 'State changed in job #{job_id}'.format(job_id=job_id)
-    message['From'] = current_app.config.get('DEFAULT_MAIL_SENDER')
+    message['From'] = mail_config.get('DEFAULT_MAIL_SENDER')
     message['To'] = owner_email
-    smtp_server.sendmail(current_app.config.get('DEFAULT_MAIL_SENDER'),
+    smtp_server.sendmail(mail_config.get('DEFAULT_MAIL_SENDER'),
                          [owner_email],
                          message.as_string())
     smtp_server.quit()
@@ -117,7 +117,7 @@ class JobFileHandler(object):
         return sf
 
     @staticmethod
-    def save_input_files(job, uploaded_files, silent=False):
+    def save_input_files(job, uploaded_files, config, silent=False):
         """
         Saves input files of the given job in appropriate folders
         :param job:
@@ -128,7 +128,7 @@ class JobFileHandler(object):
         files_to_add = []
 
         # Get or create job directory
-        job_dir = JobFileHandler.get_job_file_directory(job.id)
+        job_dir = JobFileHandler.get_job_file_directory(job.id, config)
 
         # Save staging data before running the job
         # Input files will be moved under a new folder with this structure:
@@ -164,7 +164,7 @@ class JobFileHandler(object):
         db.session.flush()
 
     @staticmethod
-    def get_job_file_directory(job_id, make_sftp_url=False):
+    def get_job_file_directory(job_id, config, make_sftp_url=False):
         """
         Returns the directory which contains job files
 
@@ -176,7 +176,7 @@ class JobFileHandler(object):
         job_owner = \
             User.query.filter(User.id == Job.owner_id,
                               Job.id == job_id).first()
-        job_owner_dir = os.path.join(current_app.config.get('STAGING_FOLDER'), job_owner.username)
+        job_owner_dir = os.path.join(config.get('STAGING_FOLDER'), job_owner.username)
         if not os.path.exists(job_owner_dir):
             os.makedirs(job_owner_dir)
         job_dir = os.path.join(job_owner_dir, str(job_id))
@@ -187,7 +187,7 @@ class JobFileHandler(object):
         return job_dir
 
     @staticmethod
-    def get_file_location(job_id, file_name):
+    def get_file_location(job_id, file_name, config):
         """
         Returns the folder of the file
         :param job_id:
@@ -199,5 +199,5 @@ class JobFileHandler(object):
             raise JobNotFoundException('Job number %s does not exist.' % job_id)
         for f in job.files:
             if f.name == file_name:
-                return JobFileHandler.get_job_file_directory(job.id)
+                return JobFileHandler.get_job_file_directory(job.id, config)
         raise FileNotFoundException('Job number %s does not have any file called %s' % (job_id, file_name))

@@ -24,13 +24,13 @@ def login():
     error = None
     if request.method == 'POST':
         # login and validate the user...
-        email = request.form.get('email')
+        username = request.form.get('username')
         password = request.form.get('password')
-        if security_services.valid_login(email, password):
+        if security_services.valid_login(username, password):
             remember = None
             if request.form.get('remember') is not None:
                 remember = True
-            user = User.query.filter_by(email=email).one()
+            user = User.query.filter_by(username=username).one()
             login_user(user, remember=remember)
             flash("Logged in successfully.")
             return redirect(request.args.get('next') or url_for('index'))
@@ -53,12 +53,13 @@ def register():
     :return:
     """
     form = RegisterForm(request.form, csrf_enabled=False)
+    error = None
     if request.method == 'POST':
         if form.validate():
             try:
-                user = User(form.user_name.data,
-                            form.email.data,
-                            get_password_digest(form.password.data))
+                user = User(form.username.data,
+                            get_password_digest(form.password.data),
+                            form.email.data,)
                 db.session.add(user)
                 db.session.commit()
                 return redirect('/security/login')

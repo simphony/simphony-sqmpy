@@ -56,8 +56,8 @@ class SagaJobWrapper(object):
         # Creating the job service object which represents a machine
         # which we connect to it using ssh (either local or remote)
         endpoint = self._get_resource_endpoint(job.resource.url, job.submit_adaptor)
-        if (current_user.name, endpoint) in _service_cache:
-            self._job_service = _service_cache[(current_user.name, endpoint)]
+        if (current_user.username, endpoint) in _service_cache:
+            self._job_service = _service_cache[(current_user.username, endpoint)]
         else:
             self._job_service = \
                 saga.job.Service(endpoint,
@@ -132,7 +132,7 @@ class SagaJobWrapper(object):
         # FIXME: Use proper ssh name to find home folder. Currently it is current user_name
         if not job.remote_dir:
             owner = security_services.get_user(job.owner_id)
-            job.remote_dir = '/home/{user_name}/sqmpy/{job_id}'.format(user_name=owner.name,
+            job.remote_dir = '/home/{user_name}/sqmpy/{job_id}'.format(user_name=owner.username,
                                                                        job_id=job.id)
         adapter = 'sftp'
         if SagaJobWrapper._is_localhost(job.resource.url):

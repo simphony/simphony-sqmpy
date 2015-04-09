@@ -15,18 +15,17 @@ __author__ = 'Mehdi Sadeghi'
 class User(db.Model):
     __tablename__ = 'users'
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(50), unique=True)
-    email = db.Column(db.String(120), unique=True)
+    username = db.Column(db.String(50), unique=True)
     password = db.Column(db.String(120))
+    email = db.Column(db.String(120), unique=True)
     role = db.Column(db.SmallInteger, default=constants.USER)
     status = db.Column(db.SmallInteger, default=constants.NEW)
     registered_on = db.Column(db.DateTime)
-    #jobs = db.relationship("Job", backref="users")
 
-    def __init__(self, name=None, email=None, password=None):
-        self.name = name
-        self.email = email
+    def __init__(self, username=None, password=None, email=None):
+        self.username = username
         self.password = password
+        self.email = email
         self.registered_on = datetime.datetime.now()
 
     def get_status(self):
@@ -50,4 +49,4 @@ class User(db.Model):
         return unicode(self.id)
 
     def __repr__(self):
-        return '<User %r>' % self.name
+        return '<User %r>' % self.username

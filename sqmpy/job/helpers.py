@@ -174,7 +174,7 @@ class JobFileHandler(object):
         job_owner = \
             User.query.filter(User.id == Job.owner_id,
                               Job.id == job_id).first()
-        job_owner_dir = os.path.join(app.config.get('STAGING_FOLDER'), job_owner.name)
+        job_owner_dir = os.path.join(app.config.get('STAGING_FOLDER'), job_owner.username)
         if not os.path.exists(job_owner_dir):
             os.makedirs(job_owner_dir)
         job_dir = os.path.join(job_owner_dir, str(job_id))

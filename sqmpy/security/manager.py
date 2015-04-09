@@ -21,11 +21,11 @@ class SecurityManager(SQMComponent):
     def __init__(self):
         super(SecurityManager, self).__init__(SECURITY_MANAGER)
 
-    def valid_login(self, email, password):
+    def valid_login(self, username, password):
         """
         Checks if the given password is valid for the username
         """
-        user = User.query.filter_by(email=email).first()
+        user = User.query.filter_by(username=username).first()
         if user is not None:
             return _is_correct_password(password, user.password)
 

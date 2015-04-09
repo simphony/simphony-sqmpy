@@ -10,11 +10,11 @@ from .constants import SECURITY_MANAGER
 __author__ = 'Mehdi Sadeghi'
 
 
-def valid_login(email, password):
+def valid_login(username, password):
     """
     Checks if the login is valid
     """
-    return core_services.get_component(SECURITY_MANAGER).valid_login(email,
+    return core_services.get_component(SECURITY_MANAGER).valid_login(username,
                                                                      password)
 
 

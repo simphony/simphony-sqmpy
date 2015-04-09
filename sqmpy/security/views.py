@@ -2,13 +2,14 @@
     sqmpy.security.views
     ~~~~~~~~~~~~~~~~~~~~~
 
-    View functions for security mudule
+    View functions for security module
 """
 from flask import flash, url_for, request, redirect, render_template, abort
 from flask.ext.login import login_user, logout_user, login_required
 
 from .. import db
 from . import security_blueprint
+from sqlalchemy.exc import IntegrityError
 from .forms import LoginForm, RegisterForm
 from .manager import get_password_digest
 from .models import User
@@ -54,11 +55,13 @@ def register():
     form = RegisterForm(request.form, csrf_enabled=False)
     if request.method == 'POST':
         if form.validate():
-            user = User(form.user_name.data,
-                        form.email.data,
-                        get_password_digest(form.password.data))
-            db.session.add(user)
-            db.session.commit()
-            return redirect('/security/login')
-
-    return render_template('security/register.html', form=form)
+            try:
+                user = User(form.user_name.data,
+                            form.email.data,
+                            get_password_digest(form.password.data))
+                db.session.add(user)
+                db.session.commit()
+                return redirect('/security/login')
+            except IntegrityError, error:
+                error = 'User with similar information already exists.'
+    return render_template('security/register.html', form=form, error=error)

@@ -10,18 +10,14 @@ _basedir = os.path.abspath(os.path.dirname(__file__))
 
 DEBUG = True
 
-# Server host and port. This is to support subdomains such as myapp.dev:5000
-# Port will be used if it is not provided when calling app.run()
-# SERVER_NAME = 'localhost:5001'
-
 # ADMINS = frozenset(['sade@iwm.fraunhofer.de'])
 SECRET_KEY = '\x94\xb2\xf2</6\xd7+Op\xc5\x97v)\x83\xda\xff)\xd0UD\xd4NB'
-#
+
 SQLALCHEMY_DATABASE_URI = 'sqlite:///' + os.path.join(_basedir, 'sqmpy.db') + '?check_same_thread=False'
 # DATABASE_CONNECT_OPTIONS = {}
-#
+
 # THREADS_PER_PAGE = 8
-#
+
 CSRF_ENABLED = True
 # CSRF_SESSION_KEY = "somethingimpossibletoguess"
 
@@ -33,7 +29,7 @@ CSRF_ENABLED = True
 
 
 # Logging options
-LOG_FILE = os.path.join(_basedir, 'sqmpy.log')
+# LOG_FILE = os.path.join(_basedir, 'sqmpy.log')
 
 # Staging options
 STAGING_FOLDER = os.path.join(_basedir, 'staging')

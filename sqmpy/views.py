@@ -4,7 +4,7 @@
 
     View functions
 """
-from flask import current_app, Blueprint, render_template
+from flask import Blueprint, render_template
 from flask.ext.login import login_required
 
 main_blueprint = Blueprint('sqmpy', __name__)
@@ -16,4 +16,3 @@ def index():
     Index page handler
     """
     return render_template('index.html')
-

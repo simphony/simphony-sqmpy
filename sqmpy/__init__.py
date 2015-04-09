@@ -50,6 +50,14 @@ app.register_blueprint(security_blueprint)
 app.register_blueprint(job_blueprint)
 app.register_blueprint(main_blueprint)
 
+# A global context processor for sub menu items
+@app.context_processor
+def make_navmenu_items():
+    if job_blueprint.name in app.blueprints:
+        return {'navitems': {job_blueprint.name: job_blueprint.url_prefix}}
+    else:
+        return {}
+
 # Create every registered model. BTW `create_all' will check for existence of tables before running CREATE queries.
 if app.debug:
     db.create_all()

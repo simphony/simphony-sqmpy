@@ -42,7 +42,11 @@
                         <ul class="nav navbar-nav">
                             <li {% if not active_page %}class="active"{% endif %}><a href="/">Home</a></li>
                             {% block navbar_links %}
-                                <li><a href="{{ url_for('sqmpy.job.index') }}">Jobs</a></li>
+                                {% if navitems %}
+                                    {% for name, url in navitems.iteritems() %}
+                                    <li {% if active_page == name%}class="active"{% endif %}><a href="{{ url }}">{{ name|capitalize}}</a></li>
+                                    {% endfor %}
+                                {% endif %}
                             {% endblock %}
                             <!--li><a href="#about">About</a></li-->
                             <!--li><a href="#contact">Contact</a></li-->

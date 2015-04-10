@@ -4,7 +4,7 @@ Entry point for running the sqmpy application standalone
 import os
 
 from sqmpy import app
-
+from gevent import monkey; monkey.patch_all()
 __author__ = 'Mehdi Sadeghi'
 
 

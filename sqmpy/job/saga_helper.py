@@ -128,13 +128,9 @@ class SagaJobWrapper(object):
         :return:
         """
         job = job_services.get_job(job_id)
-        # created in user home folder.
-        # TODO: Let user give a working directory for the job or a resource
-        # FIXME: Use proper ssh name to find home folder. Currently it is current user_name
+        # Remote working directory will be inside temp folder
         if not job.remote_dir:
-            owner = security_services.get_user(job.owner_id)
-            job.remote_dir = '/home/{user_name}/sqmpy/{job_id}'.format(user_name=owner.username,
-                                                                       job_id=job.id)
+            job.remote_dir = '/tmp/sqmpy/{job_id}'.format(job_id=job.id)
         adapter = 'sftp'
         if SagaJobWrapper._is_localhost(job.resource.url):
             adapter = 'file'

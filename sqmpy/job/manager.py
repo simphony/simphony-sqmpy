@@ -31,13 +31,14 @@ class JobManager(SQMComponent):
         # Wrapper objects contain the job itself along with related saga objects.
         self.__jobs = {}
 
-    def submit_job(self, job_name, resource_url, uploaded_files, **kwargs):
+    def submit_job(self, job_name, resource_url, upload_dir, **kwargs):
         """
         Submit a new job along with its input files. Input files will be moved under
             a new folder with this structure: <staging_dir>/<username>/<job_id>/input_files/
         :param name: job name
         :param resource_url: resource to submit job there
-        :param uploaded_files: a list of <filename, file_stream, relation> for each given file.
+        :param upload_dir: a temp directory which contains uploaded files. Any file in that directory
+            starting with `input_' and `script_` would be considered as input and script file respectively.
         :param kwargs::
             :param total_cpu_count:
             :param spmd_variation:
@@ -53,8 +54,11 @@ class JobManager(SQMComponent):
         if not resource_url:
             raise JobManagerException("Resource is not defined.")
 
-        if not uploaded_files:
+        if not upload_dir:
             raise JobManagerException('At least script files should be uploaded')
+
+        if Job.query.filter(Job.name == job_name).first():
+            raise JobManagerException('Job with given name already exists')
 
         # Store the job
         job = Job()
@@ -65,6 +69,7 @@ class JobManager(SQMComponent):
         job.owner_id = current_user.id
         job.total_cpu_count = kwargs.get('total_cpu_count')
         job.walltime_limit = kwargs.get('walltime_limit')
+        # TODO: sqmpy should be smart enough to provide available options for this parameter
         job.spmd_variation = kwargs.get('spmd_variation')
         job.description = kwargs.get('description')
         job.queue = kwargs.get('queue') or None
@@ -72,8 +77,8 @@ class JobManager(SQMComponent):
         job.total_physical_memory = kwargs.get('total_physical_memory') or None
         job.remote_dir = kwargs.get('working_directory')
 
-        # Insert a new record for url if it does not exist already
         try:
+            # Insert a new record for url if it does not exist already
             resource = Resource.query.filter(Resource.url == resource_url).first()
             if not resource:
                 resource = Resource(resource_url, resource_url)
@@ -83,12 +88,11 @@ class JobManager(SQMComponent):
             db.session.add(job)
             db.session.flush()
 
-            # Save staging data before running the job
+            # Moving temp uploaded files into a directory under job's name
             # Input files will be moved under a new folder with this structure:
             #   <staging_dir>/<username>/<job_id>/
-            # This will also save script file in the mentioned job folder as `job-[JOB_ID]_script'
             # Set to silent because some ghost files are uploaded with no name and empty value, don't know why.
-            JobFileHandler.save_input_files(job, uploaded_files, current_app.config, silent=True)
+            JobFileHandler.stage_uploaded_files(job, upload_dir, current_app.config, silent=True)
 
             #TODO: I should find a way to either save state or not to save state when error happens.
             # Create saga wrapper

@@ -4,8 +4,10 @@
 
     View functions for jobs mudule
 """
-from flask import current_app
-from flask import request, session, g, redirect, url_for, abort, \
+import os
+import tempfile
+
+from flask import request, redirect, url_for, abort, \
     render_template, flash, send_from_directory
 from flask.ext.login import login_required, current_user
 from flask.ext.csrf import csrf_exempt
@@ -15,7 +17,7 @@ from . import job_blueprint
 from .constants import FileRelation
 from .exceptions import JobNotFoundException, FileNotFoundException, JobManagerException
 from .forms import JobSubmissionForm
-from .models import Job, Resource
+from .models import Resource
 from . import services as job_services
 
 __author__ = 'Mehdi Sadeghi'
@@ -44,7 +46,7 @@ def list_jobs(page):
                            jobs=pagination.items)
 
 
-@job_blueprint.route('/job/<int:job_id>', methods=['GET'])
+@job_blueprint.route('/job/<string:job_id>', methods=['GET'])
 @login_required
 def detail(job_id):
     """
@@ -69,49 +71,53 @@ def submit(job_id=None):
     """
     form = JobSubmissionForm()
     form.resource.choices = [(h.url, h.name) for h in Resource.query.all()]
-    uploaded_files = []
     error = None
+    # Temporary directory to store uploaded files before job object creation
+    # We use a simple protocol here. The script file with start with `script_' in file name
+    # and input files will start with `input_' in their names.  This will help us not to pass
+    # around lots of parameters, only upload directory would be enough.
+    upload_dir = tempfile.mkdtemp()
     if form.validate_on_submit():
+        # Save script file to upload directory
+        script_file = request.files.get('script_file')
+        script_safe_filename = secure_filename(script_file.filename)
+        script_file.save(os.path.join(upload_dir, 'script_' + script_safe_filename))
+
+        # Save input files to upload directory
         for f in request.files.getlist('input_files'):
             # Remove unsupported characters from filename
             safe_filename = secure_filename(f.filename)
-            # Save file to upload folder under user's username
-            uploaded_files.append((safe_filename, f.stream, FileRelation.input))
+            # Save file to upload temp directory
+            f.save(os.path.join(upload_dir, 'input_' + safe_filename))
 
-        # Correct line endings before sending the script content
-        # script = ''
-        # if form.script.data is not None:
-        #     script = form.script.data.replace('\r\n', '\n')
-
-        # Read script file
-        script_safe_filename = secure_filename(request.files.get('script_file').filename)
-        script_file = (script_safe_filename,
-                       request.files.get('script_file').stream,
-                       FileRelation.script)
-        uploaded_files.append(script_file)
-
+        resource_url = None
         # Check if user has filled `new_resource' field
-        resource_url = form.resource.data
+        if form.resource.data != 'None':
+            resource_url = form.resource.data
+        # New url field and priority
         if form.new_resource.data not in (None, ''):
             resource_url = form.new_resource.data
-        job_id = None
+        if not resource_url:
+            resource_url = 'localhost'
         try:
             # Submit the job
             job_id = \
                 job_services.submit_job(form.name.data,
                                         resource_url,
-                                        uploaded_files,
+                                        upload_dir,
                                         **form.data)
             # Redirect to list
             return redirect(url_for('.detail', job_id=job_id))
         except JobManagerException, ex:
+            # Delete temporary directory with its contents
+            #os.removedirs(upload_dir)
             flash(str(ex), category='error')
             error = str(ex)
 
     return render_template('job/job_submit.html', form=form, error=error)
 
 @csrf_exempt
-@job_blueprint.route('/<int:job_id>/cancel', methods=['GET', 'POST'])
+@job_blueprint.route('/<string:job_id>/cancel', methods=['GET', 'POST'])
 @login_required
 def cancel(job_id):
     """
@@ -130,7 +136,7 @@ def cancel(job_id):
 # an image, that image is going to be show after the upload
 @job_blueprint.route('/uploads/<username>/<job_id>/<filename>')
 def uploaded_file(username, job_id, filename):
-    if username != current_user.name:
+    if username != current_user.username:
         abort(403)
     upload_dir = None
     try:

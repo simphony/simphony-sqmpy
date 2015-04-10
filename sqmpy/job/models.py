@@ -6,6 +6,7 @@
 """
 import os
 import datetime
+import base64
 
 from .. import db
 from .constants import FileRelation
@@ -18,7 +19,7 @@ class Job(db.Model):
     A job represents a task submitted by user to a remote resource.
     """
     __tablename__ = 'jobs'
-    id = db.Column(db.Integer, primary_key=True)
+    id = db.Column(db.String(8), primary_key=True)
     name = db.Column(db.String(50))
     submit_date = db.Column(db.DateTime)
     # Value of this column should be selected according to constants.Adaptor
@@ -40,6 +41,7 @@ class Job(db.Model):
     files = db.relationship('StagingFile')
 
     def __init__(self):
+        self.id = base64.urlsafe_b64encode(os.urandom(6))
         self.submit_date = datetime.datetime.utcnow()
 
     def __repr__(self):

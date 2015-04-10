@@ -19,7 +19,7 @@
                 {% for file in job.files %}
                     <li>{{file.get_relation_str()|title}}: {{file.get_path()}}
                         <a type="button" class="btn" role="button"
-                           href="{{url_for('.uploaded_file', username=current_user.name, job_id=job.id, filename=file.name)}}">Download</a></li>
+                           href="{{url_for('.uploaded_file', username=current_user.username, job_id=job.id, filename=file.name)}}">Download</a></li>
                 {% endfor %}
                 </ul>
             {% endif %}

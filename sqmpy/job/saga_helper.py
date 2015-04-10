@@ -414,7 +414,11 @@ class JobStateChangeMonitor(threading.Thread):
 
             job = job_services.get_job(self._job_id)
             if job.last_status != new_state:
-                send_state_change_email(self._job_id, job.owner_id, job.last_status, new_state, self._config)
+                try:
+                    send_state_change_email(self._job_id, job.owner_id, job.last_status, new_state, self._config)
+                except Exception:
+                    # Silently refuse any mail error and continue monitoring the job and updating its status
+                    pass
                 job.last_status = new_state
                 self._logger.debug("Monitoring thread: Commiting new status: %s" % new_state)
                 #TODO: Which session this really is?

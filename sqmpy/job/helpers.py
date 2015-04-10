@@ -6,6 +6,7 @@
     than implementing a feature.
 """
 import os
+import shutil
 import hashlib
 import smtplib
 from email.mime.text import MIMEText
@@ -117,50 +118,55 @@ class JobFileHandler(object):
         return sf
 
     @staticmethod
-    def save_input_files(job, uploaded_files, config, silent=False):
+    def stage_uploaded_files(job, upload_dir, config, silent=False):
         """
-        Saves input files of the given job in appropriate folders
+        Saves files in the given directory under the given job's directory
         :param job:
-        :param uploaded_files: list of (file_name, file_buffer, relation)
+        :param upload_dir: a directory containing files prefixed with `input_' and `script_'
         :param silent: skip empty file names
         :return:
         """
-        files_to_add = []
-
         # Get or create job directory
         job_dir = JobFileHandler.get_job_file_directory(job.id, config)
 
         # Save staging data before running the job
         # Input files will be moved under a new folder with this structure:
         #   <staging_dir>/<username>/<job_id>/input_files/
-        script_file = None
-        for file_name, file_buffer, relation in uploaded_files:
-            if file_name and file_buffer and relation:
-                if relation == FileRelation.script:
-                    import copy
-                    script_filename = file_name
-                    script_file_buffer = copy.copy(file_buffer)
-                files_to_add.append((relation.value, file_name, file_buffer, True))
-            else:
-                if not silent:
-                    raise JobManagerException("Invalid file name or path")
+        for filename in os.listdir(upload_dir):
+            staging_file_name = None
+            if filename.startswith('input_'):
+                staging_file_name = filename[6:]
+                staging_file_relation = FileRelation.input.value
+            elif filename.startswith('script_'):
+                # We rename script file name to avoid collision with input files
+                staging_file_name = 'job_{job_id}_{filename}'.format(job_id=job.id,
+                                                                     filename=filename[7:])
+                staging_file_relation = FileRelation.script.value
+                # fill job.script
+                job.user_script = open(os.path.join(upload_dir, filename)).read()
+                if filename.endswith('.py'):
+                    job.script_type = ScriptType.python.value
+                if filename.endswith('sh'):
+                    job.script_type = ScriptType.shell.value
+            elif not silent:
+                raise JobManagerException("Invalid file name or path")
 
-        # fill job.script
-        job.user_script = script_file_buffer.getvalue()
-        if script_filename.endswith('.py'):
-            job.script_type = ScriptType.python.value
-        if script_filename.endswith('sh'):
-            job.script_type = ScriptType.shell.value
+            # Move file to job directory
+            src = os.path.join(upload_dir, filename)
+            dst = os.path.join(job_dir, staging_file_name)
+            shutil.move(src, dst)
 
-        # Finally add all files
-        for relation, file_name, file_content, is_buffer in files_to_add:
-            sf = JobFileHandler.make_staging_file_entry(job.id,
-                                                        job_dir,
-                                                        relation,
-                                                        file_name,
-                                                        file_content,
-                                                        is_buffer=is_buffer)
+            # Create a record for each file
+            sf = StagingFile()
+            sf.name = staging_file_name
+            sf.relation = staging_file_relation
+            sf.original_name = filename
+            sf.checksum = hashlib.md5(open(dst).read()).hexdigest()
+            sf.location = job_dir
+            sf.parent_id = job.id
             db.session.add(sf)
+        # Delete temporary upload directory
+        os.removedirs(upload_dir)
         db.session.flush()
 
     @staticmethod
@@ -187,13 +193,16 @@ class JobFileHandler(object):
         return job_dir
 
     @staticmethod
-    def get_file_location(job_id, file_name, config):
+    def get_file_location(job_id, file_name, config=None):
         """
         Returns the folder of the file
         :param job_id:
         :param file_name:
         :return:
         """
+        # If there is a request context get the config
+        if current_app != None:
+            config = current_app.config
         job = Job.query.get(job_id)
         if job is None:
             raise JobNotFoundException('Job number %s does not exist.' % job_id)

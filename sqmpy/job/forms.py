@@ -35,7 +35,7 @@ class JobSubmissionForm(Form):
     """
     Form to handle job submission.
     """
-    name = wtf.StringField('Name', [wtf.validators.DataRequired(), wtf.validators.Length(min=1, max=50)])
+    name = wtf.StringField('Name', [wtf.validators.Optional(), wtf.validators.Length(min=1, max=50)])
     script_file = FileField('Script file', validators=[FileRequired(),
                                                        FileAllowed(['py', 'sh'], 'Python and shell scripts only!')])
     input_files = FileField('Input files', [wtf.validators.Optional()])

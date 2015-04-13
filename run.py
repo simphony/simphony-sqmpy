@@ -3,7 +3,7 @@ Entry point for running the sqmpy application standalone
 """
 import os
 
-#from gevent import monkey; monkey.patch_all()
+from gevent import monkey; monkey.patch_all()
 
 from sqmpy import create_app
 
@@ -20,6 +20,6 @@ if __name__ == '__main__':
         # Pleae note that SERVER_NAME is used for subdomains only and has no effect here.
     """
     # This line added to support heroku deployment
-    port = int(os.environ.get("PORT", 5001))
+    port = int(os.environ.get("PORT", 5000))
     app = create_app('../config.py')
     app.run(host='0.0.0.0', port=port)

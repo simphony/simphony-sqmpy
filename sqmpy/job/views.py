@@ -56,9 +56,7 @@ def detail(job_id):
     job = \
         job_services.get_job(job_id)
 
-    return render_template('job/job_detail.html',
-                           job=job,
-                           status=job_services.get_job_status(job_id))
+    return render_template('job/job_detail.html', job=job)
 
 
 @csrf_exempt

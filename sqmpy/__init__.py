@@ -87,4 +87,7 @@ def create_app(config_filename=None, config_dict=None):
     def shutdown_session(exception=None):
         db.session.remove()
 
+    # set the secret key.  keep this really secret:
+    app.secret_key = 'A\xd1I]j\x87\x85[\xc4=\xf3%\xf7T@loP\xaezK\xb3\xd2\xff'
+
     return app

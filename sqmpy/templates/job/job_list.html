@@ -18,26 +18,26 @@
             <thead>
             <tr>
                 <th>ID</th>
-                <th>Job Name</th>
-                <th>Submission Date</th>
+                <th class="job_name_col">Job Name</th>
+                <th class="job_date_col">Submission Date</th>
                 {% if current_user.get_role() == "admin" %}
                     <th>User</th>
                 {% endif %}
                 <th>Status</th>
-                <th>Description</th>
+                <th class="job_desc_col">Description</th>
             </tr>
             </thead>
             <tbody data-link="row" class="rowlink">
             {% for job in jobs %}
             <tr>
                 <td><a href="{{url_for('.detail', job_id=job.id)}}"></a>{{ job.id }}</td>
-                <td>{{ job.name }}</td>
-                <td>{{ job.submit_date }}</td>
+                <td class="job_name_col">{{ job.name }}</td>
+                <td class="job_date_col">{{ job.submit_date }}</td>
                 {% if current_user.get_role() == "admin" %}
                     <td>{{ job.owner_id }}</td>
                 {% endif %}
                 <td>{{ job.last_status }}</td>
-                <td>{{ job.description }}</td>
+                <td class="job_desc_col">{{ job.description }}</td>
             </tr>
             {% endfor%}
             </tbody>

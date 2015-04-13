@@ -33,3 +33,15 @@ background: white;
 cursor: inherit;
 display: block;
 }
+
+@media (max-width: 600px) {
+    .job_name_col{
+        display: none;
+    }
+    .job_desc_col{
+        display: none;
+    }
+    .job_date_col{
+        display: none;
+    }
+}

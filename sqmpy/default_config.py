@@ -37,3 +37,6 @@ DEFAULT_MAIL_SENDER = 'monitor@sqmpy'
 
 # Number of results to show at each page
 PER_PAGE = 20
+
+# Redis URL
+REDISTOGO_URL = 'redis://localhost:6379'

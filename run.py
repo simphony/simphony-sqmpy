@@ -3,10 +3,9 @@ Entry point for running the sqmpy application standalone
 """
 import os
 
-from sqmpy import app
-from gevent import monkey; monkey.patch_all()
-__author__ = 'Mehdi Sadeghi'
+#from gevent import monkey; monkey.patch_all()
 
+from sqmpy import create_app
 
 if __name__ == '__main__':
     """
@@ -22,4 +21,5 @@ if __name__ == '__main__':
     """
     # This line added to support heroku deployment
     port = int(os.environ.get("PORT", 5001))
+    app = create_app('../config.py')
     app.run(host='0.0.0.0', port=port)

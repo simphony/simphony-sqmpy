@@ -9,7 +9,7 @@ import datetime
 from flask import current_app
 from flask.ext.login import current_user
 
-from .. import db
+from ..models import db
 from ..core import SQMComponent
 from .exceptions import JobManagerException
 from .helpers import JobFileHandler
@@ -48,17 +48,11 @@ class JobManager(SQMComponent):
         :return: job id
         """
         # Basic checks
-        if not job_name:
-            raise JobManagerException("Job name is not defined.")
-
         if not resource_url:
             raise JobManagerException("Resource is not defined.")
 
         if not upload_dir:
             raise JobManagerException('At least script files should be uploaded')
-
-        if Job.query.filter(Job.name == job_name).first():
-            raise JobManagerException('Job with given name already exists')
 
         # Store the job
         job = Job()

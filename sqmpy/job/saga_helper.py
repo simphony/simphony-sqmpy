@@ -9,19 +9,17 @@ import socket
 import hashlib
 import time
 import datetime
-import threading
 
 import saga
 from flask import current_app
 from flask.ext.login import current_user
 
-from .. import db
+from ..models import db
 from .constants import FileRelation, ScriptType, Adaptor
 from .exceptions import JobManagerException
 from .helpers import JobFileHandler, send_state_change_email
 from .models import Resource, StagingFile, JobStateHistory, Job
 from . import services as job_services
-from ..security import services as security_services
 
 __author__ = 'Mehdi Sadeghi'
 
@@ -47,13 +45,11 @@ class SagaJobWrapper(object):
         self._job_service = None
         self._job_description = None
         self._saga_job = None
-        # Keep the instance of job monitoring thread
-        self._monitor_thread = None
         self._logger = current_app.logger
         self._script_staging_file = None
-        #Init everything
         self._initialize()
 
+        # TODO: Remove this and replace redis or database
         # Creating the job service object which represents a machine
         # which we connect to it using ssh (either local or remote)
         endpoint = self._get_resource_endpoint(job.resource.url, job.submit_adaptor)
@@ -84,8 +80,7 @@ class SagaJobWrapper(object):
         Register callback functions for the saga job
         :return:
         """
-        #TODO Add a hook here to register any callbacks
-        # This callback should store output files locally and store new status in db
+        # This callback will locally store output files and new states in db
         self._saga_job.add_callback(saga.STATE, JobStateChangeCallback(self._job, self))
 
     @staticmethod
@@ -218,9 +213,8 @@ class SagaJobWrapper(object):
         """
         return self._session
 
-    #todo: change name to download and the variable to ignore and upload
     @staticmethod
-    def move_files_back(job_id, job_description, session, config, wipe=True):
+    def move_files_back(job_id, job_description, session, config=None, wipe=True):
         """
         Copies output and error files along with any other output files back to server.
         :param job_id: job id
@@ -234,7 +228,6 @@ class SagaJobWrapper(object):
 
         # Get or create job directory
         local_job_dir = JobFileHandler.get_job_file_directory(job_id, config)
-        local_job_dir_url = None
         if SagaJobWrapper._is_localhost(job.resource.url):
             local_job_dir_url = local_job_dir
         else:
@@ -261,7 +254,6 @@ class SagaJobWrapper(object):
 
         for file_url, relation in staging_files:
             # Copy physical file to local directory
-            #TODO: Send notification with download links
             if wipe:
                 remote_dir.move(file_url, local_job_dir_url)
             else:
@@ -305,44 +297,22 @@ class SagaJobWrapper(object):
         self._saga_job = self._job_service.create_job(self._job_description)
 
         # Register call backs
-        #self._register_callbacks()
+        self._register_callbacks()
 
         # Check our job's id and state
         self._logger.debug("Job ID    : %s" % self._saga_job.id)
         self._logger.debug("Job State : %s" % self._saga_job.state)
 
-        # To be used for stopping the thread
-        stop_event = threading.Event()
+        # Run the job eventually
+        self._logger.debug("...starting job...")
+        self._saga_job.run()
 
-        try:
-            # Run the job eventually
-            self._logger.debug("...starting job...")
-            self._saga_job.run()
-
-            # Create the monitoring thread
-            self._monitor_thread = JobStateChangeMonitor(self._job.id,
-                                                         self._saga_job,
-                                                         self, stop_event,
-                                                         current_app.config)
-            # Begin monitoring
-            self._monitor_thread.start()
-
-            # Store remote pid
-            self._job.remote_pid = self._saga_job.get_id()
-            db.session.commit()
-        except:
-            # Todo: Find a way to gracefully stop the monitoring thread
-            stop_event.set()
-            raise
+        # Store remote pid
+        self._job.remote_pid = self._saga_job.get_id()
+        db.session.commit()
 
         self._logger.debug("Job ID    : %s" % self._saga_job.id)
         self._logger.debug("Job State : %s" % self._saga_job.state)
-
-        # List all jobs that are known by the adaptor.
-        # This should show our job as well.
-        self._logger.debug("Listing active jobs: ")
-        for job in self._job_service.list():
-            self._logger.debug(" * %s" % job)
 
         # TODO: Where should I close job service properly? I should put it in user session or g?
         #self._job_service.close()
@@ -363,86 +333,6 @@ class SagaJobWrapper(object):
             # db.session.commit()
         else:
             raise JobManagerException('Job PID unknown')
-
-
-class JobStateChangeMonitor(threading.Thread):
-    """
-    A timer thread to check job status changes.
-    """
-    def __init__(self, job_id, saga_job, job_wrapper, stop_event, config):
-        """
-        Initialize the time and job instance
-        :param job_id: sqmpy job id
-        :param saga_job: a saga job instance
-        :param job_wrapper: job wrapper instance
-        :param stop_event: threading.Event instance for listning to it
-        """
-        super(JobStateChangeMonitor, self).__init__()
-        self._config = config
-        self._saga_job = saga_job
-        self._job_id = job_id
-        self._job_wrapper = job_wrapper
-        self._stop_event = stop_event
-        self._logger = current_app.logger
-        self._remote_dir = SagaJobWrapper.get_job_endpoint(job_id, self._job_wrapper.get_saga_session())
-        self._last_file_names = []
-
-    def run(self):
-        """
-        Start the timer and keep watching until the job state is done, failed or canceled.
-        Right now this thread only reads the status and this cause the saga callbacks
-        to be triggered.
-        """
-        while not self._stop_event.is_set():
-            # Get new saga job state. This will trigger a call to the backend and callbacks
-            new_state = self._saga_job.state
-
-            self._logger.debug("Monitoring thread: Job ID    : %s" % self._saga_job.id)
-            # print "Monitoring thread: Job ID    : %s" % self._saga_job.id
-
-            self._logger.debug("Monitoring thread: Job State : %s" % new_state)
-            # print "Monitoring thread: Job State : %s" % new_state
-
-            # Fixme Here I have to double check if the value is stored correctly.
-            # There is a problem that if the job is done and we query job's state
-            # the registered callbacks would not be called. So I wait here for a
-            # few seconds and afterwards I check the last status and update it if
-            # necessary.
-
-            # Repeat every 3 seconds
-            time.sleep(3)
-
-            job = job_services.get_job(self._job_id)
-            if job.last_status != new_state:
-                try:
-                    send_state_change_email(self._job_id, job.owner_id, job.last_status, new_state, self._config)
-                except Exception:
-                    # Silently refuse any mail error and continue monitoring the job and updating its status
-                    pass
-                job.last_status = new_state
-                self._logger.debug("Monitoring thread: Commiting new status: %s" % new_state)
-                #TODO: Which session this really is?
-                db.session.merge(job)
-                db.session.commit()
-
-            # Check if there are new files to process
-            #remote_dir = SagaJobWrapper._get_job_endpoint(job_id, session)
-            file_urls = self._remote_dir.list()
-            update_flag = False
-            for file_url in file_urls:
-                if file_url.path not in self._last_file_names:
-                    self._last_file_names.append(file_url.path)
-                    update_flag = True
-            if update_flag:
-                SagaJobWrapper.move_files_back(self._job_id,
-                                               self._job_wrapper.get_job_description(),
-                                               self._job_wrapper.get_saga_session(),
-                                               self._config)
-
-            if new_state in (saga.DONE,
-                             saga.FAILED,
-                             saga.CANCELED):
-                return
 
 
 class JobStateChangeCallback(saga.Callback):
@@ -486,13 +376,16 @@ class JobStateChangeCallback(saga.Callback):
                                                                      create_time=saga_job.created,
                                                                      start_time=saga_job.started,
                                                                      end_time=saga_job.finished))
-        except Exception, ex:
-            current_app.logger.debug('Error querying the saga job: %s' % ex)
+        except saga.IncorrectState, error:
+            # Job is not in final state yet
+            current_app.logger.debug('Error querying the saga job: %s' % error)
+        except Exception, error:
+            current_app.logger.debug('Unknown error while querying the job: %s' % error)
+            raise
 
         # Update job status
         if self._job.last_status != val:
             try:
-                # TODO: Make notification an abstract layer which allows adding further means such as twitter
                 send_state_change_email(self._job.id, self._job.owner_id, self._job.last_status, val)
             except Exception, ex:
                 current_app.logger.debug("Callback: Failed to send mail: %s" % ex)
@@ -512,18 +405,20 @@ class JobStateChangeCallback(saga.Callback):
             if self._job not in db.session:
                 db.session.merge(self._job)
             self._job.last_status = val
-            current_app.logger.debug('######Before commit the new value is %s ' % val)
+            current_app.logger.debug('Before commit the new value is %s ' % val)
             db.session.commit()
 
         if val in (saga.DONE,
                    saga.FAILED,
                    saga.CANCELED):
-            # Unregister
-            current_app.logger.debug("Callback: I unregister myself since job number {no} is {state}".format(no=self._job.id,
-                                                                                                     state=val))
+            # Un-register
+            current_app.logger.debug("Callback: I un-register myself since job number "
+                                     "{no} is in {state} state".format(no=self._job.id,
+                                                                       state=val))
             return False
 
         # Remain registered
-        current_app.logger.debug("Callback: I listen further since job number {no} is {state}".format(no=self._job.id,
-                                                                                              state=val))
+        current_app.logger.debug("Callback: I listen further since job number {no} "
+                                 "is in {state} state".format(no=self._job.id,
+                                                              state=val))
         return True

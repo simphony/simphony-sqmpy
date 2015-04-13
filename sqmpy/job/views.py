@@ -2,7 +2,7 @@
     sqmpy.job.views
     ~~~~~~~~~~~~~~~~~~~~~
 
-    View functions for jobs mudule
+    View functions for jobs module
 """
 import os
 import tempfile
@@ -12,9 +12,9 @@ from flask import request, redirect, url_for, abort, \
 from flask.ext.login import login_required, current_user
 from flask.ext.csrf import csrf_exempt
 from werkzeug import secure_filename
+import names
 
 from . import job_blueprint
-from .constants import FileRelation
 from .exceptions import JobNotFoundException, FileNotFoundException, JobManagerException
 from .forms import JobSubmissionForm
 from .models import Resource
@@ -23,17 +23,17 @@ from . import services as job_services
 __author__ = 'Mehdi Sadeghi'
 
 
-@job_blueprint.route('/job/', methods=['GET'])
+@job_blueprint.route('/', methods=['GET'])
 def index():
     """
     Entry page for job subsystem
     :return:
     """
-    return redirect(url_for('sqmpy.job.list_jobs'))
+    return redirect(url_for('.list_jobs', page=1))
 
 
-@job_blueprint.route('/', methods=['GET'], defaults={'page': 1})
-@job_blueprint.route('/page/<int:page>', methods=['GET'])
+@job_blueprint.route('/list', methods=['GET'], defaults={'page': 1})
+@job_blueprint.route('/list/page<int:page>', methods=['GET'])
 @login_required
 def list_jobs(page):
     """
@@ -46,7 +46,7 @@ def list_jobs(page):
                            jobs=pagination.items)
 
 
-@job_blueprint.route('/job/<string:job_id>', methods=['GET'])
+@job_blueprint.route('/<string:job_id>', methods=['GET'])
 @login_required
 def detail(job_id):
     """
@@ -62,7 +62,7 @@ def detail(job_id):
 
 
 @csrf_exempt
-@job_blueprint.route('/submit', methods=['GET', 'POST'])
+@job_blueprint.route('/new', methods=['GET', 'POST'])
 @login_required
 def submit(job_id=None):
     """
@@ -85,10 +85,11 @@ def submit(job_id=None):
 
         # Save input files to upload directory
         for f in request.files.getlist('input_files'):
-            # Remove unsupported characters from filename
-            safe_filename = secure_filename(f.filename)
-            # Save file to upload temp directory
-            f.save(os.path.join(upload_dir, 'input_' + safe_filename))
+            if f.filename not in (None, ''):
+                # Remove unsupported characters from filename
+                safe_filename = secure_filename(f.filename)
+                # Save file to upload temp directory
+                f.save(os.path.join(upload_dir, 'input_' + safe_filename))
 
         resource_url = None
         # Check if user has filled `new_resource' field
@@ -102,7 +103,7 @@ def submit(job_id=None):
         try:
             # Submit the job
             job_id = \
-                job_services.submit_job(form.name.data,
+                job_services.submit_job(form.name.data or names.get_last_name(),
                                         resource_url,
                                         upload_dir,
                                         **form.data)

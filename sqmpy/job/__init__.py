@@ -12,7 +12,7 @@ from .manager import JobManager
 __author__ = 'Mehdi Sadeghi'
 
 
-job_blueprint = Blueprint('job', __name__, url_prefix='/jobs')
+job_blueprint = Blueprint('job', __name__, url_prefix='/job')
 
 @job_blueprint.context_processor
 def job_cnx_processor():

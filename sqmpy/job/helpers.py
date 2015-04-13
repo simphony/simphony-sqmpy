@@ -5,6 +5,7 @@
     Contains functions and classes which ease the other methods rather
     than implementing a feature.
 """
+from flask.helpers import url_for
 import os
 import shutil
 import hashlib
@@ -15,7 +16,7 @@ from shutil import copyfileobj
 
 from flask import current_app
 
-from .. import db
+from ..models import db
 from ..security.models import User
 from .exceptions import JobManagerException, JobNotFoundException, FileNotFoundException
 from .models import Job, StagingFile
@@ -24,7 +25,7 @@ from .constants import FileRelation, ScriptType
 __author__ = 'Mehdi Sadeghi'
 
 
-def send_state_change_email(job_id, owner_id, old_state, new_state, mail_config):
+def send_state_change_email(job_id, owner_id, old_state, new_state, mail_config=None):
     """
     A simple helper class to send smtp email for job state change
     :param job_id: Job id in database
@@ -33,6 +34,8 @@ def send_state_change_email(job_id, owner_id, old_state, new_state, mail_config)
     :param new_state:
     :return:
     """
+    if not mail_config:
+        mail_config = current_app.config
     owner_email, = db.session.query(User.email).filter(User.id == owner_id).one()
     smtp_server = smtplib.SMTP(mail_config.get('MAIL_SERVER'))
     job_link = ''
@@ -46,11 +49,12 @@ def send_state_change_email(job_id, owner_id, old_state, new_state, mail_config)
         port = int(server_name.rsplit(':', 1)[1])
         server_name = server_name.rsplit(':', 1)[0]
     else:
+        server_name = 'localhost'
         port = 5001
-
-    job_link = 'http://{host_name}:{port}/job/{job_id}'.format(host_name=server_name,
-                                                               port=port,
-                                                               job_id=job_id)
+    url = url_for('.detail', job_id=job_id)
+    job_link = 'http://{host_name}:{port}{url}'.format(host_name=server_name,
+                                                        port=port,
+                                                        url=url)
     html_message = \
         """<DOCTYPE html>
         <html>
@@ -70,7 +74,6 @@ def send_state_change_email(job_id, owner_id, old_state, new_state, mail_config)
     part1 = MIMEText(text_message, 'plain')
     part2 = MIMEText(html_message, 'html')
 
-    #message = MIMEText(message)
     message = MIMEMultipart('alternative')
     message.attach(part1)
     message.attach(part2)
@@ -170,7 +173,7 @@ class JobFileHandler(object):
         db.session.flush()
 
     @staticmethod
-    def get_job_file_directory(job_id, config, make_sftp_url=False):
+    def get_job_file_directory(job_id, config=None, make_sftp_url=False):
         """
         Returns the directory which contains job files
 
@@ -182,6 +185,8 @@ class JobFileHandler(object):
         job_owner = \
             User.query.filter(User.id == Job.owner_id,
                               Job.id == job_id).first()
+        if not config:
+            config = current_app.config
         job_owner_dir = os.path.join(config.get('STAGING_FOLDER'), job_owner.username)
         if not os.path.exists(job_owner_dir):
             os.makedirs(job_owner_dir)

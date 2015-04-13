@@ -4,7 +4,7 @@
     This module contains configuration keys for the application.
     See http://flask.pocoo.org/docs/config/ for more information.
 """
-#import tempfile
+import tempfile
 
 DEBUG = True
 
@@ -29,14 +29,14 @@ RECAPTCHA_OPTIONS = {'theme': 'white'}
 # LOG_FILE = None
 
 # Staging options
-#STAGING_FOLDER = tempfile.gettempdir()
+STAGING_FOLDER = tempfile.gettempdir()
 
 # SMTP Configs
 MAIL_SERVER = 'localhost'
 DEFAULT_MAIL_SENDER = 'monitor@sqmpy'
 
 # Number of results to show at each page
-PER_PAGE = 20
+PER_PAGE = 10
 
 # Redis URL
 REDISTOGO_URL = 'redis://localhost:6379'

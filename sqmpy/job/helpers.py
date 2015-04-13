@@ -50,11 +50,11 @@ def send_state_change_email(job_id, owner_id, old_state, new_state, mail_config=
         server_name = server_name.rsplit(':', 1)[0]
     else:
         server_name = 'localhost'
-        port = 5001
+        port = 5000
     url = url_for('.detail', job_id=job_id)
     job_link = 'http://{host_name}:{port}{url}'.format(host_name=server_name,
-                                                        port=port,
-                                                        url=url)
+                                                       port=port,
+                                                       url=url)
     html_message = \
         """<DOCTYPE html>
         <html>

@@ -5,7 +5,7 @@ import os
 
 from gevent import monkey; monkey.patch_all()
 
-from sqmpy import create_app
+from sqmpy.factory import create_app
 
 if __name__ == '__main__':
     """

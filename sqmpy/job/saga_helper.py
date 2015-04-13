@@ -25,7 +25,7 @@ __author__ = 'Mehdi Sadeghi'
 
 
 # To be used with url and user as key and service object as value, I know it is dirty.
-_service_cache = {}
+#_service_cache = {}
 
 
 class SagaJobWrapper(object):
@@ -42,7 +42,6 @@ class SagaJobWrapper(object):
         self._job = job
         self._security_context = None
         self._session = None
-        self._job_service = None
         self._job_description = None
         self._saga_job = None
         self._logger = current_app.logger
@@ -53,13 +52,13 @@ class SagaJobWrapper(object):
         # Creating the job service object which represents a machine
         # which we connect to it using ssh (either local or remote)
         endpoint = self._get_resource_endpoint(job.resource.url, job.submit_adaptor)
-        if (current_user.username, endpoint) in _service_cache:
-            self._job_service = _service_cache[(current_user.username, endpoint)]
-        else:
-            self._job_service = \
-                saga.job.Service(endpoint,
-                                 session=self._session)
-            _service_cache[(current_user, endpoint)] = self._job_service
+        # if (current_user.username, endpoint) in _service_cache:
+        #     self._job_service = _service_cache[(current_user.username, endpoint)]
+        # else:
+        self._job_service = \
+            saga.job.Service(endpoint,
+                             session=self._session)
+            #_service_cache[(current_user, endpoint)] = self._job_service
 
     def _initialize(self):
         """
@@ -297,8 +296,9 @@ class SagaJobWrapper(object):
         self._saga_job = self._job_service.create_job(self._job_description)
 
         # Register call backs
-        self._register_callbacks()
+        #self._register_callbacks()
 
+        # TODO: My monitoring approach is wrong and should be changed.
         # Prepare our gevent greenlet
         import gevent
         @copy_current_request_context
@@ -320,7 +320,7 @@ class SagaJobWrapper(object):
                         history_record.new_state = val
                         history_record.job_id = self._job.id
                         db.session.add(history_record)
-
+                        db.session.flush()
                         # If there are new files, transfer them back, along with output and error files
                         SagaJobWrapper.move_files_back(self._job.id,
                                                        self.get_job_description(),
@@ -377,78 +377,6 @@ class SagaJobWrapper(object):
         else:
             raise JobManagerException('Job PID unknown')
 
-    def cb(self, obj, key, val):
-            """
-            Callback itself.
-            :param obj: the watched object instance
-            :param key:the watched attribute, e.g. state or state_detail
-            :param val:the new value of the watched attribute
-            :return:
-            """
-            saga_job = obj
-            try:
-                current_app.logger.debug("### Job State Change Report\n"\
-                                         "ID: {id}\n"\
-                                         "Name: {name}\n"\
-                                         "State Trnsition from {old} ---> {new}\n"\
-                                         "Exit Code: {exit_code}\n"\
-                                         "Exec. Hosts: {exec_host}\n"\
-                                         "Create Time: {create_time}\n"\
-                                         "Start Time: {start_time}\n"\
-                                         "End Time: {end_time}\n".format(id=self._job.id,
-                                                                         name=self._job.name,
-                                                                         old=self._job.last_status,
-                                                                         new=val,
-                                                                         exit_code=saga_job.exit_code,
-                                                                         exec_host=saga_job.execution_hosts,
-                                                                         create_time=saga_job.created,
-                                                                         start_time=saga_job.started,
-                                                                         end_time=saga_job.finished))
-            except saga.IncorrectState, error:
-                # Job is not in final state yet
-                current_app.logger.debug('Error querying the saga job: %s' % error)
-            except Exception, error:
-                current_app.logger.debug('Unknown error while querying the job: %s' % error)
-
-            # Update job status
-            if self._job.last_status != val:
-                try:
-                    send_state_change_email(self._job.id, self._job.owner_id, self._job.last_status, val)
-                except Exception, ex:
-                    current_app.logger.debug("Callback: Failed to send mail: %s" % ex)
-                # Insert history record
-                history_record = JobStateHistory()
-                history_record.change_time = datetime.datetime.now()
-                history_record.old_state = self._job.last_status
-                history_record.new_state = val
-                history_record.job_id = self._job.id
-                db.session.add(history_record)
-
-                # If there are new files, transfer them back, along with output and error files
-                SagaJobWrapper.move_files_back(self._job.id,
-                                               self._wrapper.get_job_description(),
-                                               self._wrapper.get_saga_session())
-                # Update last status
-                if self._job not in db.session:
-                    db.session.merge(self._job)
-                self._job.last_status = val
-                current_app.logger.debug('Before commit the new value is %s ' % val)
-                db.session.commit()
-
-            if val in (saga.DONE,
-                       saga.FAILED,
-                       saga.CANCELED):
-                # Un-register
-                current_app.logger.debug("Callback: I un-register myself since job number "
-                                         "{no} is in {state} state".format(no=self._job.id,
-                                                                           state=val))
-                return False
-
-            # Remain registered
-            current_app.logger.debug("Callback: I listen further since job number {no} "
-                                     "is in {state} state".format(no=self._job.id,
-                                                                  state=val))
-            return True
 
 class JobStateChangeCallback(saga.Callback):
     """

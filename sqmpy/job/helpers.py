@@ -5,6 +5,7 @@
     Contains functions and classes which ease the other methods rather
     than implementing a feature.
 """
+from flask.ext.login import current_user
 from flask.helpers import url_for
 import os
 import shutil
@@ -182,12 +183,19 @@ class JobFileHandler(object):
         :return: file system path
         :rtype : str
         """
-        job_owner = \
-            User.query.filter(User.id == Job.owner_id,
-                              Job.id == job_id).first()
         if not config:
             config = current_app.config
-        job_owner_dir = os.path.join(config.get('STAGING_FOLDER'), job_owner.username)
+
+        if current_user.is_anonymous:
+            # Use the username which this process is running under it
+            import getpass
+            job_owner_dir = os.path.join(config.get('STAGING_FOLDER'), getpass.getuser())
+        else:
+            job_owner = \
+                User.query.filter(User.id == Job.owner_id,
+                                  Job.id == job_id).first()
+            job_owner_dir = os.path.join(config.get('STAGING_FOLDER'), job_owner.username)
+
         if not os.path.exists(job_owner_dir):
             os.makedirs(job_owner_dir)
         job_dir = os.path.join(job_owner_dir, str(job_id))

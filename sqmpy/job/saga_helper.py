@@ -239,7 +239,7 @@ class SagaJobWrapper(object):
                                                                      Job.id == job_id).all()
         # Convert tuple result to list
         uploaded_files = [file_name for file_name, in uploaded_files]
-        #TODO: Check for extra created files and move them back if needed
+        # TODO: Check for extra created files and move them back if needed
         remote_dir = SagaJobWrapper.get_job_endpoint(job_id, session)
         files = remote_dir.list()
         staging_files = []

@@ -60,7 +60,8 @@ class JobManager(SQMComponent):
         job.submit_date = datetime.datetime.now()
         job.submit_adaptor = kwargs.get('adaptor') or Adaptor.shell.value
         job.last_status = JobStatus.INIT
-        job.owner_id = current_user.id
+        if not current_user.is_anonymous():
+            job.owner_id = current_user.id
         job.total_cpu_count = kwargs.get('total_cpu_count')
         job.walltime_limit = kwargs.get('walltime_limit')
         # TODO: sqmpy should be smart enough to provide available options for this parameter
@@ -135,7 +136,11 @@ class JobManager(SQMComponent):
         :param page: page number
         :return: job pagination
         """
-        query = Job.query.filter(Job.owner_id == current_user.id).order_by(Job.submit_date.desc())
+        if current_user.is_anonymous():
+            # Do not filter. Login is disabled.
+            query = Job.query.filter().order_by(Job.submit_date.desc())
+        else:
+            query = Job.query.filter(Job.owner_id == current_user.id).order_by(Job.submit_date.desc())
 
         return query.paginate(page, current_app.config['PER_PAGE'])
 

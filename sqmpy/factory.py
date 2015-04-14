@@ -39,13 +39,10 @@ def create_app(config_filename=None, config_dict=None):
         CsrfProtect(app)
 
     # Registering blueprints,
-    # IMPORTANT: views should be imported before registering blueprints and
-    # after initializing app and db objects. Forgive me if it isn't super cool.
+    # IMPORTANT: views should be imported before registering blueprints
     import sqmpy.views
     import sqmpy.security.views
     import sqmpy.job.views
-
-    # Register blueprints
     from .security import security_blueprint
     from .job import job_blueprint
     from .views import main_blueprint

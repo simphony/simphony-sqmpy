@@ -13,7 +13,7 @@ __author__ = 'Mehdi Sadeghi'
 JOB_MANAGER = 'sqmpy.job.manager'
 
 
-#TODO Could be replaced with Enum class in python 3.4 (is back ported)
+# TODO Could be replaced with Enum class in python 3.4 (is back ported)
 class JobStatus(object):
     """
     Represents job states

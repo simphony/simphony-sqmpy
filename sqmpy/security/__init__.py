@@ -19,7 +19,7 @@ security_blueprint = Blueprint('sqmpy.security', __name__, url_prefix='/security
 
 @security_blueprint.record_once
 def on_load(state):
-    #Activate Login
+    # Activate Login
     login_manager = LoginManager()
     login_manager.init_app(state.app)
     login_manager.login_view = '/security/login'
@@ -28,5 +28,5 @@ def on_load(state):
     def load_user(id):
         return User.query.get(id)
 
-#Register the component in core
+# Register the component in core
 core_services.register(SecurityManager())

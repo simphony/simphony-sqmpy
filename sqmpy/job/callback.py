@@ -10,8 +10,8 @@ import saga
 from flask import current_app
 
 from ..models import db
-from .helpers import send_state_change_email
 from .models import JobStateHistory
+import helpers
 
 
 __author__ = 'Mehdi Sadeghi'
@@ -67,7 +67,10 @@ class JobStateChangeCallback(saga.Callback):
         # Update job status
         if self._job.last_status != val:
             try:
-                send_state_change_email(self._job.id, self._job.owner_id, self._job.last_status, val)
+                helpers.send_state_change_email(self._job.id,
+                                                self._job.owner_id,
+                                                self._job.last_status,
+                                                val)
             except Exception, ex:
                 current_app.logger.debug("Callback: Failed to send mail: %s" % ex)
             # Insert history record
@@ -79,9 +82,9 @@ class JobStateChangeCallback(saga.Callback):
             db.session.add(history_record)
 
             # If there are new files, transfer them back, along with output and error files
-            SagaJobWrapper.move_files_back(self._job.id,
-                                           self._wrapper.get_job_description(),
-                                           self._wrapper.get_saga_session())
+            helpers.download_job_files(self._job.id,
+                                       self._wrapper.get_job_description(),
+                                       self._wrapper.get_saga_session())
             # Update last status
             if self._job not in db.session:
                 db.session.merge(self._job)

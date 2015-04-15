@@ -6,16 +6,13 @@
     than implementing a feature.
 """
 import os
-import time
 import shutil
 import hashlib
 import smtplib
 import socket
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
-from shutil import copyfileobj
 
-import saga
 from flask import current_app
 from flask.ext.login import current_user
 from flask.helpers import url_for
@@ -24,7 +21,7 @@ from ..models import db
 from ..security.models import User
 from .exceptions import JobManagerException, JobNotFoundException, FileNotFoundException
 from .models import Job, StagingFile
-from .constants import FileRelation, ScriptType, Adaptor
+from .constants import FileRelation, ScriptType
 
 __author__ = 'Mehdi Sadeghi'
 
@@ -99,22 +96,6 @@ def send_state_change_email(job_id, owner_id, old_state, new_state, mail_config=
     smtp_server.quit()
 
 
-def get_resource_endpoint(host, adaptor):
-    """
-    Get ssh URI of remote host
-    :param host: host to make url for it
-    :param adaptor: adaptor integer value according to Adaptor enum
-    :return:
-    """
-    backend = 'ssh'
-    if is_localhost(host):
-        backend = 'fork'
-    elif adaptor == Adaptor.sge.value:
-        backend = 'sge+ssh'
-    return '{backend}://{remote_host}'.format(backend=backend,
-                                              remote_host=host)
-
-
 def is_localhost(host):
     """
     Return true if is localhost
@@ -129,222 +110,85 @@ def is_localhost(host):
     return False
 
 
-def get_job_endpoint(job_id, session):
+def stage_uploaded_files(job, upload_dir, config, silent=False):
     """
-    Returns the remote job working directory. Creates the parent
-    folders if they don't exist.
-    :param job_id: job id
-    :param session: saga session to be used
+    Saves files in the given directory under the given job's directory
+    :param job:
+    :param upload_dir: a directory containing files prefixed with `input_' and `script_'
+    :param silent: skip empty file names
     :return:
     """
-    job = Job.query.get(job_id)
-    # Remote working directory will be inside temp folder
-    if not job.remote_dir:
-        job.remote_dir = '/tmp/sqmpy/{job_id}'.format(job_id=job.id)
-    adapter = 'sftp'
-    if is_localhost(job.resource.url):
-        adapter = 'file'
-    remote_address = \
-        '{adapter}://{remote_host}/{working_directory}'.format(adapter=adapter,
-                                                               remote_host=job.resource.url,
-                                                               working_directory=job.remote_dir)
-    # Appropriate folders will be created
-    return \
-        saga.filesystem.Directory(remote_address,
-                                  saga.filesystem.CREATE_PARENTS,
-                                  session=session)
-
-
-def move_files_back(job_id, job_description, session, config=None, wipe=True):
-    """
-    Copies output and error files along with any other output files back to server.
-    :param job_id: job id
-    :param job_description:
-    :param session: saga session to remote resource
-    :param wipe: if set to True will wipe files from remote machine.
-    :return:
-    """
-    # Get a new object in this session
-    job = Job.query.get(job_id)
-
     # Get or create job directory
-    local_job_dir = JobFileHandler.get_job_file_directory(job_id, config)
-    if is_localhost(job.resource.url):
-        local_job_dir_url = local_job_dir
-    else:
-        local_job_dir_url = JobFileHandler.get_job_file_directory(job_id, config, make_sftp_url=True)
+    job_dir = get_job_staging_folder(job.id, config)
 
-    # Get staging file names for this job which are already uploaded
-    # we don't need to download them since we have them already
-    uploaded_files = \
-        StagingFile.query.with_entities(StagingFile.name).filter(StagingFile.parent_id == Job.id,
-                                                                 Job.id == job_id).all()
-    # Convert tuple result to list
-    uploaded_files = [file_name for file_name, in uploaded_files]
-    remote_dir = get_job_endpoint(job_id, session)
-    files = remote_dir.list()
-    staging_files = []
-    for file_url in files:
-        if file_url.path == job_description.output:
-            staging_files.append((file_url, FileRelation.output.value))
-        elif file_url.path == job_description.error:
-            staging_files.append((file_url, FileRelation.error.value))
-        elif file_url.path not in uploaded_files:
-            staging_files.append((file_url, FileRelation.output.value))
+    # Save staging data before running the job
+    # Input files will be moved under a new folder with this structure:
+    #   <staging_dir>/<username>/<job_id>/input_files/
+    for filename in os.listdir(upload_dir):
+        staging_file_name = None
+        if filename.startswith('input_'):
+            staging_file_name = filename[6:]
+            staging_file_relation = FileRelation.input.value
+        elif filename.startswith('script_'):
+            # We rename script file name to avoid collision with input files
+            staging_file_name = 'job_{job_id}_{filename}'.format(job_id=job.id,
+                                                                 filename=filename[7:])
+            staging_file_relation = FileRelation.script.value
+            # fill job.script
+            job.script = open(os.path.join(upload_dir, filename)).read()
+            if filename.endswith('.py'):
+                job.script_type = ScriptType.python.value
+            if filename.endswith('sh'):
+                job.script_type = ScriptType.shell.value
+        elif not silent:
+            raise JobManagerException("Invalid file name or path")
 
-    for file_url, relation in staging_files:
-        # Copy physical file to local directory
-        if wipe:
-            remote_dir.move(file_url, local_job_dir_url)
-        else:
-            remote_dir.copy(file_url, local_job_dir_url)
-        time.sleep(.5)
-        # Insert appropriate record into db
-        absolute_name = os.path.join(local_job_dir, file_url.path)
+        # Move file to job directory
+        src = os.path.join(upload_dir, filename)
+        dst = os.path.join(job_dir, staging_file_name)
+        shutil.move(src, dst)
+
+        # Create a record for each file
         sf = StagingFile()
-        sf.name = file_url.path
-        sf.relation = relation
-        sf.original_name = file_url.path
-        sf.checksum = hashlib.md5(open(absolute_name).read()).hexdigest()
-        sf.location = local_job_dir
-        sf.parent_id = job_id
-        db.session.add(sf)
-    db.session.commit()
-
-
-class JobFileHandler(object):
-    """
-    To save input files of the job in appropriate folders and insert records for them.
-    """
-    @staticmethod
-    def make_staging_file_entry(job_id, job_dir, relation, file_name, file_contents, is_buffer=True):
-        """
-        Create an staging file entity
-        :param job_id: job id
-        :param job_dir: job directory
-        :param relation: type of given file, input, error or script
-        :param file_name: file name
-        :param file_contents: either a buffer or
-        :param is_buffer: is the file_content a buffer or text contents
-        :return:
-        """
-        absolute_name = os.path.join(job_dir, file_name)
-        f = open(absolute_name, 'wb')
-        if is_buffer:
-            # Copy file buffer into destination
-            copyfileobj(file_contents, f, 16384)
-        else:
-            f.write(file_contents)
-        f.close()
-        sf = StagingFile()
-        sf.name = file_name
-        sf.relation = relation
-        sf.original_name = file_name
-        sf.checksum = hashlib.md5(open(absolute_name).read()).hexdigest()
+        sf.name = staging_file_name
+        sf.relation = staging_file_relation
+        sf.original_name = filename
+        sf.checksum = hashlib.md5(open(dst).read()).hexdigest()
         sf.location = job_dir
-        sf.parent_id = job_id
+        sf.parent_id = job.id
+        db.session.add(sf)
+    # Delete temporary upload directory
+    os.removedirs(upload_dir)
+    db.session.flush()
 
-        return sf
 
-    @staticmethod
-    def stage_uploaded_files(job, upload_dir, config, silent=False):
-        """
-        Saves files in the given directory under the given job's directory
-        :param job:
-        :param upload_dir: a directory containing files prefixed with `input_' and `script_'
-        :param silent: skip empty file names
-        :return:
-        """
-        # Get or create job directory
-        job_dir = JobFileHandler.get_job_file_directory(job.id, config)
+def get_job_staging_folder(job_id, config=None, make_sftp_url=False):
+    """
+    Returns the directory which contains job files
 
-        # Save staging data before running the job
-        # Input files will be moved under a new folder with this structure:
-        #   <staging_dir>/<username>/<job_id>/input_files/
-        for filename in os.listdir(upload_dir):
-            staging_file_name = None
-            if filename.startswith('input_'):
-                staging_file_name = filename[6:]
-                staging_file_relation = FileRelation.input.value
-            elif filename.startswith('script_'):
-                # We rename script file name to avoid collision with input files
-                staging_file_name = 'job_{job_id}_{filename}'.format(job_id=job.id,
-                                                                     filename=filename[7:])
-                staging_file_relation = FileRelation.script.value
-                # fill job.script
-                job.user_script = open(os.path.join(upload_dir, filename)).read()
-                if filename.endswith('.py'):
-                    job.script_type = ScriptType.python.value
-                if filename.endswith('sh'):
-                    job.script_type = ScriptType.shell.value
-            elif not silent:
-                raise JobManagerException("Invalid file name or path")
+    :param job_id:
+    :param make_sftp_url: return as sftp address
+    :return: file system path
+    :rtype : str
+    """
+    if not config:
+        config = current_app.config
 
-            # Move file to job directory
-            src = os.path.join(upload_dir, filename)
-            dst = os.path.join(job_dir, staging_file_name)
-            shutil.move(src, dst)
+    if current_user.is_anonymous:
+        # Use the username which this process is running under it
+        import getpass
+        job_owner_dir = os.path.join(config.get('STAGING_FOLDER'), getpass.getuser())
+    else:
+        job_owner = \
+            User.query.filter(User.id == Job.owner_id,
+                              Job.id == job_id).first()
+        job_owner_dir = os.path.join(config.get('STAGING_FOLDER'), job_owner.username)
 
-            # Create a record for each file
-            sf = StagingFile()
-            sf.name = staging_file_name
-            sf.relation = staging_file_relation
-            sf.original_name = filename
-            sf.checksum = hashlib.md5(open(dst).read()).hexdigest()
-            sf.location = job_dir
-            sf.parent_id = job.id
-            db.session.add(sf)
-        # Delete temporary upload directory
-        os.removedirs(upload_dir)
-        db.session.flush()
-
-    @staticmethod
-    def get_job_file_directory(job_id, config=None, make_sftp_url=False):
-        """
-        Returns the directory which contains job files
-
-        :param job_id:
-        :param make_sftp_url: return as sftp address
-        :return: file system path
-        :rtype : str
-        """
-        if not config:
-            config = current_app.config
-
-        if current_user.is_anonymous:
-            # Use the username which this process is running under it
-            import getpass
-            job_owner_dir = os.path.join(config.get('STAGING_FOLDER'), getpass.getuser())
-        else:
-            job_owner = \
-                User.query.filter(User.id == Job.owner_id,
-                                  Job.id == job_id).first()
-            job_owner_dir = os.path.join(config.get('STAGING_FOLDER'), job_owner.username)
-
-        if not os.path.exists(job_owner_dir):
-            os.makedirs(job_owner_dir)
-        job_dir = os.path.join(job_owner_dir, str(job_id))
-        if not os.path.exists(job_dir):
-            os.makedirs(job_dir)
-        if make_sftp_url:
-            job_dir = 'sftp://localhost{job_dir}'.format(job_dir=job_dir)
-        return job_dir
-
-    @staticmethod
-    def get_file_location(job_id, file_name, config=None):
-        """
-        Returns the folder of the file
-        :param job_id:
-        :param file_name:
-        :return:
-        """
-        # If there is a request context get the config
-        if current_app != None:
-            config = current_app.config
-        job = Job.query.get(job_id)
-        if job is None:
-            raise JobNotFoundException('Job number %s does not exist.' % job_id)
-        for f in job.files:
-            if f.name == file_name:
-                return JobFileHandler.get_job_file_directory(job.id, config)
-        raise FileNotFoundException('Job number %s does not have any file called %s' % (job_id, file_name))
+    if not os.path.exists(job_owner_dir):
+        os.makedirs(job_owner_dir)
+    job_dir = os.path.join(job_owner_dir, str(job_id))
+    if not os.path.exists(job_dir):
+        os.makedirs(job_dir)
+    if make_sftp_url:
+        job_dir = 'sftp://localhost{job_dir}'.format(job_dir=job_dir)
+    return job_dir

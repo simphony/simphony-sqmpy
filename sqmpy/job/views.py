@@ -101,19 +101,21 @@ def submit(job_id=None):
         try:
             # Submit the job
             job_id = \
-                job_services.submit_job(form.name.data or names.get_last_name(),
-                                        resource_url,
-                                        upload_dir,
-                                        **form.data)
+                job_services.submit(form.name.data or names.get_last_name(),
+                                    resource_url,
+                                    upload_dir,
+                                    **form.data)
             # Redirect to list
             return redirect(url_for('.detail', job_id=job_id))
         except JobManagerException, ex:
             # Delete temporary directory with its contents
-            #os.removedirs(upload_dir)
+            if os.path.exists(upload_dir):
+                os.removedirs(upload_dir)
             flash(str(ex), category='error')
             error = str(ex)
 
     return render_template('job/job_submit.html', form=form, error=error)
+
 
 @csrf_exempt
 @job_blueprint.route('/<string:job_id>/cancel', methods=['GET', 'POST'])
@@ -124,8 +126,7 @@ def cancel(job_id):
     :param job_id:
     :return:
     """
-    if job_id:
-        job_services.cancel_job(job_id)
+    job_services.cancel_job(job_id)
     return redirect(url_for('.detail', job_id=job_id))
 
 
@@ -149,6 +150,7 @@ def uploaded_file(username, job_id, filename):
     mimetypes.add_type('text/plain', '.lammps')
     mimetypes.add_type('text/plain', '.couette')
     return send_from_directory(upload_dir, filename)
+
 
 @job_blueprint.app_template_global(name='url_for_other_page')
 def url_for_other_page(page):

@@ -11,15 +11,16 @@ from flask.ext.login import current_user
 
 from ..models import db
 from .exceptions import JobManagerException
-from .helpers import JobFileHandler
 from .models import Job, Resource
 from .constants import JobStatus, Adaptor
 from .saga_helper import SagaJobWrapper
+from .exceptions import JobNotFoundException, FileNotFoundException
+import helpers
 
 __author__ = 'Mehdi Sadeghi'
 
 
-def submit_job(job_name, resource_url, upload_dir, **kwargs):
+def submit(job_name, resource_url, upload_dir, **kwargs):
     """
     Submit a new job along with its input files. Input files will be moved under
         a new folder with this structure: <staging_dir>/<username>/<job_id>/input_files/
@@ -46,19 +47,20 @@ def submit_job(job_name, resource_url, upload_dir, **kwargs):
     job = Job()
     job.name = job_name
     job.submit_date = datetime.datetime.now()
-    job.submit_adaptor = kwargs.get('adaptor') or Adaptor.shell.value
+    job.script_type = kwargs.get('adaptor') or Adaptor.shell.value
     job.last_status = JobStatus.INIT
     if not current_user.is_anonymous():
         job.owner_id = current_user.id
+    job.remote_dir = kwargs.get('working_directory')
+    job.description = kwargs.get('description')
+
     job.total_cpu_count = kwargs.get('total_cpu_count')
     job.walltime_limit = kwargs.get('walltime_limit')
     # TODO: sqmpy should be smart enough to provide available options for this parameter
     job.spmd_variation = kwargs.get('spmd_variation')
-    job.description = kwargs.get('description')
     job.queue = kwargs.get('queue') or None
     job.project = kwargs.get('project') or None
     job.total_physical_memory = kwargs.get('total_physical_memory') or None
-    job.remote_dir = kwargs.get('working_directory')
 
     try:
         # Insert a new record for url if it does not exist already
@@ -75,14 +77,10 @@ def submit_job(job_name, resource_url, upload_dir, **kwargs):
         # Input files will be moved under a new folder with this structure:
         #   <staging_dir>/<username>/<job_id>/
         # Set to silent because some ghost files are uploaded with no name and empty value, don't know why.
-        JobFileHandler.stage_uploaded_files(job, upload_dir, current_app.config, silent=True)
+        helpers.stage_uploaded_files(job, upload_dir, current_app.config, silent=True)
 
-        #TODO: I should find a way to either save state or not to save state when error happens.
-        # Create saga wrapper
+        # Submit the job using saga
         saga_wrapper = SagaJobWrapper(job)
-        # Keep the created job
-        g.__jobs[job.id] = saga_wrapper
-        # Run the saga job
         saga_wrapper.run()
     except:
         db.session.rollback()
@@ -143,7 +141,16 @@ def get_file_location(job_id, file_name):
     :param file_name:
     :return:
     """
-    return JobFileHandler.get_file_location(job_id, file_name)
+    # If there is a request context get the config
+    if current_app is not None:
+        config = current_app.config
+    job = Job.query.get(job_id)
+    if job is None:
+        raise JobNotFoundException('Job number %s does not exist.' % job_id)
+    for f in job.files:
+        if f.name == file_name:
+            return helpers.get_job_staging_folder(job.id, config)
+    raise FileNotFoundException('Job number %s does not have any file called %s' % (job_id, file_name))
 
 
 def cancel_job(job_id):
@@ -152,8 +159,6 @@ def cancel_job(job_id):
     :param job_id:
     :return:
     """
-    if job_id in g.__jobs:
-        wrapper = g.__jobs[job_id]
-        wrapper.cancel()
-    else:
-        raise JobManagerException("Detached or non-existing job.")
+    job = get_job(job_id)
+    wrapper = SagaJobWrapper(job)
+    wrapper.cancel()

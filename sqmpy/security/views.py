@@ -13,7 +13,7 @@ from sqlalchemy.exc import IntegrityError
 from .forms import LoginForm, RegisterForm
 from .manager import get_password_digest
 from .models import User
-from . import services as security_services
+from . import manager as security_services
 
 __author__ = 'Mehdi Sadeghi'
 

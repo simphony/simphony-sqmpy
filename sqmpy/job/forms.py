@@ -6,7 +6,6 @@
 """
 from flask.ext.wtf import Form
 from flask.ext.wtf.file import FileField, FileAllowed, FileRequired
-
 import wtforms as wtf
 
 from .constants import Adaptor

@@ -4,7 +4,7 @@
 
     Implements security forms.
 """
-from flask.ext.wtf import Form, RecaptchaField
+from flask.ext.wtf import Form
 from wtforms import PasswordField, StringField, validators
 
 

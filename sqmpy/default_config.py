@@ -8,7 +8,6 @@ import tempfile
 
 DEBUG = True
 
-ADMINS = frozenset(['sade@iwm.fraunhofer.de'])
 SECRET_KEY = "This string will be replaced with a proper key in production."
 
 SQLALCHEMY_DATABASE_URI = 'sqlite:///'
@@ -34,6 +33,9 @@ STAGING_FOLDER = tempfile.gettempdir()
 # SMTP Configs
 MAIL_SERVER = 'localhost'
 DEFAULT_MAIL_SENDER = 'monitor@sqmpy'
+# Default web server address. Set this to whatever address the server will run
+# This will be used to generate urls to web pages
+SERVER_ADDRESS = 'localhost:5000'
 
 # Number of results to show at each page
 PER_PAGE = 10

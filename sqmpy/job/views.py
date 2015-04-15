@@ -18,7 +18,7 @@ from . import job_blueprint
 from .exceptions import JobNotFoundException, FileNotFoundException, JobManagerException
 from .forms import JobSubmissionForm
 from .models import Resource
-from . import services as job_services
+from . import manager as job_services
 
 __author__ = 'Mehdi Sadeghi'
 

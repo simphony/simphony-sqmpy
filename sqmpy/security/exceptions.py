@@ -4,12 +4,12 @@
 
     Contains security exceptions
 """
-from ..core import SQMException
+from ..exceptions import SqmpyException
 
 __author__ = 'Mehdi Sadeghi'
 
 
-class SecurityManagerException(SQMException):
+class SecurityManagerException(SqmpyException):
     """
     Security manager exception base class
     """

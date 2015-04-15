@@ -4,10 +4,12 @@
 
     Contains job management exceptions
 """
+from ..exceptions import SqmpyException
+
 __author__ = 'Mehdi Sadeghi'
 
 
-class JobManagerException(Exception):
+class JobManagerException(SqmpyException):
     """
     Represents job manager exceptions
     """

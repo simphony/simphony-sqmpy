@@ -7,15 +7,13 @@
 from flask import Blueprint
 from flask.ext.login import LoginManager
 
-from ..core import core_services
 from .models import User
-from .manager import SecurityManager
 
 __author__ = 'Mehdi Sadeghi'
 
 
 # Create security blueprint
-security_blueprint = Blueprint('sqmpy.security', __name__, url_prefix='/security')
+security_blueprint = Blueprint('security', __name__, url_prefix='/security')
 
 @security_blueprint.record_once
 def on_load(state):
@@ -25,8 +23,5 @@ def on_load(state):
     login_manager.login_view = '/security/login'
 
     @login_manager.user_loader
-    def load_user(id):
-        return User.query.get(id)
-
-# Register the component in core
-core_services.register(SecurityManager())
+    def load_user(user_id):
+        return User.query.get(user_id)

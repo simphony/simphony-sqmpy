@@ -39,6 +39,3 @@ PER_PAGE = 10
 
 # Redis URL
 REDISTOGO_URL = 'redis://localhost:6379'
-
-# For first release there is no login-procedure
-LOGIN_DISABLED = True

@@ -33,7 +33,7 @@ def login():
             user = User.query.filter_by(username=username).one()
             login_user(user, remember=remember)
             flash('Successfully logged in.')
-            return redirect(request.args.get('next') or url_for('index'))
+            return redirect(request.args.get('next') or url_for('sqmpy.index'))
         else:
             error = 'Invalid username/password'
     return render_template('security/login.html', form=form, error=error)

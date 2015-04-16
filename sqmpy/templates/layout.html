@@ -51,12 +51,12 @@
                             <!--li><a href="#about">About</a></li-->
                             <!--li><a href="#contact">Contact</a></li-->
                         </ul>
-                    {% if not current_user.is_anonymous() %}
+                    {% if not config.LOGIN_DISABLED %}
                         <ul class="nav navbar-nav navbar-right">
                             {% if not current_user.is_authenticated() %}
-                                <li><a href="{{ url_for('sqmpy.security.login') }}">log in</a></li>
+                                <li><a href="{{ url_for('security.login') }}">log in</a></li>
                             {% else %}
-                                <li><a href="{{ url_for('sqmpy.security.logout') }}">{{current_user.username}} | log out</a></li>
+                                <li><a href="{{ url_for('security.logout') }}">{{current_user.username}} | log out</a></li>
                             {% endif %}
                         </ul>
                     {% endif %}

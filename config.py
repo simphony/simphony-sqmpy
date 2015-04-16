@@ -25,4 +25,5 @@ MAIL_SERVER = 'iwmcas.iwm.fraunhofer.de'
 # Admin email to send job status notifications to, in case login is disabled
 ADMIN_EMAIL = 'sade@iwm.fraunhofer.de'
 
-
+# For first release there is no login-procedure
+LOGIN_DISABLED = True

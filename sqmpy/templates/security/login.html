@@ -11,7 +11,7 @@
 
   {% block body %}
     <div class="container">
-      <form class="form-signin" role="form" action="{{ url_for('sqmpy.security.login', next=request.args.get('next', '')) }}" method="post">
+      <form class="form-signin" role="form" action="{{ url_for('.login', next=request.args.get('next', '')) }}" method="post">
       {% if csrf_token %}
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
       {% endif %}
@@ -33,7 +33,7 @@
         <!--label class="checkbox">
           <input name="remember" type="checkbox" value="remember-me"> Remember me
         </label-->
-          <small>No account yet? Register <a href="{{ url_for('sqmpy.security.register')}}">here.</a></small>
+          <small>No account yet? Register <a href="{{ url_for('.register')}}">here.</a></small>
         <button class="btn btn-lg btn-primary btn-block" type="submit">Sign in</button>
 
       </form>

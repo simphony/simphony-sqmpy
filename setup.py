@@ -39,7 +39,8 @@ setup(name='sqmpy',
                         'enum34==1.0',
                         'saga-python==0.27',
                         'py-bcrypt==0.4',
-			'names==0.3.0'],
+			'names==0.3.0',
+			'gevent==1.0.1'],
       #dependency_links=[
           #"git+ssh://git@github.com/radical-cybertools/saga-python.git@0.17#egg=saga-python-0.17"
       #]

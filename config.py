@@ -20,7 +20,7 @@ MAIL_SERVER = 'iwmcas.iwm.fraunhofer.de'
 # Default web server address. Set this to whatever address the server will run
 # This will be used to generate urls outside of a request context for example
 # for notifications which contain links to certain pages such as job details.
-SERVER_NAME = 'localhost:3000'
+#SERVER_NAME = 'sqmpy.iwm.fraunhofer.de:3000'
 
 # Admin email to send job status notifications to, in case login is disabled
 ADMIN_EMAIL = 'sade@iwm.fraunhofer.de'

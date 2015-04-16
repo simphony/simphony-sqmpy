@@ -1,10 +1,10 @@
 from flask import Flask
 from flask.ext.wtf.csrf import CsrfProtect
 
-from . import default_config
+#from . import default_config
 
 
-def create_app(config_filename=None, config_dict=None):
+def create_app(config_filename=None):
     """
     Application factory
     :param config_filename:
@@ -14,21 +14,14 @@ def create_app(config_filename=None, config_dict=None):
     app = Flask(__name__.split('.')[0], static_url_path='')
 
     # Import default configs
-    app.config.from_object(default_config)
+    app.config.from_object('sqmpy.default_config')
 
-    # Import config module from working directory if exists
-    try:
-        app.config.from_object('config')
-    except ImportError:
-        pass
+    # Import from environment
+    app.config.from_envvar('SQMPY_SETTINGS', silent=True)
 
+    # Load the given config file
     if config_filename:
-        # Load the given config file
-        app.config.from_pyfile(config_filename)
-
-    # Finally load the given config dictionary and override any existing keys
-    if config_dict:
-        app.config.update(config_dict)
+        app.config.from_pyfile(config_filename, silent=True)
 
     # Register app on db
     from .models import db

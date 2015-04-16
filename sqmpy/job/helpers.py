@@ -17,7 +17,7 @@ from flask import current_app
 from flask.ext.login import current_user
 from flask.helpers import url_for
 
-from ..models import db
+from ..database import db
 from ..security.models import User
 from .exceptions import JobManagerException
 from .models import Job, StagingFile

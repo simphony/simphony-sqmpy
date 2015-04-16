@@ -8,7 +8,7 @@ import os
 import datetime
 import base64
 
-from ..models import db
+from ..database import db
 from .constants import FileRelation
 
 __author__ = 'Mehdi Sadeghi'

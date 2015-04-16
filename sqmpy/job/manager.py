@@ -9,7 +9,7 @@ import datetime
 from flask import current_app, g
 from flask.ext.login import current_user
 
-from ..models import db
+from ..database import db
 from .exceptions import JobManagerException
 from .models import Job, Resource
 from .constants import JobStatus, Adaptor

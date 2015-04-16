@@ -9,7 +9,7 @@ import datetime
 import saga
 from flask import current_app
 
-from ..models import db
+from ..database import db
 from .models import JobStateHistory
 import helpers
 

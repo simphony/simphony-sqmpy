@@ -7,7 +7,7 @@
 from flask import flash, url_for, request, redirect, render_template, abort
 from flask.ext.login import login_user, logout_user, login_required
 
-from ..models import db
+from ..database import db
 from . import security_blueprint
 from sqlalchemy.exc import IntegrityError
 from .forms import LoginForm, RegisterForm

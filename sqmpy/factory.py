@@ -1,10 +1,8 @@
 from flask import Flask
 from flask.ext.wtf.csrf import CsrfProtect
 
-#from . import default_config
 
-
-def create_app(config_filename=None):
+def create_app(config_filename=None, **kwargs):
     """
     Application factory
     :param config_filename:
@@ -14,7 +12,7 @@ def create_app(config_filename=None):
     app = Flask(__name__.split('.')[0], static_url_path='')
 
     # Import default configs
-    app.config.from_object('sqmpy.default_config')
+    app.config.from_object('sqmpy.defaults')
 
     # Import from environment
     app.config.from_envvar('SQMPY_SETTINGS', silent=True)
@@ -23,8 +21,11 @@ def create_app(config_filename=None):
     if config_filename:
         app.config.from_pyfile(config_filename, silent=True)
 
+    # Updated with keyword arguments
+    app.config.update(kwargs)
+
     # Register app on db
-    from .models import db
+    from .database import db
     db.init_app(app)
 
     # Activate CSRF protection

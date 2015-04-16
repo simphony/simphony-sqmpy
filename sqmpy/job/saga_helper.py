@@ -13,7 +13,7 @@ import saga
 from flask import current_app, copy_current_request_context
 
 import helpers
-from ..models import db
+from ..database import db
 from .constants import FileRelation, ScriptType, Adaptor
 from .exceptions import JobManagerException
 from .models import Resource, StagingFile, JobStateHistory, Job

@@ -6,7 +6,7 @@
 """
 import datetime
 
-from ..models import db
+from ..database import db
 from . import constants
 
 __author__ = 'Mehdi Sadeghi'

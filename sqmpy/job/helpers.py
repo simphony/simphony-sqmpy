@@ -19,7 +19,7 @@ from flask.helpers import url_for
 
 from ..models import db
 from ..security.models import User
-from .exceptions import JobManagerException, JobNotFoundException, FileNotFoundException
+from .exceptions import JobManagerException
 from .models import Job, StagingFile
 from .constants import FileRelation, ScriptType
 
@@ -48,23 +48,6 @@ def send_state_change_email(job_id, owner_id, old_state, new_state, mail_config=
     text_message = \
         'Status changed from {old} to {new}'.format(old=old_state,
                                                     new=new_state)
-
-    server_name = mail_config.get('SERVER_ADDRESS')
-    if server_name and ':' in server_name:
-        port = int(server_name.rsplit(':', 1)[1])
-        server_name = server_name.rsplit(':', 1)[0]
-    else:
-        server_name = 'localhost'
-        port = 5000
-    url = url_for('.detail', job_id=job_id)
-    if not port or port == 80:
-        job_link = 'http://{host_name}{url}'.format(host_name=server_name,
-                                                    url=url)
-    else:
-        job_link = 'http://{host_name}:{port}{url}'.format(host_name=server_name,
-                                                           port=port,
-                                                           url=url)
-
     html_message = \
         """<DOCTYPE html>
         <html>
@@ -79,7 +62,7 @@ def send_state_change_email(job_id, owner_id, old_state, new_state, mail_config=
         </body>
         </html>""".format(text_message=text_message,
                           job_id=job_id,
-                          link=job_link)
+                          link=url_for('.detail', job_id=job_id, _external=True))
 
     part1 = MIMEText(text_message, 'plain')
     part2 = MIMEText(html_message, 'html')

@@ -53,9 +53,12 @@ def detail(job_id):
     Show detail page for a job
     :return:
     """
-    job = \
-        job_services.get_job(job_id)
-
+    try:
+        job = \
+            job_services.get_job(job_id)
+    except JobNotFoundException:
+        flash('There is no job with this id %s' % job_id, category='error')
+        return redirect(url_for('.list_jobs'))
     return render_template('job/job_detail.html', job=job)
 
 

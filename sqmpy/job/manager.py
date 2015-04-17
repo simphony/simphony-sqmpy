@@ -115,7 +115,7 @@ def get_job(job_id, *args, **kwargs):
     """
     job = Job.query.get(job_id)
     if not job:
-        raise JobManagerException("Job not found.")
+        raise JobNotFoundException("Job not found.")
     return job
 
 

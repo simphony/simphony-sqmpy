@@ -44,6 +44,7 @@ coverage.xml
 .db
 staging
 sqmpy.db
+data.db
 .idea
 
 # Rope

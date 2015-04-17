@@ -9,7 +9,7 @@ _basedir = os.path.abspath(os.path.dirname(__file__))
 
 SECRET_KEY = '\x94\xb2\xf2</6\xd7+Op\xc5\x97v)\x83\xda\xff)\xd0UD\xd4NB'
 
-SQLALCHEMY_DATABASE_URI = 'sqlite:///' + os.path.join(_basedir, 'sqmpy.db') + '?check_same_thread=False'
+SQLALCHEMY_DATABASE_URI = 'sqlite:///' + os.path.join(_basedir, 'data.db')  # + '?check_same_thread=False'
 
 # Staging options
 STAGING_DIR = '/tmp/staging/'

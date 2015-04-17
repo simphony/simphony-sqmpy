@@ -10,6 +10,7 @@ import shutil
 import hashlib
 import smtplib
 import socket
+import getpass
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 
@@ -159,13 +160,12 @@ def get_job_staging_folder(job_id, config=None, make_sftp_url=False):
 
     if current_user.is_anonymous:
         # Use the username which this process is running under it
-        import getpass
-        job_owner_dir = os.path.join(config.get('STAGING_FOLDER'), getpass.getuser())
+        job_owner_dir = os.path.join(config.get('STAGING_DIR'), getpass.getuser())
     else:
         job_owner = \
             User.query.filter(User.id == Job.owner_id,
                               Job.id == job_id).first()
-        job_owner_dir = os.path.join(config.get('STAGING_FOLDER'), job_owner.username)
+        job_owner_dir = os.path.join(config.get('STAGING_DIR'), job_owner.username)
 
     if not os.path.exists(job_owner_dir):
         os.makedirs(job_owner_dir)

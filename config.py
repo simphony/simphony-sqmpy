@@ -12,7 +12,7 @@ SECRET_KEY = '\x94\xb2\xf2</6\xd7+Op\xc5\x97v)\x83\xda\xff)\xd0UD\xd4NB'
 SQLALCHEMY_DATABASE_URI = 'sqlite:///' + os.path.join(_basedir, 'sqmpy.db') + '?check_same_thread=False'
 
 # Staging options
-STAGING_FOLDER = os.path.join(_basedir, 'staging')
+STAGING_DIR = '/tmp/staging/'
 
 # SMTP Configs
 MAIL_SERVER = 'iwmcas.iwm.fraunhofer.de'

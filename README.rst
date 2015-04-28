@@ -2,8 +2,11 @@
 Simple Queue Manager
 ====================
 
-.. image:: https://travis-ci.org/mehdisadeghi/sqmpy.svg
-    :target: https://travis-ci.org/mehdisadeghi/sqmpy?branch=master
+.. image:: https://travis-ci.org/mehdisadeghi/sqmpy.svg?branch=master
+        :target: https://travis-ci.org/mehdisadeghi/sqmpy
+
+.. image:: https://coveralls.io/repos/mehdisadeghi/sqmpy/badge.svg?branch=master
+        :target: https://coveralls.io/r/mehdisadeghi/sqmpy
 
 sqmpy stands for simple queue manager written in python and is a web application which is based on Flask miroframework
 and SAGA-Python distributed computing access layer.

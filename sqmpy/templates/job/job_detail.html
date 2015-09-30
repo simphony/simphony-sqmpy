@@ -2,54 +2,79 @@
 
 {% block container %}
     {{ super() }}
-    <div>
-        <h3>Job Details</h3>
-        <dl>
-            <dt>Job ID</dt>
-            <dd>{{job.id}}</dd>
-            <dt>Name</dt>
-            <dd>{{job.name}}</dd>
-            <dt>Submit date</dt>
-            <dd>{{job.submit_date}}</dd>
-            <dt>Resource</dt>
-            <dd>{{job.resource.url}}</dd>
-            {% if job.files|length > 0 %}
-                <dt>Related files</dt>
-                <ul>
+    <div class="panel panel-default">
+        <div class="panel-heading">
+            <h3 class="panel-title">Job Details
+                {% if job.last_status == 'Done' %}
+                    <span class="label label-success">{{job.last_status}}</span>
+                {% elif job.last_status == 'Failed' %}
+                    <span class="label label-danger">{{job.last_status}}</span>
+                {% else %}
+                    <span class="label label-info">{{job.last_status}}</span>
+                {% endif %}
+            </h3>
+        </div>
+        <div class="panel-body">
+            <dl>
+                <dt>Job ID</dt>
+                <dd>{{job.id}}</dd>
+                <dt>Name</dt>
+                <dd>{{job.name}}</dd>
+                <dt>Submit date</dt>
+                <dd>{{job.submit_date}}</dd>
+                <dt>Resource</dt>
+                <dd>{{job.resource.url}}</dd>
+                <dt>Last status</dt>
+                <dd>{{job.last_status}}</dd>
+                {% if job.submit_adaptor %}
+                <dt>Queue name</dt>
+                <dd>{{job.queue}}</dd>
+                <dt>Project name</dt>
+                <dd>{{ job.project }}</dd>
+                <dt>Total number of CPUs</dt>
+                <dd>{{job.total_cpu_count}}</dd>
+                <dt>SPMD variation</dt>
+                <dd>{{job.spmd_variation}}</dd>
+                <dt>Walltime limit</dt>
+                <dd>{{job.walltime_limit}}</dd>
+                <dt>Total physical memory</dt>
+                <dd>{{ job.total_physical_memory }}</dd>
+                <dt>Working directory</dt>
+                <dd>{{ job.remote_dir }}</dd>
+                {% endif %}
+                <dt>Description</dt>
+                <dd>{{job.description}}</dd>
+            </dl>
+        </div>
+        {% if job.files|length > 0 %}
+            <div class="panel-heading">
+                <h3 class="panel-title">Related files</h3>
+            </div>
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Type</th>
+                        <th>Download link</th>
+                    </tr>
+                </thead>
+                <tbody>
                 {% for file in job.files %}
-                    <li>{{file.get_relation_str()|title}}: {{file.get_path()}}
-                        <a type="button" class="btn" role="button"
-                           href="{{url_for('.uploaded_file', username=current_user.username, job_id=job.id, filename=file.name)}}">Download</a></li>
+                    <tr>
+                        <td>{{loop.index}}</td>
+                        <td>{{file.get_relation_str()|title}}</td>
+                        <td>
+                            <a href="{{url_for('.uploaded_file', username=current_user.username, job_id=job.id, filename=file.name)}}">Download</a>
+                        </td>
+                    </tr>
                 {% endfor %}
-                </ul>
-            {% endif %}
-            <dt>Last status</dt>
-            <dd>{{job.last_status}}</dd>
-            {% if job.submit_adaptor %}
-            <dt>Queue name</dt>
-            <dd>{{job.queue}}</dd>
-            <dt>Project name</dt>
-            <dd>{{ job.project }}</dd>
-            <dt>Total number of CPUs</dt>
-            <dd>{{job.total_cpu_count}}</dd>
-            <dt>SPMD variation</dt>
-            <dd>{{job.spmd_variation}}</dd>
-            <dt>Walltime limit</dt>
-            <dd>{{job.walltime_limit}}</dd>
-            <dt>Total physical memory</dt>
-            <dd>{{ job.total_physical_memory }}</dd>
-            <dt>Working directory</dt>
-            <dd>{{ job.remote_dir }}</dd>
-            {% endif %}
-            <dt>Script</dt>
-            <dd><textarea readonly="readonly">{{job.script}}</textarea></dd>
-            <dt>Description</dt>
-            <dd>{{job.description}}</dd>
-        </dl>
-    </div>
-    <div>
-        {% if job.last_status in ('Running' ,'Pending')%}
-        <a type="button" class="btn btn-lg btn-danger" role="button" href="{{url_for('.cancel', job_id=job.id)}}">Cancel</a>
+                </tbody>
+            </table>
         {% endif %}
+        <div>
+            {% if job.last_status in ('Running' ,'Pending')%}
+            <a type="button" class="btn btn-lg btn-danger" role="button" href="{{url_for('.cancel', job_id=job.id)}}">Cancel</a>
+            {% endif %}
+        </div>
     </div>
 {% endblock %}

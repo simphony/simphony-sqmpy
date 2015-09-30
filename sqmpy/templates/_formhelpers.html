@@ -1,55 +1,58 @@
 {% macro render_field(field) %}
-  <dt>{{ field.label }}
-  <dd>{{ field(**kwargs)|safe }}
-  {% if field.errors %}
-    <ul class=errors>
-    {% for error in field.errors %}
-      <li>{{ error }}</li>
-    {% endfor %}
-    </ul>
-  {% endif %}
-  </dd>
+    <div class="form-group">
+        {{ field.label}}
+        {{ field(class="form-control", **kwargs)|safe }}
+            {% if field.errors %}
+                <ul class=errors>
+                    {% for error in field.errors %}
+                        <li>{{ error }}</li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+
+    </div>
 {% endmacro %}
 
+
 {% macro render_pagination(pagination) %}
-  <div class=pagination>
-  {%- for page in pagination.iter_pages() %}
-    {% if page %}
-      {% if page != pagination.page %}
-        <a href="{{ url_for_other_page(page) }}">{{ page }}</a>
-      {% else %}
-        <strong>{{ page }}</strong>
-      {% endif %}
-    {% else %}
-      <span class=ellipsis>…</span>
-    {% endif %}
-  {%- endfor %}
-  {% if pagination.has_next %}
-    <a href="{{ url_for_other_page(pagination.page + 1)
-      }}">Next &raquo;</a>
-  {% endif %}
-  </div>
+    <div class=pagination>
+        {%- for page in pagination.iter_pages() %}
+            {% if page %}
+                {% if page != pagination.page %}
+                    <a href="{{ url_for_other_page(page) }}">{{ page }}</a>
+                {% else %}
+                    <strong>{{ page }}</strong>
+                {% endif %}
+            {% else %}
+                <span class=ellipsis>…</span>
+            {% endif %}
+        {%- endfor %}
+        {% if pagination.has_next %}
+            <a href="{{ url_for_other_page(pagination.page + 1)
+                }}">Next &raquo;</a>
+        {% endif %}
+    </div>
 {% endmacro %}
 
 {% macro render_messages() %}
-{% with messages = get_flashed_messages(with_categories=True) %}
-{% if messages %}
-<ul class="flashes" style="list-style:none; width:40%">
-{% for category, message in messages %}
-{% if category == 'message' %}
-<li class="alert alert-info">
-{% endif %}
-{% if category == 'warning' %}
-<li class="alert alert-warning">
-{% endif %}
-{% if category == 'error' %}
-<li class="alert alert-danger">
-{% endif %}
-<a href="javascript:void(0)" class="close" data-dismiss="alert">x</a>
-{{ message }}
-</li>
-{% endfor %}
-</ul>
-{% endif %}
-{% endwith %}
+    {% with messages = get_flashed_messages(with_categories=True) %}
+        {% if messages %}
+            <ul class="flashes" style="list-style:none; width:40%">
+                {% for category, message in messages %}
+                    {% if category == 'message' %}
+                        <li class="alert alert-info">
+                    {% endif %}
+                    {% if category == 'warning' %}
+                        <li class="alert alert-warning">
+                    {% endif %}
+                    {% if category == 'error' %}
+                        <li class="alert alert-danger">
+                    {% endif %}
+                    <a href="javascript:void(0)" class="close" data-dismiss="alert">x</a>
+                    {{ message }}
+                    </li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+    {% endwith %}
 {% endmacro %}

@@ -18,6 +18,7 @@ from . import job_blueprint
 from .exceptions import JobNotFoundException, FileNotFoundException, JobManagerException
 from .forms import JobSubmissionForm
 from .models import Resource
+from .constants import ScriptType
 from . import manager as job_services
 
 __author__ = 'Mehdi Sadeghi'
@@ -82,6 +83,14 @@ def submit(job_id=None):
         # Save script file to upload directory
         script_file = request.files.get('script_file')
         script_safe_filename = secure_filename(script_file.filename)
+        # Recognize type of the script
+        if script_safe_filename.endswith('.sh'):
+            script_type = ScriptType.shell.value
+        elif script_safe_filename.endswith('.py'):
+            script_type = ScriptType.python.value
+        else:
+            raise Exception('Invalid script type. Only python or shell scripts are allowed.')
+        # TODO: don't raise exception if there is shebang notation inside the script file
         script_file.save(os.path.join(upload_dir, 'script_' + script_safe_filename))
 
         # Save input files to upload directory
@@ -101,12 +110,14 @@ def submit(job_id=None):
             resource_url = form.new_resource.data
         if not resource_url:
             resource_url = 'localhost'
+
         try:
             # Submit the job
             job_id = \
                 job_services.submit(form.name.data or names.get_last_name(),
                                     resource_url,
                                     upload_dir,
+                                    script_type,
                                     **form.data)
             # Redirect to list
             return redirect(url_for('.detail', job_id=job_id))

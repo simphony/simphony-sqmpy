@@ -14,7 +14,7 @@ from flask import current_app, copy_current_request_context
 
 import helpers
 from ..database import db
-from .constants import FileRelation, ScriptType, Adaptor
+from .constants import FileRelation, ScriptType, HPCBackend
 from .exceptions import JobManagerException
 from .models import Resource, StagingFile, JobStateHistory, Job
 from .callback import JobStateChangeCallback
@@ -41,7 +41,7 @@ class SagaJobWrapper(object):
             self._saga_job = self._job_service.get_job(job.remote_job_id)
         else:
             # Creating the job service object i.e. the connection
-            job.resource_endpoint = get_resource_endpoint(job.resource.url, job.script_type)
+            job.resource_endpoint = get_resource_endpoint(job.resource.url, job.hpc_backend)
             self._job_service = self.make_job_service(job.resource_endpoint)
 
     def make_job_service(self, endpoint):
@@ -160,19 +160,20 @@ class SagaJobWrapper(object):
         self._saga_job.cancel()
 
 
-def get_resource_endpoint(host, adaptor):
+def get_resource_endpoint(host, hpc_backend):
     """
     Get ssh URI of remote host
     :param host: host to make url for it
-    :param adaptor: adaptor integer value according to Adaptor enum
+    :param hpc_backend: hpc_backend integer value according to HPCBackend enum
     :return:
     """
-    backend = 'ssh'
+    # Default SAGA adaptor to ssh
+    adaptor = 'ssh'
     if helpers.is_localhost(host):
-        backend = 'fork'
-    elif adaptor == Adaptor.sge.value:
-        backend = 'sge+ssh'
-    return '{backend}://{remote_host}'.format(backend=backend,
+        adaptor = 'fork'
+    elif hpc_backend == HPCBackend.sge.value:
+        adaptor = 'sge+ssh'
+    return '{adaptor}://{remote_host}'.format(adaptor=adaptor,
                                               remote_host=host)
 
 

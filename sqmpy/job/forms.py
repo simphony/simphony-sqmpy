@@ -8,7 +8,7 @@ from flask.ext.wtf import Form
 from flask.ext.wtf.file import FileField, FileAllowed, FileRequired
 import wtforms as wtf
 
-from .constants import Adaptor
+from .constants import HPCBackend
 
 __author__ = 'Mehdi Sadeghi'
 
@@ -44,24 +44,24 @@ class JobSubmissionForm(Form):
     working_directory = \
         wtf.StringField('Remote working directory', [wtf.validators.Optional(),
                                                                 wtf.validators.Regexp('^(/)?([^/\0]+(/)?)+$')])
-    adaptor = wtf.SelectField('Job type',
-                              validators=[wtf.validators.Optional()],
-                              choices=[(entry.value, entry.name) for entry in Adaptor],
-                              coerce=int)
+    hpc_backend = wtf.SelectField('HPC Backend',
+                                  validators=[wtf.validators.Optional()],
+                                  choices=[(entry.value, entry.name) for entry in HPCBackend],
+                                  coerce=int)
     queue = wtf.StringField('Queue name', [wtf.validators.Optional(),
                                            wtf.validators.Length(min=1, max=150)])
     project = wtf.StringField('Project name', [wtf.validators.Optional(),
                                                wtf.validators.Length(min=1, max=150)])
     total_physical_memory = wtf.IntegerField('Total physical memory', [wtf.validators.Optional()])
     total_cpu_count = wtf.IntegerField('Total number of CPUs',
-                                       [OptionalIfFieldEqualTo('adaptor',
-                                                               Adaptor.shell.value)])
+                                       [OptionalIfFieldEqualTo('hpc_backend',
+                                                                HPCBackend.normal.value)])
     spmd_variation = wtf.StringField('SPMD variation',
-                                     [OptionalIfFieldEqualTo('adaptor',
-                                                             Adaptor.shell.value),
+                                     [OptionalIfFieldEqualTo('hpc_backend',
+                                                             HPCBackend.normal.value),
                                       wtf.validators.Length(min=1, max=50)])
     walltime_limit = wtf.IntegerField('Walltime limit in minutes',
-                                      [OptionalIfFieldEqualTo('adaptor',
-                                                              Adaptor.shell.value)])
+                                      [OptionalIfFieldEqualTo('hpc_backend',
+                                                              HPCBackend.normal.value)])
     description = wtf.TextAreaField('Description', [wtf.validators.Optional()])
     submit = wtf.SubmitField('Submit')

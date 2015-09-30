@@ -12,7 +12,7 @@ from flask.ext.login import current_user
 from ..database import db
 from .exceptions import JobManagerException
 from .models import Job, Resource
-from .constants import JobStatus, Adaptor
+from .constants import JobStatus, HPCBackend, ScriptType
 from .saga_helper import SagaJobWrapper
 from .exceptions import JobNotFoundException, FileNotFoundException
 import helpers
@@ -20,7 +20,7 @@ import helpers
 __author__ = 'Mehdi Sadeghi'
 
 
-def submit(job_name, resource_url, upload_dir, **kwargs):
+def submit(job_name, resource_url, upload_dir, script_type, **kwargs):
     """
     Submit a new job along with its input files. Input files will be moved under
         a new folder with this structure: <staging_dir>/<username>/<job_id>/input_files/
@@ -28,6 +28,8 @@ def submit(job_name, resource_url, upload_dir, **kwargs):
     :param resource_url: resource to submit job there
     :param upload_dir: a temp directory which contains uploaded files. Any file in that directory
         starting with `input_' and `script_` would be considered as input and script file respectively.
+    :param script_type: a value from ScriptType enum to represend script type.
+        could be 0 for shell and 1 for python scripts.
     :param kwargs::
         :param total_cpu_count:
         :param spmd_variation:
@@ -47,7 +49,16 @@ def submit(job_name, resource_url, upload_dir, **kwargs):
     job = Job()
     job.name = job_name
     job.submit_date = datetime.datetime.now()
-    job.script_type = kwargs.get('adaptor') or Adaptor.shell.value
+    if 'hpc_backend' in kwargs:
+        hpc_backend = kwargs.get('hpc_backend')
+        try:
+            job.hpc_backend = HPCBackend(hpc_backend).value
+        except ValueError:
+            raise Exception('Invalid HPCBackend value %s' % hpc_backend)
+    try:
+        job.script_type = ScriptType(script_type).value
+    except ValueError:
+        raise Exception('Invalid script type value %s' % script_type)
     job.last_status = JobStatus.INIT
     if not current_user.is_anonymous():
         job.owner_id = current_user.id

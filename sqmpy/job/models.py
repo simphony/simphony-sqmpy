@@ -29,6 +29,7 @@ class Job(db.Model):
     resource_endpoint = db.Column(db.Text())
     script = db.Column(db.Text())
     script_type = db.Column(db.Integer, nullable=False)
+    hpc_backend = db.Column(db.Integer)
     description = db.Column(db.Text())
 
     queue = db.Column(db.String(150))

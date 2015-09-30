@@ -43,15 +43,15 @@ class FileRelation(Enum):
 @unique
 class ScriptType(Enum):
     """
-    Defines script types such as shell and python
+    Defines script types such as shell or python script
     """
     shell = 0
     python = 1
 
 
-class Adaptor(Enum):
+class HPCBackend(Enum):
     """
-    Represent adaptors on resource backends, such as shell, sge and etc.
+    Represents type of backend resource to execute the job on it, such as shell or sge backend.
     """
-    shell = 0
+    normal = 0
     sge = 1

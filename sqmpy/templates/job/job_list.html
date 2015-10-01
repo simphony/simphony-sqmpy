@@ -17,7 +17,7 @@
         <table class="table table-striped table-bordered table-hover">
             <thead>
             <tr>
-                <th>ID</th>
+                <th>Remote ID</th>
                 <th class="job_name_col">Job Name</th>
                 <th class="job_date_col">Submission Date</th>
                 {% if not current_user.is_anonymous() and current_user.get_role() == "admin" %}
@@ -30,7 +30,7 @@
             <tbody data-link="row" class="rowlink">
             {% for job in jobs %}
             <tr>
-                <td><a href="{{url_for('.detail', job_id=job.id)}}"></a>{{ job.id }}</td>
+                <td><a href="{{url_for('.detail', job_id=job.id)}}"></a>{{ job.remote_job_id }}</td>
                 <td class="job_name_col">{{ job.name }}</td>
                 <td class="job_date_col">{{ job.submit_date }}</td>
                 {% if not current_user.is_anonymous() and current_user.get_role() == "admin" %}

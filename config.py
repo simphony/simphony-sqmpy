@@ -17,6 +17,9 @@ STAGING_DIR = '/tmp/staging/'
 # SMTP Configs
 MAIL_SERVER = 'iwmcas.iwm.fraunhofer.de'
 
+# Notification flag. If true will try to send notifications (emails) when job status changes.
+NOTIFICATION = False
+
 # Default web server address. Set this to whatever address the server will run
 # This will be used to generate urls outside of a request context for example
 # for notifications which contain links to certain pages such as job details.

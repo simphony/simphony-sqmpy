@@ -39,6 +39,9 @@ def send_state_change_email(job_id, owner_id, old_state, new_state, mail_config=
     if not mail_config:
         mail_config = current_app.config
 
+    if not mail_config.NOTIFICATION:
+        return
+
     if owner_id:
         owner_email, = db.session.query(User.email).filter(User.id == owner_id).one()
     elif 'ADMIN_EMAIL' in mail_config:

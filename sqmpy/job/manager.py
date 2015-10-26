@@ -9,6 +9,7 @@ import datetime
 from flask import current_app, g
 from flask.ext.login import current_user
 
+import saga
 from ..database import db
 from .exceptions import JobManagerException
 from .models import Job, Resource
@@ -87,12 +88,20 @@ def submit(job_name, resource_url, upload_dir, script_type, **kwargs):
         # Moving temp uploaded files into a directory under job's name
         # Input files will be moved under a new folder with this structure:
         #   <staging_dir>/<username>/<job_id>/
-        # Set to silent because some ghost files are uploaded with no name and empty value, don't know why.
-        helpers.stage_uploaded_files(job, upload_dir, current_app.config, silent=True)
+        # Set to silent because some ghost files are uploaded with no name and
+        #   empty value, don't know why.
+        helpers.stage_uploaded_files(job,
+                                     upload_dir,
+                                     current_app.config,
+                                     silent=True)
 
         # Submit the job using saga
         saga_wrapper = SagaJobWrapper(job)
         saga_wrapper.run()
+    except saga.exceptions.AuthenticationFailed:
+        db.session.rollback()
+        raise JobManagerException('Can not login to the remote host, \
+            authentication failed.')
     except:
         db.session.rollback()
         raise

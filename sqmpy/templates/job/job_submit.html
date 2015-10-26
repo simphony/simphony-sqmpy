@@ -2,17 +2,13 @@
 
 {% block container%}
     {{ super() }}
-    {% from "_formhelpers.html" import render_field with context%}
-    {% block flash_messages2 %}
-        {% from "_formhelpers.html" import render_messages with context%}
-        {{render_messages()}}
-    {% endblock%}
     <div class="panel panel-default">
         <div class="panel-heading">
             <h3 class="panel-title">Job submission form</h3>
         </div>
         <div class="panel-body">
             <form role="form" enctype=multipart/form-data action="{{url_for('.submit')}}" method="POST">
+                {% from "_formhelpers.html" import render_field with context%}
                 {{ form.hidden_tag() }}
                 {{ render_field(form.script_file) }}
                 {{ render_field(form.input_files, multiple="True") }}
@@ -38,6 +34,3 @@
         </div>
     </div>
 {% endblock %}
-
-{% block flash_messages %}
-{% endblock%}

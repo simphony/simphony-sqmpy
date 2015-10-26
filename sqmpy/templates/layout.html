@@ -65,14 +65,13 @@
                 </div>
             </div>
         <div class="container starter-template">
+            {% block flash_messages %}
+                {% from "_formhelpers.html" import render_messages with context%}
+                {{render_messages()}}
+            {% endblock%}
             {% block container%}
             {% endblock %}
-            {% block flash_messages %}
-            {% from "_formhelpers.html" import render_messages with context%}
-            {{render_messages()}}
-            {% endblock%}
         </div>
-        <!-- /.container -->
         {% endblock %}
 
         {% block body_tail%}

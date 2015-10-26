@@ -38,7 +38,7 @@ virtual-env installed then:
 
     $ virtual-env --no-site-packages sqmpy-env
     $ . sqmpy-env/bin/activate
-    
+
 If you don't have virutal-env on your machine then try to download it. **Please be aware that this is outdated
 since new versions of virtualenv do not download and install pip and setuptools for security reasons**:
 
@@ -93,14 +93,14 @@ will lost after restarting the application.
 
 Using sqmpy
 -----------
-sqmpy is a flask web application therefor it runs like any other flask applications. Put the following code in
-apython file called run.py and run it:
+sqmpy is a flask web application therefore it runs like any other flask applications. Put the following code in
+a python file called run.py and run it:
 
 ::
 
     from sqmpy import app
     app.run('0.0.0.0', port=5001, debug=True)
-    
+
 About Files and Folders, Local or Remote
 ----------------------------------------
 sqmpy will create a *sqmpy.log* and *sqmpy.db* and a staging folder called *staging*. The path to these files are

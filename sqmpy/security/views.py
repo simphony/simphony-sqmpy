@@ -21,8 +21,7 @@ __author__ = 'Mehdi Sadeghi'
 @security_blueprint.route('/login', methods=['GET', 'POST'])
 def login():
     form = LoginForm(request.form)
-    error = None
-    if request.method == 'POST':
+    if form.validate_on_submit():
         # login and validate the user...
         username = request.form.get('username')
         password = request.form.get('password')
@@ -35,8 +34,8 @@ def login():
             flash('Successfully logged in.')
             return redirect(request.args.get('next') or url_for('sqmpy.index'))
         else:
-            error = 'Invalid username/password'
-    return render_template('security/login.html', form=form, error=error)
+            flash('Invalid username/password', category='error')
+    return render_template('security/login.html', form=form)
 
 
 @security_blueprint.route('/logout')

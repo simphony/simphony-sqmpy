@@ -1,43 +1,34 @@
 {% extends 'layout.html' %}
-      {% block head_meta %}
-    <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-      {% endblock %}
-{% block head_tail%}
-    <!-- Custom styles for this template -->
-    <link href="{{ url_for('static', filename='css/signin.css') }}" rel="stylesheet">
+{% block head_meta %}
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 {% endblock %}
 
-  {% block body %}
-    <div class="container">
-      <form class="form-signin" role="form" action="{{ url_for('.login', next=request.args.get('next', '')) }}" method="post">
-      {% if csrf_token %}
-        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
-      {% endif %}
-        {% if request.args.get('next') %}
-          <div class="alert alert-warning alert-dismissable">
-              <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
-              <!--span class="glyphicon glyphicon-warning-sign"></span--><!--strong> Warning!</strong--> To visit {{request.args.get('next')}} on this server you need to sign in.
-              </div>
-          {% endif %}
+{% block head_tail%}
+<!-- Custom styles for this template -->
+<link href="{{ url_for('static', filename='css/signin.css') }}" rel="stylesheet">
+{% endblock %}
+
+{% block body %}
+<div class="container">
+
+    <form class="form-signin" role="form" action="{{ url_for('.login', next=request.args.get('next', '')) }}" method="post">
+        {% from "_formhelpers.html" import render_messages with context%}
+        {{render_messages()}}
+        {{ form.csrf_token }}
+
         <h2 class="form-signin-heading">Please sign in</h2>
-        <input name="username" type="username" class="form-control" placeholder="Username" required autofocus>
+        <input name="username" type="username" class="form-control" placeholder="Username" required autofocus style="margin-bottom:5px;">
         <input name="password" type="password" class="form-control" placeholder="Password" required>
-          {% if error %}
-          <div class="alert alert-danger alert-dismissable">
-          <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
-          <!--strong>Error!</strong--> {{error}}
-          </div>
-          {% endif %}
         <!--label class="checkbox">
-          <input name="remember" type="checkbox" value="remember-me"> Remember me
-        </label-->
-          <small>No account yet? Register <a href="{{ url_for('.register')}}">here.</a></small>
-        <button class="btn btn-lg btn-primary btn-block" type="submit">Sign in</button>
+        <input name="remember" type="checkbox" value="remember-me"> Remember me
+    </label-->
+    <small>No account yet? Register <a href="{{ url_for('.register')}}">here.</a></small>
+    <button class="btn btn-lg btn-primary btn-block" type="submit">Sign in</button>
 
-      </form>
+</form>
 
-    </div> <!-- /container -->
+</div> <!-- /container -->
 
-  {% endblock %}
+{% endblock %}

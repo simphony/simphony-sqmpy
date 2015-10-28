@@ -61,7 +61,7 @@ def submit(job_name, resource_url, upload_dir, script_type, **kwargs):
     except ValueError:
         raise Exception('Invalid script type value %s' % script_type)
     job.last_status = JobStatus.INIT
-    if not current_user.is_anonymous():
+    if not current_user.is_anonymous:
         job.owner_id = current_user.id
     job.remote_dir = kwargs.get('working_directory')
     job.description = kwargs.get('description')
@@ -145,7 +145,7 @@ def list_jobs(page=None, **kwargs):
     :param page: page number
     :return: job pagination
     """
-    if current_user.is_anonymous():
+    if current_user.is_anonymous:
         # Do not filter. Login is disabled.
         query = Job.query.filter().order_by(Job.submit_date.desc())
     else:

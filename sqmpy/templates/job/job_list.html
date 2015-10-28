@@ -20,7 +20,7 @@
                 <th>#</th>
                 <th>Remote ID</th>
                 <th class="job_date_col">Submission Date</th>
-                {% if not current_user.is_anonymous() and current_user.get_role() == "admin" %}
+                {% if not current_user.is_anonymous and current_user.get_role() == "admin" %}
                     <th>User</th>
                 {% endif %}
                 <th>Status</th>
@@ -32,7 +32,7 @@
                 <td>{{ loop.index }} </td>
                 <td><a href="{{url_for('.detail', job_id=job.id)}}"></a>{{ job.remote_job_id }}</td>
                 <td class="job_date_col">{{ job.submit_date }}</td>
-                {% if not current_user.is_anonymous() and current_user.get_role() == "admin" %}
+                {% if not current_user.is_anonymous and current_user.get_role() == "admin" %}
                     <td>{{ job.owner_id }}</td>
                 {% endif %}
                 <td>{{ job.last_status }}</td>

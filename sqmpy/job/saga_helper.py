@@ -10,7 +10,8 @@ import datetime
 import hashlib
 
 import saga
-from flask import current_app, copy_current_request_context
+from flask import current_app, copy_current_request_context, session
+from flask.ext.login import current_user
 
 import helpers
 from ..database import db
@@ -47,6 +48,10 @@ class SagaJobWrapper(object):
     def make_job_service(self, endpoint):
         # Create ssh security context
         ctx = saga.Context('ssh')
+        if current_app.config.get('SSH_WITH_LOGIN_INFO'):
+            ctx.user_id = current_user.id
+            global session
+            ctx.user_pass = session['password']
         session = saga.Session()
         session.add_context(ctx)
 

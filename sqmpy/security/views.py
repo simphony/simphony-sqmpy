@@ -4,7 +4,7 @@
 
     View functions for security module
 """
-from flask import flash, url_for, request, redirect, render_template, abort
+from flask import flash, url_for, request, redirect, render_template, session
 from flask.ext.login import login_user, logout_user, login_required
 
 from ..database import db
@@ -25,16 +25,16 @@ def login():
         # login and validate the user...
         username = request.form.get('username')
         password = request.form.get('password')
-        if security_services.valid_login(username, password):
-            remember = None
-            if request.form.get('remember') is not None:
-                remember = True
-            user = User.query.filter_by(username=username).one()
-            login_user(user, remember=remember)
-            flash('Successfully logged in.')
-            return redirect(request.args.get('next') or url_for('sqmpy.index'))
-        else:
-            flash('Invalid username/password', category='error')
+        try:
+            if security_services.validate_login(username, password):
+                user = security_services.get_user(username)
+                login_user(user, remember=request.form.get('remember'))
+                flash('Successfully logged in.')
+                return redirect(request.args.get('next') or url_for('sqmpy.index'))
+            else:
+                flash('Invalid username/password', category='error')
+        except Exception, error:
+            flash('LDAP Error: %s' % error, category='error')
     return render_template('security/login.html', form=form)
 
 
@@ -42,9 +42,11 @@ def login():
 @login_required
 def logout():
     logout_user()
+    session.clear()
     return redirect('/')
 
 
+# TODO: Disable registration for LDAP, or better, enable it only if local
 @security_blueprint.route('/register', methods=['GET', 'POST'])
 def register():
     """

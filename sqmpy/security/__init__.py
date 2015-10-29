@@ -7,7 +7,7 @@
 from flask import Blueprint
 from flask.ext.login import LoginManager, AnonymousUserMixin
 
-from .models import User
+import manager
 
 __author__ = 'Mehdi Sadeghi'
 
@@ -16,33 +16,37 @@ __author__ = 'Mehdi Sadeghi'
 security_blueprint = Blueprint('security', __name__, url_prefix='/security')
 
 
-# This does not look good but there is justification for it. Since we use saga and
-# saga uses ssh to connect to remote hosts and we do not ask users for their ssh
-# credentials, therefore we use the ssh keys which are available in home folder of
-# the user which is running Sqmpy process. Therefore, no matter who is in front of
-# the browser, we have will run commands on remote machines with the user who has
-# run the Flask application in the first place.
-class AnonymousOperator(AnonymousUserMixin):
-    def __init__(self):
-        super(AnonymousOperator, self).__init__()
-        import getpass
-        self.username = getpass.getuser()
-
-
 @security_blueprint.record_once
 def on_load(state):
     # Activate Login
-    login_manager = LoginManager()
+    login_manager = login_manager_factory(state)
     login_manager.init_app(state.app)
-    login_manager.login_view = '/security/login'
 
-    # Set custom anonymous user to return the user which is running the process.
+
+def login_manager_factory(state):
+    """
+    Create a login manager accordingly.
+    """
+    login_manager = LoginManager()
+    login_manager.login_view = '/security/login'
+    login_manager.login_message_category = "warning"
+
+    # Set custom anonymous user to return the user which is running the
+    #   process.
     def make_anon_user():
-        return AnonymousOperator()
+        return AnonymousUserMixin()
     login_manager.anonymous_user = make_anon_user
 
-    @login_manager.user_loader
-    def load_user(user_id):
-        return User.query.get(user_id)
+    if 'USE_LDAP_LOGIN' in state.app.config:
+        @login_manager.user_loader
+        def load_user(username):
+            print('Going to load ldap user %s' % username)
+            user, dn, entry = manager._get_ldap_user(username)
+            return user
+    else:
+        @login_manager.user_loader
+        def load_user(username):
+            print('Going to load normal user %s' % username)
+            return manager._get_user(username)
 
-
+    return login_manager

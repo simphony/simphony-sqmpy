@@ -4,7 +4,9 @@
 
     Provides user management
 """
+import ldap
 import bcrypt
+from flask import current_app, session
 
 from .exceptions import SecurityManagerException
 from .models import User
@@ -12,7 +14,17 @@ from .models import User
 __author__ = 'Mehdi Sadeghi'
 
 
-def valid_login(username, password):
+def validate_login(username, password):
+    """
+    Checks the login on the configured backend.
+    """
+    if current_app.config.get('USE_LDAP_LOGIN'):
+        return _valid_ldap_login(username, password)
+    else:
+        return _valid_login(username, password)
+
+
+def _valid_login(username, password):
     """
     Checks if the given password is valid for the username
     """
@@ -23,16 +35,95 @@ def valid_login(username, password):
     return False
 
 
-def get_user(user_id):
+def _valid_ldap_login(username, password):
     """
-    Returns the user with given id
-    :param id:
+    Tries to login using LDAP
+    """
+    if password in (None, ''):
+        print ('No LDAP password is provided')
+        return False
+    user, dn, entry = _get_ldap_user(username)
+    if __debug__:
+        print 'Got ldap user: %s %s %s' % (user, dn, entry)
+
+    try:
+        if 'LDAP_SERVER' not in current_app.config:
+            raise Exception('Missing LDAP server information.')
+
+        ld = ldap.initialize('ldap://{host}:{port}'.format(
+            host=current_app.config.get('LDAP_SERVER'),
+            port=current_app.config.get('LDAP_PORT', 389)
+        ))
+        result = ld.simple_bind_s(dn, password)
+        if __debug__:
+            print 'LDAP bind_simple_s result is %s' % str(result)
+
+        # Keep password for SSH job submission
+        session['password'] = password
+        return True
+    except ldap.INVALID_CREDENTIALS:
+        return False
+    else:
+        raise
+
+
+def get_user(username):
+    """
+    Checks the login on the configured backend.
+    """
+    if current_app.config.get('USE_LDAP_LOGIN'):
+        user, dn, entry = _get_ldap_user(username)
+        return user
+    else:
+        return _get_user(username)
+
+
+def _get_user(username):
+    """
+    Returns the user with given username
+    :param username:
     :return:
     """
-    user = User.query.get(user_id)
+    user = User.query.filter_by(username=username).one()
     if user is None:
-        raise SecurityManagerException('User [{user_id}] not found.'.format(user_id=user_id))
+        raise SecurityManagerException(
+            'User [{username}] not found.'.format(username=username))
     return user
+
+
+def _get_ldap_user(username):
+    """
+    Returns an LDAP user
+    :param username
+    :return:
+    """
+    if 'LDAP_SERVER' not in current_app.config:
+        raise Exception('Missing LDAP server information.')
+
+    ld = ldap.initialize('ldap://{host}:{port}'.format(
+        host=current_app.config.get('LDAP_SERVER'),
+        port=current_app.config.get('LDAP_PORT', 389)
+    ))
+
+    basedn = current_app.config.get('LDAP_BASEDN', '')
+    # So far only anonymous LDAP is supported
+    # ld.simple_bind_s()
+    ldap_filter = '(&(objectclass=person)(uid=%s))' % username
+    results = ld.search_s('', # basedn,
+                          ldap.SCOPE_SUBTREE,
+                          ldap_filter)
+    if len(results) < 1:
+        raise Exception('User %s not found' % username)
+    dn, entry = results[0]
+    if __debug__:
+        print('Found dn %s for user %s' % (dn, username))
+    email = None
+    if len(entry['mail']) > 0:
+        email = entry['mail'][0]
+    user = User(username=username,
+                email=email)
+    user.id = entry['uid'][0]
+    return user, dn, entry
 
 
 def get_password_digest(password):

@@ -4,14 +4,16 @@
     This module contains configuration keys for the application.
     See http://flask.pocoo.org/docs/config/ for more information.
 """
-DEBUG = True
+# Set to True to get interactive debug output instead of HTTP 500 error
+DEBUG = False
 
-# To sign cookies
+# The secret key will be used to encrypt cookies.
 SECRET_KEY = "This string will be replaced with a proper key in production."
 
 # Database settings
 SQLALCHEMY_DATABASE_URI = 'sqlite:///'
 DATABASE_CONNECT_OPTIONS = {}
+SQLALCHEMY_TRACK_MODIFICATIONS = False
 
 # CSRF settings
 CSRF_ENABLED = False
@@ -34,5 +36,27 @@ DEFAULT_MAIL_SENDER = 'monitor@sqmpy'
 # Number of results to show when using pagination
 PER_PAGE = 10
 
-# Redis URL
-REDISTOGO_URL = 'redis://localhost:6379'
+# Will try to send notification emails when job status changes.
+NOTIFICATION = False
+
+# Default web server address. Set this to whatever address the server will run
+# This will be used to generate urls outside of a request context for example
+# for notifications which contain links to certain pages such as job details.
+# SERVER_NAME = 'sqmpy.example.com:3000'
+
+# Admin email to send job status notifications to, in case login is disabled
+# ADMIN_EMAIL = 'me@example.com'
+
+# For first release there is no login-procedure
+LOGIN_DISABLED = True
+
+# Enables LDAP login, this will cause LDAP credentials to be
+#   used for SSH as well
+USE_LDAP_LOGIN = False
+# LDAP_SERVER = 'example.com'
+# LDAP_BASEDN = 'ou=People,ou=IWM,o=Fraunhofer,c=DE'
+
+# User user login information for SSH. Default option is password-less access.
+# When set, sqmpy will user the provided username and password to obtain an
+# SSH connection to any remote host.
+SSH_WITH_LOGIN_INFO = False

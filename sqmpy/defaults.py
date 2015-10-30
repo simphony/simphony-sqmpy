@@ -30,7 +30,8 @@ RECAPTCHA_OPTIONS = {'theme': 'white'}
 # STAGING_DIR = '/path/to/staging_dir'
 
 # Mail settings
-MAIL_SERVER = 'localhost'
+SMTP_HOST = 'localhost'
+SMTP_PORT = 25
 DEFAULT_MAIL_SENDER = 'monitor@sqmpy'
 
 # Number of results to show when using pagination

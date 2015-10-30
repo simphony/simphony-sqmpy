@@ -7,5 +7,9 @@ from sqmpy.factory import create_app
 
 # This line added to support heroku deployment
 port = int(os.environ.get("PORT", 3000))
+
 app = create_app('../config.py')
-app.run(port=port)
+app.run(host='0.0.0.0', port=port,
+        ssl_context=('server.crt', 'server.key'),
+        debug=True,
+        threaded=True)

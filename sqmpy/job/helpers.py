@@ -41,7 +41,7 @@ def send_state_change_email(job_id, owner_id, old_state, new_state,
     if not mail_config:
         mail_config = current_app.config
 
-    if not mail_config.NOTIFICATION:
+    if not mail_config.get('NOTIFICATION'):
         return
 
     if owner_id:
@@ -83,12 +83,15 @@ def send_state_change_email(job_id, owner_id, old_state, new_state,
     message['To'] = owner_email
 
     try:
-        smtp_server = smtplib.SMTP(mail_config.get('MAIL_SERVER'))
+        smtp_server = smtplib.SMTP(host=mail_config.get('SMTP_HOST',
+                                                        'localhost'),
+                                   port=mail_config.get('SMTP_PORT', 0))
         smtp_server.sendmail(mail_config.get('DEFAULT_MAIL_SENDER'),
                              [owner_email],
                              message.as_string())
         smtp_server.quit()
     except Exception, error:
+        print "Callback: Failed to send mail: %s" % error
         current_app.logger.debug("Callback: Failed to send mail: %s" % error)
         if not silent:
             raise

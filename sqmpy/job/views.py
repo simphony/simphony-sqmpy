@@ -8,13 +8,12 @@ import os
 import tempfile
 
 from flask import request, redirect, url_for, abort, \
-    render_template, flash, send_from_directory
+    render_template, flash, send_from_directory, Blueprint, g
 from flask.ext.login import login_required, current_user
 from flask.ext.csrf import csrf_exempt
 from werkzeug import secure_filename
 import names
 
-from . import job_blueprint
 from .exceptions import JobNotFoundException, FileNotFoundException, JobManagerException
 from .forms import JobSubmissionForm
 from .models import Resource
@@ -22,6 +21,19 @@ from .constants import ScriptType
 from . import manager as job_services
 
 __author__ = 'Mehdi Sadeghi'
+
+
+job_blueprint = Blueprint('job', __name__, url_prefix='/jobs')
+
+
+@job_blueprint.context_processor
+def job_cnx_processor():
+    return dict(active_page=job_blueprint.name)
+
+
+@job_blueprint.before_request
+def add_job_list(*args, **kwargs):
+    g.__jobs = {}
 
 
 @job_blueprint.route('/', methods=['GET'])

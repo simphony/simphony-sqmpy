@@ -60,13 +60,13 @@ class Resource(db.Model):
     __tablename__ = 'resources'
     id = db.Column(db.Integer, primary_key=True)
     url = db.Column(db.String(150), unique=True)
-    description = db.Column(db.String(150), unique=True)
+    name = db.Column(db.String(150), unique=True)
     jobs = db.relationship('Job', backref="resource")
 
     # I pass None to params to let Admin page to create objects
-    def __init__(self, url=None, description=None):
+    def __init__(self, url=None, name=None):
         self.url = url
-        self.description = description
+        self.name = name
 
     def __repr__(self):
         return '<Resource %s>' % self.url

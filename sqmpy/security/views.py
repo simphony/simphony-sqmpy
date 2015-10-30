@@ -8,14 +8,56 @@ from flask import flash, url_for, request, redirect, render_template, session
 from flask.ext.login import login_user, logout_user, login_required
 
 from ..database import db
-from . import security_blueprint
 from sqlalchemy.exc import IntegrityError
 from .forms import LoginForm, RegisterForm
 from .manager import get_password_digest
 from .models import User
 from . import manager as security_services
 
+from flask import Blueprint
+from flask.ext.login import LoginManager, AnonymousUserMixin
+
 __author__ = 'Mehdi Sadeghi'
+
+
+# Create security blueprint
+security_blueprint = Blueprint('security', __name__, url_prefix='/security')
+
+
+@security_blueprint.record_once
+def on_load(state):
+    # Activate Login
+    login_manager = login_manager_factory(state)
+    login_manager.init_app(state.app)
+
+
+def login_manager_factory(state):
+    """
+    Create a login manager accordingly.
+    """
+    login_manager = LoginManager()
+    login_manager.login_view = '/security/login'
+    login_manager.login_message_category = "warning"
+
+    # Set custom anonymous user to return the user which is running the
+    #   process.
+    def make_anon_user():
+        return AnonymousUserMixin()
+    login_manager.anonymous_user = make_anon_user
+
+    if 'USE_LDAP_LOGIN' in state.app.config:
+        @login_manager.user_loader
+        def load_user(username):
+            print('Going to load ldap user %s' % username)
+            user, dn, entry = security_services._get_ldap_user(username)
+            return user
+    else:
+        @login_manager.user_loader
+        def load_user(username):
+            print('Going to load normal user %s' % username)
+            return security_services._get_user(username)
+
+    return login_manager
 
 
 @security_blueprint.route('/login', methods=['GET', 'POST'])

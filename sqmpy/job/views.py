@@ -118,14 +118,15 @@ def submit(job_id=None):
                 # Save file to upload temp directory
                 f.save(os.path.join(upload_dir, 'input_' + safe_filename))
 
+        # Assing the default value
+        resource_url = 'localhost'
+
         # Check if user has filled `new_resource' field
         if form.resource.data != 'None':
             resource_url = form.resource.data
         # New url field and priority
         if form.new_resource.data not in (None, ''):
             resource_url = form.new_resource.data
-        if not resource_url:
-            resource_url = 'localhost'
 
         try:
             # Submit the job

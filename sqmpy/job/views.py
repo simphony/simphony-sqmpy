@@ -114,10 +114,11 @@ def submit(job_id=None):
         try:
             # Submit the job
             job_id = \
-                job_services.submit(form.name.data or names.get_last_name(),
-                                    resource_url,
+                job_services.submit(resource_url,
                                     upload_dir,
                                     script_type,
+                                    job_name=form.name.data
+                                    or names.get_last_name(),
                                     **form.data)
             # Redirect to list
             return redirect(url_for('.detail', job_id=job_id))

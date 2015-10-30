@@ -21,17 +21,21 @@ import helpers
 __author__ = 'Mehdi Sadeghi'
 
 
-def submit(job_name, resource_url, upload_dir, script_type, **kwargs):
+def submit(resource_url, upload_dir, script_type, **kwargs):
     """
-    Submit a new job along with its input files. Input files will be moved under
-        a new folder with this structure: <staging_dir>/<username>/<job_id>/input_files/
-    :param name: job name
+    Submit a new job along with its input files. Input files will be moved
+    under a new folder with this structure:
+        <staging_dir>/<username>/<job_id>/input_files/
     :param resource_url: resource to submit job there
-    :param upload_dir: a temp directory which contains uploaded files. Any file in that directory
-        starting with `input_' and `script_` would be considered as input and script file respectively.
+    :param upload_dir: a temp directory which contains uploaded files.
+        Any file in that directory starting with `input_' and `script_` would
+        be considered as input and script file respectively.
     :param script_type: a value from ScriptType enum to represend script type.
         could be 0 for shell and 1 for python scripts.
     :param kwargs::
+        :param name: a user defined name for the job
+        :param hpc_backend: type of scheduler on the remote host. Currently
+            normal(shell) and sge are supported.
         :param total_cpu_count:
         :param spmd_variation:
         :param walltime_limit:
@@ -46,39 +50,31 @@ def submit(job_name, resource_url, upload_dir, script_type, **kwargs):
     if not upload_dir:
         raise JobManagerException('At least script files should be uploaded')
 
-    # Store the job
+    # Create a job and fill it with provided information
     job = Job()
-    job.name = job_name
-    job.submit_date = datetime.datetime.now()
+    job.script_type = ScriptType(script_type).value
+
     if 'hpc_backend' in kwargs:
-        hpc_backend = kwargs.get('hpc_backend')
-        try:
-            job.hpc_backend = HPCBackend(hpc_backend).value
-        except ValueError:
-            raise Exception('Invalid HPCBackend value %s' % hpc_backend)
-    try:
-        job.script_type = ScriptType(script_type).value
-    except ValueError:
-        raise Exception('Invalid script type value %s' % script_type)
-    job.last_status = JobStatus.INIT
+        job.hpc_backend = HPCBackend(kwargs.get('hpc_backend')).value
+
     if not current_user.is_anonymous:
         job.owner_id = current_user.id
+
+    job.name = kwargs.get('job_name')
     job.remote_dir = kwargs.get('working_directory')
     job.description = kwargs.get('description')
-
     job.total_cpu_count = kwargs.get('total_cpu_count')
     job.walltime_limit = kwargs.get('walltime_limit')
-    # TODO: sqmpy should be smart enough to provide available options for this parameter
     job.spmd_variation = kwargs.get('spmd_variation')
-    job.queue = kwargs.get('queue') or None
-    job.project = kwargs.get('project') or None
-    job.total_physical_memory = kwargs.get('total_physical_memory') or None
+    job.queue = kwargs.get('queue')
+    job.project = kwargs.get('project')
+    job.total_physical_memory = kwargs.get('total_physical_memory')
 
     try:
         # Insert a new record for url if it does not exist already
         resource = Resource.query.filter(Resource.url == resource_url).first()
         if not resource:
-            resource = Resource(resource_url, resource_url)
+            resource = Resource(resource_url)
             db.session.add(resource)
             db.session.flush()
         job.resource_id = resource.id
@@ -105,6 +101,7 @@ def submit(job_name, resource_url, upload_dir, script_type, **kwargs):
     except:
         db.session.rollback()
         raise
+    # If no error has happened so far, commit the session.
     db.session.commit()
     return job.id
 
@@ -120,11 +117,13 @@ def get_job_status(job_id):
         if job.last_status not in [JobStatus.CANCELED,
                                    JobStatus.DONE,
                                    JobStatus.FAILED]:
-            # If there is not wrapper for the job and the job is not either cancelled, done, or failed,
-            # then we don't know what has happened to the job.
+            # If there is not wrapper for the job and the job is not either
+            # cancelled, done, or failed, then we don't know what has happened
+            # to the job.
             return JobStatus.UNKNOWN
 
-    # If we have the wrapper we trust him to update last_status and we sent the object's status.
+    # If we have the wrapper we trust him to update last_status and we sent
+    # the object's status.
     return job.last_status
 
 
@@ -149,7 +148,9 @@ def list_jobs(page=None, **kwargs):
         # Do not filter. Login is disabled.
         query = Job.query.filter().order_by(Job.submit_date.desc())
     else:
-        query = Job.query.filter(Job.owner_id == current_user.id).order_by(Job.submit_date.desc())
+        query = \
+            Job.query.filter(Job.owner_id == current_user.id).order_by(
+                Job.submit_date.desc())
 
     return query.paginate(page, current_app.config['PER_PAGE'])
 
@@ -170,7 +171,9 @@ def get_file_location(job_id, file_name):
     for f in job.files:
         if f.name == file_name:
             return helpers.get_job_staging_folder(job.id, config)
-    raise FileNotFoundException('Job number %s does not have any file called %s' % (job_id, file_name))
+    raise \
+        FileNotFoundException('Job number %s does not have any file called %s'
+                              % (job_id, file_name))
 
 
 def cancel_job(job_id):

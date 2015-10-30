@@ -27,13 +27,15 @@ from .constants import FileRelation, ScriptType
 __author__ = 'Mehdi Sadeghi'
 
 
-def send_state_change_email(job_id, owner_id, old_state, new_state, mail_config=None):
+def send_state_change_email(job_id, owner_id, old_state, new_state,
+                            mail_config=None, silent=False):
     """
     A simple helper class to send smtp email for job state change
     :param job_id: Job id in database
     :param owner_id: job's owner id
     :param old_state:
     :param new_state:
+    :param silent: suppress errors
     :return:
     """
     if not mail_config:
@@ -43,12 +45,12 @@ def send_state_change_email(job_id, owner_id, old_state, new_state, mail_config=
         return
 
     if owner_id:
-        owner_email, = db.session.query(User.email).filter(User.id == owner_id).one()
+        owner_email, = \
+            db.session.query(User.email).filter(User.id == owner_id).one()
     elif 'ADMIN_EMAIL' in mail_config:
         owner_email = mail_config.get('ADMIN_EMAIL')
     else:
         raise Exception('Job owner email unknown.')
-    smtp_server = smtplib.SMTP(mail_config.get('MAIL_SERVER'))
     text_message = \
         'Status changed from {old} to {new}'.format(old=old_state,
                                                     new=new_state)
@@ -66,7 +68,9 @@ def send_state_change_email(job_id, owner_id, old_state, new_state, mail_config=
         </body>
         </html>""".format(text_message=text_message,
                           job_id=job_id,
-                          link=url_for('.detail', job_id=job_id, _external=True))
+                          link=url_for('.detail',
+                                       job_id=job_id,
+                                       _external=True))
 
     part1 = MIMEText(text_message, 'plain')
     part2 = MIMEText(html_message, 'html')
@@ -77,10 +81,17 @@ def send_state_change_email(job_id, owner_id, old_state, new_state, mail_config=
     message['Subject'] = 'State changed in job #{job_id}'.format(job_id=job_id)
     message['From'] = mail_config.get('DEFAULT_MAIL_SENDER')
     message['To'] = owner_email
-    smtp_server.sendmail(mail_config.get('DEFAULT_MAIL_SENDER'),
-                         [owner_email],
-                         message.as_string())
-    smtp_server.quit()
+
+    try:
+        smtp_server = smtplib.SMTP(mail_config.get('MAIL_SERVER'))
+        smtp_server.sendmail(mail_config.get('DEFAULT_MAIL_SENDER'),
+                             [owner_email],
+                             message.as_string())
+        smtp_server.quit()
+    except Exception, error:
+        current_app.logger.debug("Callback: Failed to send mail: %s" % error)
+        if not silent:
+            raise
 
 
 def is_localhost(host):
@@ -101,7 +112,8 @@ def stage_uploaded_files(job, upload_dir, config, silent=False):
     """
     Saves files in the given directory under the given job's directory
     :param job:
-    :param upload_dir: a directory containing files prefixed with `input_' and `script_'
+    :param upload_dir: a directory containing files prefixed with `input_'
+        and `script_'
     :param silent: skip empty file names
     :return:
     """
@@ -118,8 +130,9 @@ def stage_uploaded_files(job, upload_dir, config, silent=False):
             staging_file_relation = FileRelation.input.value
         elif filename.startswith('script_'):
             # We rename script file name to avoid collision with input files
-            staging_file_name = 'job_{job_id}_{filename}'.format(job_id=job.id,
-                                                                 filename=filename[7:])
+            staging_file_name = \
+                'job_{job_id}_{filename}'.format(job_id=job.id,
+                                                 filename=filename[7:])
             staging_file_relation = FileRelation.script.value
             # fill job.script
             job.script = open(os.path.join(upload_dir, filename)).read()

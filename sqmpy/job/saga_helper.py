@@ -11,13 +11,14 @@ import hashlib
 
 import saga
 import flask
+import gevent
 from flask.ext.login import current_user
 
 import helpers
 from ..database import db
 from .constants import FileRelation, ScriptType, HPCBackend
 from .exceptions import JobManagerException
-from .models import Resource, StagingFile, JobStateHistory, Job
+from .models import StagingFile, JobStateHistory, Job
 from .callback import JobStateChangeCallback
 
 __author__ = 'Mehdi Sadeghi'
@@ -42,7 +43,8 @@ class SagaJobWrapper(object):
             self._saga_job = self._job_service.get_job(job.remote_job_id)
         else:
             # Creating the job service object i.e. the connection
-            job.resource_endpoint = get_resource_endpoint(job.resource.url, job.hpc_backend)
+            job.resource_endpoint = \
+                get_resource_endpoint(job.resource.url, job.hpc_backend)
             self._job_service = self.make_job_service(job.resource_endpoint)
 
     def make_job_service(self, endpoint):
@@ -66,7 +68,8 @@ class SagaJobWrapper(object):
         :return:
         """
         # This callback will locally store output files and new states in db
-        self._saga_job.add_callback(saga.STATE, JobStateChangeCallback(self._job, self))
+        self._saga_job.add_callback(saga.STATE,
+                                    JobStateChangeCallback(self._job, self))
 
     def get_job(self):
         """
@@ -80,13 +83,11 @@ class SagaJobWrapper(object):
         Run the job on remote resource
         :return:
         """
-        # Get resource address
-        resource = None
-        if self._job.resource_id and self._job.resource_id > 0:
-            resource = Resource.query.get(self._job.resource_id)
-
         # Set remote job working directory
-        remote_job_dir = get_job_endpoint(self._job.id, self._job_service.session)
+        remote_job_dir = \
+            get_job_endpoint(self._job.id, self._job_service.session)
+
+        # Make sure the working directory is empty
         if remote_job_dir.list():
             raise JobManagerException('Remote directory is not empty')
 
@@ -100,26 +101,26 @@ class SagaJobWrapper(object):
         self._saga_job = self._job_service.create_job(jd)
 
         # Register call backs
-        #self._register_callbacks()
+        # self._register_callbacks()
 
         # TODO: My monitoring approach is wrong and should be changed.
         # Prepare our gevent greenlet
-        import gevent
         @flask.copy_current_request_context
         def monitor_state():
             while True:
+                if __debug__:
+                    print('Monitoring job %s for changes...' % self._job.id)
                 gevent.sleep(3)
                 try:
                     val = self._saga_job.state
                     if val != self._job.last_status:
                         # Shout out load
-                        try:
-                            helpers.send_state_change_email(self._job.id,
-                                                            self._job.owner_id,
-                                                            self._job.last_status,
-                                                            val)
-                        except Exception, ex:
-                            flask.current_app.logger.debug("Callback: Failed to send mail: %s" % ex)
+                        helpers.send_state_change_email(self._job.id,
+                                                        self._job.owner_id,
+                                                        self._job.last_status,
+                                                        val,
+                                                        silent=True)
+
                         # Insert history record
                         history_record = JobStateHistory()
                         history_record.change_time = datetime.datetime.now()
@@ -128,37 +129,42 @@ class SagaJobWrapper(object):
                         history_record.job_id = self._job.id
                         db.session.add(history_record)
                         db.session.flush()
-                        # If there are new files, transfer them back, along with output and error files
+
+                        # If there are new files, transfer them back, along
+                        # with output and error files
                         download_job_files(self._job.id,
                                            self._saga_job.description,
                                            self._job_service.session)
+
                         # Update last status
                         self._job.last_status = val
                         if self._job not in db.session:
                             db.session.merge(self._job)
-                        flask.current_app.logger.debug('Before commit the new value is %s ' % val)
                         db.session.commit()
                     if val in (saga.FAILED,
                                saga.DONE,
                                saga.CANCELED,
                                saga.FINAL,
                                saga.EXCEPTION):
-                        print 'Breaking ...', val
                         return
                 except saga.IncorrectState:
                     pass
+
+        # Spawn the coroutine
         gevent.spawn(monitor_state)
 
         # Run the job eventually
-        flask.current_app.logger.debug("...starting job...")
+        flask.current_app.logger.debug("...starting job[%s]..." % self._job.id)
         self._saga_job.run()
 
         # Store remote pid
         self._job.remote_job_id = self._saga_job.get_id()
         db.session.commit()
 
-        flask.current_app.logger.debug("Job ID    : %s" % self._saga_job.id)
-        flask.current_app.logger.debug("Job State : %s" % self._saga_job.state)
+        flask.current_app.logger.debug(
+            "Remote Job ID    : %s" % self._saga_job.id)
+        flask.current_app.logger.debug(
+            "Remote Job State : %s" % self._saga_job.state)
 
     def cancel(self):
         """
@@ -199,10 +205,11 @@ def get_job_endpoint(job_id, session):
     adapter = 'sftp'
     if helpers.is_localhost(job.resource.url):
         adapter = 'file'
+    adaptor_string = '{adapter}://{remote_host}/{working_directory}'
     remote_address = \
-        '{adapter}://{remote_host}/{working_directory}'.format(adapter=adapter,
-                                                               remote_host=job.resource.url,
-                                                               working_directory=job.remote_dir)
+        adaptor_string.format(adapter=adapter,
+                              remote_host=job.resource.url,
+                              working_directory=job.remote_dir)
     # Appropriate folders will be created
     return \
         saga.filesystem.Directory(remote_address,
@@ -218,8 +225,9 @@ def make_job_description(job, remote_job_dir):
     :return:
     """
     script_file = \
-        StagingFile.query.filter(StagingFile.parent_id == job.id,
-                                 StagingFile.relation == FileRelation.script.value).first()
+        StagingFile.query.filter(
+            StagingFile.parent_id == job.id,
+            StagingFile.relation == FileRelation.script.value).first()
 
     jd = saga.job.Description()
     # TODO: Add queue name, project and other params
@@ -248,9 +256,11 @@ def make_job_description(job, remote_job_dir):
     return jd
 
 
-def download_job_files(job_id, job_description, session, config=None, wipe=True):
+def download_job_files(job_id, job_description, session, config=None,
+                       wipe=True):
     """
-    Copies output and error files along with any other output files back to the current machine.
+    Copies output and error files along with any other output files back to the
+    current machine.
     :param job_id: job id
     :param job_description:
     :param session: saga session to remote resource
@@ -265,13 +275,15 @@ def download_job_files(job_id, job_description, session, config=None, wipe=True)
     if helpers.is_localhost(job.resource.url):
         local_job_dir_url = local_job_dir
     else:
-        local_job_dir_url = helpers.get_job_staging_folder(job_id, config, make_sftp_url=True)
+        local_job_dir_url = \
+            helpers.get_job_staging_folder(job_id, config, make_sftp_url=True)
 
     # Get staging file names for this job which are already uploaded
     # we don't need to download them since we have them already
     uploaded_files = \
-        StagingFile.query.with_entities(StagingFile.name).filter(StagingFile.parent_id == Job.id,
-                                                                 Job.id == job_id).all()
+        StagingFile.query.with_entities(StagingFile.name).filter(
+            StagingFile.parent_id == Job.id,
+            Job.id == job_id).all()
     # Convert tuple result to list
     uploaded_files = [file_name for file_name, in uploaded_files]
     remote_dir = get_job_endpoint(job_id, session)
@@ -314,9 +326,10 @@ def transfer_job_files(job_id, remote_job_dir_url):
     """
     # Copy script and input files to remote host
     uploading_files = \
-        StagingFile.query.filter(StagingFile.parent_id == job_id,
-                                 StagingFile.relation.in_([FileRelation.input.value,
-                                                           FileRelation.script.value])).all()
+        StagingFile.query.filter(
+            StagingFile.parent_id == job_id,
+            StagingFile.relation.in_([FileRelation.input.value,
+                                      FileRelation.script.value])).all()
     for file_to_upload in uploading_files:
         file_wrapper = \
             saga.filesystem.File('file://localhost/{file_path}'

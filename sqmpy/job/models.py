@@ -9,7 +9,7 @@ import datetime
 import base64
 
 from ..database import db
-from .constants import FileRelation
+from .constants import FileRelation, JobStatus
 
 __author__ = 'Mehdi Sadeghi'
 
@@ -46,6 +46,7 @@ class Job(db.Model):
     def __init__(self):
         self.id = base64.urlsafe_b64encode(os.urandom(6))
         self.submit_date = datetime.datetime.utcnow()
+        self.last_status = JobStatus.INIT
 
     def __repr__(self):
         return '<Job %s>' % self.id
@@ -58,14 +59,14 @@ class Resource(db.Model):
     """
     __tablename__ = 'resources'
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(50), unique=True)
     url = db.Column(db.String(150), unique=True)
+    description = db.Column(db.String(150), unique=True)
     jobs = db.relationship('Job', backref="resource")
 
     # I pass None to params to let Admin page to create objects
-    def __init__(self, name=None, url=None):
-        self.name = name
+    def __init__(self, url=None, description=None):
         self.url = url
+        self.description = description
 
     def __repr__(self):
         return '<Resource %s>' % self.url

@@ -51,7 +51,8 @@ class ScriptType(Enum):
 
 class HPCBackend(Enum):
     """
-    Represents type of backend resource to execute the job on it, such as shell or sge backend.
+    Represents type of backend resource to execute the job on it, such as shell
+        or sge backend.
     """
     normal = 0
     sge = 1

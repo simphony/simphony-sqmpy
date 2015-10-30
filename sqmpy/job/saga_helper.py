@@ -10,7 +10,7 @@ import datetime
 import hashlib
 
 import saga
-from flask import current_app, copy_current_request_context, session
+import flask
 from flask.ext.login import current_user
 
 import helpers
@@ -47,11 +47,13 @@ class SagaJobWrapper(object):
 
     def make_job_service(self, endpoint):
         # Create ssh security context
-        ctx = saga.Context('ssh')
-        if current_app.config.get('SSH_WITH_LOGIN_INFO'):
+        ctx = None
+        if flask.current_app.config.get('SSH_WITH_LOGIN_INFO'):
+            ctx = saga.Context('userpass')
             ctx.user_id = current_user.id
-            global session
-            ctx.user_pass = session['password']
+            ctx.user_pass = flask.session['password']
+        else:
+            ctx = saga.Context('ssh')
         session = saga.Session()
         session.add_context(ctx)
 
@@ -103,7 +105,7 @@ class SagaJobWrapper(object):
         # TODO: My monitoring approach is wrong and should be changed.
         # Prepare our gevent greenlet
         import gevent
-        @copy_current_request_context
+        @flask.copy_current_request_context
         def monitor_state():
             while True:
                 gevent.sleep(3)
@@ -117,7 +119,7 @@ class SagaJobWrapper(object):
                                                             self._job.last_status,
                                                             val)
                         except Exception, ex:
-                            current_app.logger.debug("Callback: Failed to send mail: %s" % ex)
+                            flask.current_app.logger.debug("Callback: Failed to send mail: %s" % ex)
                         # Insert history record
                         history_record = JobStateHistory()
                         history_record.change_time = datetime.datetime.now()
@@ -134,7 +136,7 @@ class SagaJobWrapper(object):
                         self._job.last_status = val
                         if self._job not in db.session:
                             db.session.merge(self._job)
-                        current_app.logger.debug('Before commit the new value is %s ' % val)
+                        flask.current_app.logger.debug('Before commit the new value is %s ' % val)
                         db.session.commit()
                     if val in (saga.FAILED,
                                saga.DONE,
@@ -148,15 +150,15 @@ class SagaJobWrapper(object):
         gevent.spawn(monitor_state)
 
         # Run the job eventually
-        current_app.logger.debug("...starting job...")
+        flask.current_app.logger.debug("...starting job...")
         self._saga_job.run()
 
         # Store remote pid
         self._job.remote_job_id = self._saga_job.get_id()
         db.session.commit()
 
-        current_app.logger.debug("Job ID    : %s" % self._saga_job.id)
-        current_app.logger.debug("Job State : %s" % self._saga_job.state)
+        flask.current_app.logger.debug("Job ID    : %s" % self._saga_job.id)
+        flask.current_app.logger.debug("Job State : %s" % self._saga_job.state)
 
     def cancel(self):
         """

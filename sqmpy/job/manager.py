@@ -98,10 +98,10 @@ def submit(job_name, resource_url, upload_dir, script_type, **kwargs):
         # Submit the job using saga
         saga_wrapper = SagaJobWrapper(job)
         saga_wrapper.run()
-    except saga.exceptions.AuthenticationFailed:
+    except saga.exceptions.AuthenticationFailed, error:
         db.session.rollback()
         raise JobManagerException('Can not login to the remote host, \
-            authentication failed.')
+            authentication failed. %s' % error)
     except:
         db.session.rollback()
         raise

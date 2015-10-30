@@ -1,4 +1,4 @@
-#User roles
+# User roles
 ADMIN = 0
 STAFF = 1
 USER = 2
@@ -8,7 +8,7 @@ ROLE = {
     USER: 'user',
 }
 
-#User status
+# User status
 INACTIVE = 0
 NEW = 1
 ACTIVE = 2

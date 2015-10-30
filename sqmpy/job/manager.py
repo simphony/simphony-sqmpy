@@ -4,8 +4,6 @@
 
     Manager class along with it's helpers.
 """
-import datetime
-
 from flask import current_app, g
 from flask.ext.login import current_user
 

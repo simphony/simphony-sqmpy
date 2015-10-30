@@ -105,11 +105,14 @@ def _get_ldap_user(username):
         port=current_app.config.get('LDAP_PORT', 389)
     ))
 
-    basedn = current_app.config.get('LDAP_BASEDN', '')
+    # TODO: The current LDAP support is very limited. This should be fixed for
+    # a proper support.
     # So far only anonymous LDAP is supported
     # ld.simple_bind_s()
     ldap_filter = '(&(objectclass=person)(uid=%s))' % username
-    results = ld.search_s('', # basedn,
+    # A correct basedn is required for search in some setups. Should be finxed.
+    # basedn = current_app.config.get('LDAP_BASEDN', '')
+    results = ld.search_s('',
                           ldap.SCOPE_SUBTREE,
                           ldap_filter)
     if len(results) < 1:

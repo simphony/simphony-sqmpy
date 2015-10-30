@@ -31,12 +31,6 @@ def create_app(config_filename=None, **kwargs):
     from .database import db
     db.init_app(app)
 
-    if __debug__:
-        with app.app_context():
-            from sqmpy.job import models
-            from sqmpy.security import models
-            db.create_all()
-
     # Activate CSRF protection
     if app.config.get('CSRF_ENABLED'):
         CsrfProtect(app)
@@ -48,6 +42,12 @@ def create_app(config_filename=None, **kwargs):
     app.register_blueprint(security_blueprint)
     app.register_blueprint(job_blueprint)
     app.register_blueprint(main_blueprint)
+
+    if __debug__:
+        # create_all should be called after models are imported. In current
+        # code they are imported along with blue_print imports above.
+        with app.app_context():
+            db.create_all()
 
     # A global context processor for sub menu items
     @app.context_processor

@@ -72,7 +72,8 @@ def login():
                 user = security_services.get_user(username)
                 login_user(user, remember=request.form.get('remember'))
                 flash('Successfully logged in.')
-                return redirect(request.args.get('next') or url_for('sqmpy.index'))
+                return redirect(request.args.get('next') or
+                                url_for('sqmpy.index'))
             else:
                 flash('Invalid username/password', category='error')
         except Exception, error:
@@ -105,7 +106,8 @@ def register():
                             form.email.data,)
                 db.session.add(user)
                 db.session.commit()
-                # After a successful register log in the user and go to home page.
+                # After a successful register log in the user and go
+                # to home page.
                 login_user(user)
                 flash('Successfully registered')
                 return redirect('/')

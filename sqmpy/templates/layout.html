@@ -48,12 +48,10 @@
                                     {% endfor %}
                                 {% endif %}
                             {% endblock %}
-                            <!--li><a href="#about">About</a></li-->
-                            <!--li><a href="#contact">Contact</a></li-->
                         </ul>
                     {% if not config.LOGIN_DISABLED %}
                         <ul class="nav navbar-nav navbar-right">
-                            {% if not current_user.is_authenticated() %}
+                            {% if not current_user.is_authenticated %}
                                 <li><a href="{{ url_for('security.login') }}">log in</a></li>
                             {% else %}
                                 <li><a href="{{ url_for('security.logout') }}">{{current_user.username}} | log out</a></li>

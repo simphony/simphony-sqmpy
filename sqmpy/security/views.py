@@ -45,17 +45,10 @@ def login_manager_factory(state):
         return AnonymousUserMixin()
     login_manager.anonymous_user = make_anon_user
 
-    if 'USE_LDAP_LOGIN' in state.app.config:
-        @login_manager.user_loader
-        def load_user(username):
-            print('Going to load ldap user %s' % username)
-            user, dn, entry = security_services._get_ldap_user(username)
-            return user
-    else:
-        @login_manager.user_loader
-        def load_user(username):
-            print('Going to load normal user %s' % username)
-            return security_services._get_user(username)
+    @login_manager.user_loader
+    def load_user(user_id):
+        print('Loading user %s' % user_id)
+        return security_services.get_user(user_id)
 
     return login_manager
 
@@ -69,7 +62,7 @@ def login():
         password = request.form.get('password')
         try:
             if security_services.validate_login(username, password):
-                user = security_services.get_user(username)
+                user = security_services.get_user_by_username(username)
                 login_user(user, remember=request.form.get('remember'))
                 flash('Successfully logged in.')
                 return redirect(request.args.get('next') or
@@ -77,7 +70,7 @@ def login():
             else:
                 flash('Invalid username/password', category='error')
         except Exception, error:
-            flash('LDAP Error: %s' % error, category='error')
+            flash(error, category='error')
     return render_template('security/login.html', form=form)
 
 

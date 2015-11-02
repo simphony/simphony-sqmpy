@@ -19,12 +19,12 @@ def validate_login(username, password):
     Checks the login on the configured backend.
     """
     if current_app.config.get('USE_LDAP_LOGIN'):
-        return _valid_ldap_login(username, password)
+        return _is_valid_ldap_login(username, password)
     else:
-        return _valid_login(username, password)
+        return _is_valid_login(username, password)
 
 
-def _valid_login(username, password):
+def _is_valid_login(username, password):
     """
     Checks if the given password is valid for the username
     """
@@ -35,7 +35,7 @@ def _valid_login(username, password):
     return False
 
 
-def _valid_ldap_login(username, password):
+def _is_valid_ldap_login(username, password):
     """
     Tries to login using LDAP
     """
@@ -67,34 +67,45 @@ def _valid_ldap_login(username, password):
         raise
 
 
-def get_user(username):
+def get_user_by_username(username):
     """
-    Checks the login on the configured backend.
+    Return a user based on username.
     """
     if current_app.config.get('USE_LDAP_LOGIN'):
         user, dn, entry = _get_ldap_user(username)
         return user
     else:
-        return _get_user(username)
+        return User.query.filter_by(username=username).one()
 
 
-def _get_user(username):
+def get_user(user_id):
+    """
+    Checks the login on the configured backend.
+    """
+    if current_app.config.get('USE_LDAP_LOGIN'):
+        user, dn, entry = _get_ldap_user(user_id)
+        return user
+    else:
+        return _get_user(user_id)
+
+
+def _get_user(user_id):
     """
     Returns the user with given username
-    :param username:
+    :param user_id:
     :return:
     """
-    user = User.query.filter_by(username=username).one()
+    user = User.query.get(user_id)
     if user is None:
         raise SecurityManagerException(
-            'User [{username}] not found.'.format(username=username))
+            'User [{user_id}] not found.'.format(user_id=user_id))
     return user
 
 
-def _get_ldap_user(username):
+def _get_ldap_user(user_id):
     """
     Returns an LDAP user
-    :param username
+    :param user_id
     :return:
     """
     if 'LDAP_SERVER' not in current_app.config:
@@ -109,21 +120,21 @@ def _get_ldap_user(username):
     # a proper support.
     # So far only anonymous LDAP is supported
     # ld.simple_bind_s()
-    ldap_filter = '(&(objectclass=person)(uid=%s))' % username
+    ldap_filter = '(&(objectclass=person)(uid=%s))' % user_id
     # A correct basedn is required for search in some setups. Should be finxed.
     # basedn = current_app.config.get('LDAP_BASEDN', '')
     results = ld.search_s('',
                           ldap.SCOPE_SUBTREE,
                           ldap_filter)
     if len(results) < 1:
-        raise Exception('User %s not found' % username)
+        raise Exception('LDAP error: user %s not found' % user_id)
     dn, entry = results[0]
     if __debug__:
-        print('Found dn %s for user %s' % (dn, username))
+        print('Found dn %s for user %s' % (dn, user_id))
     email = None
     if len(entry['mail']) > 0:
         email = entry['mail'][0]
-    user = User(username=username,
+    user = User(username=user_id,
                 email=email)
     user.id = entry['uid'][0]
     return user, dn, entry

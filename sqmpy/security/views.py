@@ -65,6 +65,8 @@ def login():
                 user = security_services.get_user_by_username(username)
                 login_user(user, remember=request.form.get('remember'))
                 flash('Successfully logged in.')
+                # We need to store password in order to do SSH
+                session['password'] = password
                 return redirect(request.args.get('next') or
                                 url_for('sqmpy.index'))
             else:

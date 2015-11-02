@@ -35,7 +35,15 @@
                 {% if not current_user.is_anonymous and current_user.get_role() == "admin" %}
                     <td>{{ job.owner_id }}</td>
                 {% endif %}
-                <td>{{ job.last_status }}</td>
+                <td>
+                {% if job.last_status == 'Done' %}
+                    <span class="label label-success">Done</span>
+                {% elif job.last_status == 'Failed' %}
+                    <span class="label label-danger">Failed</span>
+                {% else %}
+                    <span class="label label-info">{{job.last_status}}</span>
+                {% endif %}
+                </td>
             </tr>
             {% endfor%}
             </tbody>

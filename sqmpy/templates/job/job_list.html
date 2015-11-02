@@ -42,9 +42,12 @@
         </table>
     </div>
     <div>
-        <p><a type="button" class="btn btn-primary" role="button" href="{{url_for('.submit')}}">New Job</a>
-        {{render_pagination(pagination)}}</p>
+        <p>
+            <a type="button" class="btn btn-primary" role="button" href="{{url_for('.submit')}}">New Job</a>
+        {{render_pagination(pagination)}}
+        </p>
     </div>
+
 
 {% endblock %}
 {% block body_tail %}

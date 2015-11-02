@@ -1,9 +1,1 @@
 {% extends 'layout.html' %}
-
-{% block body_tail %}
-    {{ super() }}
-    <script>
-        $('input[type=file]').bootstrapFileInput();
-        $('.file-inputs').bootstrapFileInput();
-    </script>
-{% endblock %}

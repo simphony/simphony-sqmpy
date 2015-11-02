@@ -10,26 +10,60 @@
             <form role="form" enctype=multipart/form-data action="{{url_for('.submit')}}" method="POST">
                 {% from "_formhelpers.html" import render_field with context%}
                 {{ form.hidden_tag() }}
-                {{ render_field(form.script_file) }}
-                {{ render_field(form.input_files, multiple="True") }}
-                <span id="options" class="collapse">
-                    {{ render_field(form.name) }}
-                    {{ render_field(form.resource) }}
-                    {{ render_field(form.new_resource) }}
-                    {{ render_field(form.working_directory) }}
-                    {{ render_field(form.hpc_backend) }}
-                    {{ render_field(form.queue) }}
-                    {{ render_field(form.project) }}
-                    {{ render_field(form.total_physical_memory) }}
-                    {{ render_field(form.total_cpu_count) }}
-                    {{ render_field(form.spmd_variation) }}
-                    {{ render_field(form.walltime_limit) }}
+                <div class="col-lg-6 col-sm-6 col-12">
+                    <h5><strong>Script file</strong></h6>
+                     <div class="input-group">
+                         <span class="input-group-btn">
+                             <span class="btn btn-default btn-file">
+                                 Browse&hellip; <input type="file" id="script_file" name="script_file">
+                             </span>
+                             {% for error in form.input_files.errors %}
+                                 <span class="alert alert-danger">{{ error }}</span>
+                             {% endfor %}
+                         </span>
+                         <input type="text" class="form-control" readonly>
+                     </div>
+                     {% if form.script_file.errors %}
+                         {% for error in form.script_file.errors %}
+                             <div style="color:red;">{{ error }}</div>
+                         {% endfor %}
+                     {% endif %}
+
+                    <h5><strong>Input files</strong></h6>
+                     <div class="input-group">
+                         <span class="input-group-btn">
+                             <span class="btn btn-default btn-file">
+                                 Browse&hellip; <input type="file" multiple id="input_files" name="input_files">
+                             </span>
+                         </span>
+                         <input type="text" class="form-control" readonly>
+                     </div>
+                     {% if form.input_files.errors %}
+                         {% for error in form.input_files.errors %}
+                             <div style="color:red;">{{ error }}</div>
+                         {% endfor %}
+                     {% endif %}
+
                     {{ render_field(form.description) }}
-                </span>
-                <button type="button" class="btn btn-default dropdown-toggle navbar-btn" data-toggle="collapse"
-                        data-target="#options">Options
-                </button>
-                <button type="submit" class="btn btn-success navbar-btn">Submit</button>
+                    <span id="options" class="collapse">
+                        {{ render_field(form.name) }}
+                        {{ render_field(form.resource) }}
+                        {{ render_field(form.new_resource) }}
+                        {{ render_field(form.working_directory) }}
+                        {{ render_field(form.hpc_backend) }}
+                        {{ render_field(form.queue) }}
+                        {{ render_field(form.project) }}
+                        {{ render_field(form.total_physical_memory) }}
+                        {{ render_field(form.total_cpu_count) }}
+                        {{ render_field(form.spmd_variation) }}
+                        {{ render_field(form.walltime_limit) }}
+
+                    </span>
+                    <button type="button" class="btn btn-default dropdown-toggle navbar-btn" data-toggle="collapse"
+                            data-target="#options">Options
+                    </button>
+                    <button type="submit" class="btn btn-success navbar-btn">Submit</button>
+                </div>
             </form>
         </div>
     </div>

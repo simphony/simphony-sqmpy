@@ -10,9 +10,16 @@
         <title>{% block title %}Simple Queue Manager{% endblock %}</title>
 
         <!-- Bootstrap -->
-        <link href="{{ url_for('static', filename='css/bootstrap.min.css')  }}" rel="stylesheet">
+        <!-- Latest compiled and minified CSS -->
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css" integrity="sha512-dTfge/zgoMYpP7QbHy4gWMEGsbsdZeCXz7irItjcC3sPUFtf0kuFbDz/ixG7ArTxmDjLXDmezHubeNikyKGVyQ==" crossorigin="anonymous">
+
+        <!-- Optional theme -->
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap-theme.min.css" integrity="sha384-aUGj/X2zp5rLCbBxumKTCw2Z50WgIr1vs/PFN4praOTvYXWlVyh2UtNUU0KAUhAX" crossorigin="anonymous">
+
+        <!-- Cutom stlyes -->
         <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
-        <link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap-theme.min.css') }}" />
+
+        <!-- jqery theme -->
         <link rel="stylesheet" href="{{ url_for('static', filename='css/jquery-ui-smoothness-1.10.3.css') }}" />
 
         <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
@@ -74,11 +81,42 @@
 
         {% block body_tail%}
             <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
-            <script src="{{ url_for('static', filename='js/jquery-1.11.1.min.js') }}"></script>
-            <!-- Include all compiled plugins (below), or include individual files as needed -->
-            <script src="{{ url_for('static', filename='js/bootstrap.min.js') }}"></script>
-            <script src="{{ url_for('static', filename='js/bootstrap.file-input.js') }}"></script>
+            <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
 
+            <!-- Latest compiled and minified JavaScript -->
+            <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js" integrity="sha512-K1qjQ+NcF2TYO/eI3M6v8EiNYZfA95pQumfvcVrTHtwQVDG+aHRqLi/ETn2uB+1JqwYqVG3LIvdm9lj6imS/pQ==" crossorigin="anonymous"></script>
+
+            <!-- Style file inputs -->
+            <!--script src="{{ url_for('static', filename='js/bootstrap.file-input.js') }}"></script-->
+            <!--script>
+                $('input[type=file]').bootstrapFileInput();
+                $('.file-inputs').bootstrapFileInput();
+            </script-->
+
+            <!-- File input tweaks -->
+            <script>
+            $(document).on('change', '.btn-file :file', function() {
+                  var input = $(this),
+                      numFiles = input.get(0).files ? input.get(0).files.length : 1,
+                      label = input.val().replace(/\\/g, '/').replace(/.*\//, '');
+                  input.trigger('fileselect', [numFiles, label]);
+                });
+
+            $(document).ready( function() {
+                $('.btn-file :file').on('fileselect', function(event, numFiles, label) {
+
+                    var input = $(this).parents('.input-group').find(':text'),
+                        log = numFiles > 1 ? numFiles + ' files selected' : label;
+
+                    if( input.length ) {
+                        input.val(log);
+                    } else {
+                        if( log ) alert(log);
+                    }
+
+                });
+            });
+            </script>
         {% endblock %}
     </body>
 </html>

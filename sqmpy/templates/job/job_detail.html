@@ -2,9 +2,9 @@
 
 {% block container %}
     {{ super() }}
-    <div class="panel panel-default">
+    <div class="panel panel-info">
         <div class="panel-heading">
-            <h3 class="panel-title">Job Details
+            <h3 class="panel-title">Job details
                 {% if job.last_status == 'Done' %}
                     <span class="label label-success">{{job.last_status}}</span>
                 {% elif job.last_status == 'Failed' %}
@@ -15,68 +15,127 @@
             </h3>
         </div>
         <div class="panel-body">
-            <dl>
-                <dt>Job ID</dt>
-                <dd>{{job.id}}</dd>
-                <dt>Remote ID</dt>
-                <dd>{{job.remote_job_id}}</dd>
-                <dt>Name</dt>
-                <dd>{{job.name}}</dd>
-                <dt>Submit date</dt>
-                <dd>{{job.submit_date}}</dd>
-                <dt>Resource</dt>
-                <dd>{{job.resource.url}}</dd>
-                <dt>Last status</dt>
-                <dd>{{job.last_status}}</dd>
-                {% if job.submit_adaptor %}
-                <dt>Queue name</dt>
-                <dd>{{job.queue}}</dd>
-                <dt>Project name</dt>
-                <dd>{{ job.project }}</dd>
-                <dt>Total number of CPUs</dt>
-                <dd>{{job.total_cpu_count}}</dd>
-                <dt>SPMD variation</dt>
-                <dd>{{job.spmd_variation}}</dd>
-                <dt>Walltime limit</dt>
-                <dd>{{job.walltime_limit}}</dd>
-                <dt>Total physical memory</dt>
-                <dd>{{ job.total_physical_memory }}</dd>
-                <dt>Working directory</dt>
-                <dd>{{ job.remote_dir }}</dd>
-                {% endif %}
-                <dt>Description</dt>
-                <dd>{{job.description}}</dd>
-            </dl>
-        </div>
-        {% if job.files|length > 0 %}
-            <div class="panel-heading">
-                <h3 class="panel-title">Related files</h3>
-            </div>
-            <table class="table">
-                <thead>
-                    <tr>
-                        <th>#</th>
-                        <th>Type</th>
-                        <th>Download link</th>
-                    </tr>
-                </thead>
+            <table class="table table-bordered">
                 <tbody>
-                {% for file in job.files %}
+                <tr>
+                    <td><strong>Remote ID</strong></td>
+                    <td>{{ job.remote_job_id }}</td>
+                </tr>
+                <tr>
+                    <td><strong>Submit date</strong></td>
+                    <td>{{job.submit_date.strftime('%d/%m/%y at %r')}}</td>
+                </tr>
+                <tr>
+                    <td><strong>Resource</strong></td>
+                    <td>{{job.resource.url}}</td>
+                </tr>
+                {% if job.submit_adaptor %}
                     <tr>
-                        <td>{{loop.index}}</td>
-                        <td>{{file.get_relation_str()|title}}</td>
-                        <td>
-                            <a href="{{url_for('.uploaded_file', username=current_user.username, job_id=job.id, filename=file.name)}}">Download</a>
-                        </td>
+                        <td><strong>Queoe name</strong></td>
+                        <td>{{ job.queue }}</td>
                     </tr>
-                {% endfor %}
+                    <tr>
+                        <td><strong>Project name</strong></td>
+                        <td>{{ job.project }}</td>
+                    </tr>
+                    <tr>
+                        <td><strong>CPU count</strong></td>
+                        <td>{{ job.total_cpu_count }}</td>
+                    </tr>
+                    <tr>
+                        <td><strong>SPMD variation</strong></td>
+                        <td>{{ job.spmd_variation }}</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Walltime limit</strong></td>
+                        <td>{{ job.walltime_limit }}</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Physical memory</strong></td>
+                        <td>{{ job.total_physical_memory }}</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Working directory</strong></td>
+                        <td>{{ job.remote_dir }}</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Description</strong></td>
+                        <td>{{job.description}}</td>
+                    </tr>
+                {% endif %}
                 </tbody>
             </table>
-        {% endif %}
-        <div>
-            {% if job.last_status in ('Running' ,'Pending')%}
-            <a type="button" class="btn btn-lg btn-danger" role="button" href="{{url_for('.cancel', job_id=job.id)}}">Cancel</a>
-            {% endif %}
         </div>
     </div>
+        {% if job.files|length > 0 %}
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <h3 class="panel-title">Uploaded files</h3>
+            </div>
+            <div class="panel-body">
+                <table class="table table-bordered">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Type</th>
+                            <th>Download link</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    {% for file in job.files if file.relation|int in (0,3) %}
+                        <tr>
+                            <td>{{loop.index}}</td>
+                            <td>{{file.get_relation_str()|title}}</td>
+                            <td>
+                                <a href="{{url_for('.uploaded_file', username=current_user.username, job_id=job.id, filename=file.name)}}">Download</a>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <h3 class="panel-title">Output files</h3>
+            </div>
+            <div class="panel-body">
+                <table class="table table-bordered">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Type</th>
+                            <th>Download link</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    {% for file in job.files if file.relation|int not in (0,3) %}
+                        <tr>
+                            <td>{{loop.index}}</td>
+                            <td>{{file.get_relation_str()|title}}</td>
+                            <td>
+                                <a href="{{url_for('.uploaded_file', username=current_user.username, job_id=job.id, filename=file.name)}}">Download</a>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        {% endif %}
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <h3 class="panel-title">Possible actions</h3>
+            </div>
+            <div class="panel-body">
+                <form class="btn-group" action="{{url_for('.cancel', job_id=job.id)}}" method="post">
+                    {% if job.last_status in ('Running' ,'Pending')%}
+                        <input type="submit" class="btn btn-danger" value="Cancel">
+                    {% else %}
+                    <p>There is nothing to do around this job for now.</p>
+                    {% endif %}
+                </form>
+            </div>
+        </div>
+
 {% endblock %}

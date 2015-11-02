@@ -67,7 +67,8 @@ class Resource(db.Model):
     # I pass None to params to let Admin page to create objects
     def __init__(self, url=None, name=None):
         self.url = url
-        self.name = name
+        # If name is not provided just use the url
+        self.name = name or url
 
     def __repr__(self):
         return '<Resource %s>' % self.url

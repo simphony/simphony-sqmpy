@@ -80,7 +80,7 @@ def login():
 @login_required
 def logout():
     logout_user()
-    session.clear()
+    session.pop('password', None)
     return redirect('/')
 
 

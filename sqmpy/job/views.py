@@ -24,7 +24,7 @@ from . import manager as job_services
 __author__ = 'Mehdi Sadeghi'
 
 
-job_blueprint = Blueprint('job', __name__, url_prefix='/jobs')
+job_blueprint = Blueprint('jobs', __name__, url_prefix='/jobs')
 
 
 @job_blueprint.context_processor
@@ -37,21 +37,12 @@ def add_job_list(*args, **kwargs):
     g.__jobs = {}
 
 
-@job_blueprint.route('/', methods=['GET'])
-def index():
+@job_blueprint.route('/', methods=['GET'], defaults={'page': 1})
+@job_blueprint.route('/page<int:page>', methods=['GET'])
+@login_required
+def index(page):
     """
     Entry page for job subsystem
-    :return:
-    """
-    return redirect(url_for('.list_jobs', page=1))
-
-
-@job_blueprint.route('/list', methods=['GET'], defaults={'page': 1})
-@job_blueprint.route('/list/page<int:page>', methods=['GET'])
-@login_required
-def list_jobs(page):
-    """
-    Show list of jobs for current user
     :return:
     """
     pagination = job_services.list_jobs(page=page)
@@ -72,7 +63,7 @@ def detail(job_id):
             job_services.get_job(job_id)
     except JobNotFoundException:
         flash('There is no job with this id %s' % job_id, category='error')
-        return redirect(url_for('.list_jobs'))
+        return redirect(url_for('.index'))
     return render_template('job/job_detail.html', job=job)
 
 

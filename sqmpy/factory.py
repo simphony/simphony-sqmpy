@@ -52,8 +52,10 @@ def create_app(config_filename=None, **kwargs):
     # A global context processor for sub menu items
     @app.context_processor
     def make_navmenu_items():
+        from flask import url_for
         if job_blueprint.name in app.blueprints:
-            return {'navitems': {job_blueprint.name: job_blueprint.url_prefix}}
+            return {'navitems': {job_blueprint.name:
+                                 url_for('%s.index' % job_blueprint.name)}}
         else:
             return {}
 

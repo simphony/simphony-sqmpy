@@ -43,11 +43,11 @@
                             <span class="icon-bar"></span>
                             <span class="icon-bar"></span>
                         </button>
-                        <a class="navbar-brand" href="/">SQM</a>
+                        <a class="navbar-brand" href="{{url_for('sqmpy.index')}}">SQMPY</a>
                     </div>
                     <div class="collapse navbar-collapse">
                         <ul class="nav navbar-nav">
-                            <li {% if not active_page %}class="active"{% endif %}><a href="/">Home</a></li>
+                            <!--li {% if not active_page %}class="active"{% endif %}><a href="/">Home</a></li-->
                             {% block navbar_links %}
                                 {% if navitems %}
                                     {% for name, url in navitems.iteritems() %}

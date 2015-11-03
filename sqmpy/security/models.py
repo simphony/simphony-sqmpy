@@ -18,7 +18,7 @@ class User(db.Model):
     username = db.Column(db.String(50), unique=True)
     password = db.Column(db.String(120))
     email = db.Column(db.String(120), unique=True)
-    role = db.Column(db.SmallInteger, default=constants.USER)
+    role = db.Column(db.String(20), default=constants.USER)
     status = db.Column(db.SmallInteger, default=constants.NEW)
     registered_on = db.Column(db.DateTime)
 
@@ -27,6 +27,8 @@ class User(db.Model):
         self.password = password
         self.email = email
         self.registered_on = datetime.datetime.now()
+        self.role = constants.USER
+        self.status = constants.NEW
 
     def get_status(self):
         return constants.STATUS[self.status]
@@ -34,14 +36,17 @@ class User(db.Model):
     def get_role(self):
         return constants.ROLE[self.role]
 
+    @property
     def is_authenticated(self):
         return True
 
+    @property
     def is_active(self):
         if self.status != constants.INACTIVE:
             return True
         return False
 
+    @property
     def is_anonymous(self):
         return False
 

@@ -10,7 +10,6 @@ import shutil
 import hashlib
 import smtplib
 import socket
-import getpass
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 
@@ -20,6 +19,7 @@ from flask.helpers import url_for
 
 from ..database import db
 from ..security.models import User
+from ..security import manager as security_services
 from .exceptions import JobManagerException
 from .models import Job, StagingFile
 from .constants import FileRelation, ScriptType
@@ -44,9 +44,9 @@ def send_state_change_email(job_id, owner_id, old_state, new_state,
     if not mail_config.get('NOTIFICATION'):
         return
 
+    owner_email = None
     if owner_id:
-        owner_email, = \
-            db.session.query(User.email).filter(User.id == owner_id).one()
+        owner_email = security_services.get_user(owner_id).email
     elif 'ADMIN_EMAIL' in mail_config:
         owner_email = mail_config.get('ADMIN_EMAIL')
     else:
@@ -181,11 +181,11 @@ def get_job_staging_folder(job_id, config=None, make_sftp_url=False):
 
     if current_user.is_anonymous:
         # Use the username which this process is running under it
-        job_owner_dir = os.path.join(staging_dir, getpass.getuser())
+        job_owner_dir = os.path.join(staging_dir, 'anonymous_user')
     else:
+        job = Job.query.get(job_id)
         job_owner = \
-            User.query.filter(User.id == Job.owner_id,
-                              Job.id == job_id).first()
+            security_services.get_user(job.owner_id)
         job_owner_dir = os.path.join(staging_dir, job_owner.username)
 
     if not os.path.exists(job_owner_dir):

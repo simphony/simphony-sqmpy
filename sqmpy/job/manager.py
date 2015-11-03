@@ -50,13 +50,11 @@ def submit(resource_url, upload_dir, script_type, **kwargs):
 
     # Create a job and fill it with provided information
     job = Job()
+    job.owner_id = current_user.id
     job.script_type = ScriptType(script_type).value
 
     if 'hpc_backend' in kwargs:
         job.hpc_backend = HPCBackend(kwargs.get('hpc_backend')).value
-
-    if not current_user.is_anonymous:
-        job.owner_id = current_user.id
 
     job.name = kwargs.get('job_name')
     job.remote_dir = kwargs.get('working_directory')
@@ -142,7 +140,8 @@ def list_jobs(page=None, **kwargs):
     :param page: page number
     :return: job pagination
     """
-    if current_user.is_anonymous:
+
+    if current_user.is_anonymous and current_app.config.get('LOGIN_DISABLED'):
         # Do not filter. Login is disabled.
         query = Job.query.filter().order_by(Job.submit_date.desc())
     else:

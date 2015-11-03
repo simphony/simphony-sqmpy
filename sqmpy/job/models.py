@@ -6,7 +6,6 @@
 """
 import os
 import datetime
-import base64
 
 from ..database import db
 from .constants import FileRelation, JobStatus
@@ -45,7 +44,6 @@ class Job(db.Model):
     files = db.relationship('StagingFile')
 
     def __init__(self):
-        #self.id = base64.urlsafe_b64encode(os.urandom(6))
         self.submit_date = datetime.datetime.utcnow()
         self.last_status = JobStatus.INIT
 

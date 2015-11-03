@@ -8,8 +8,9 @@ def read(*paths):
         return f.read()
 
 setup(name='sqmpy',
-      version='0.3',
-      description='A simple queue manager to submit and monitor jobs on computing resources.',
+      version='0.4',
+      description='A simple queue manager to submit and monitor jobs on'
+                  'computing resources.',
       long_description=(read('README.rst')),
       url='http://github.com/mehdisadeghi/sqmpy',
       license='BSD',
@@ -30,18 +31,15 @@ setup(name='sqmpy',
       ],
       data_files=['config.py',
                   'run.py'],
-      install_requires=['Flask==0.10',
-                        'Flask-SQLAlchemy==1.0',
-                        'Flask-Login==0.2.11',
-                        'Flask-WTF==0.10.0',
-                        'Flask-CSRF==0.9.2',
-                        'Flask-Uploads==0.1.3',
-                        'enum34==1.0',
-                        'saga-python==0.27',
-                        'py-bcrypt==0.4',
-			'names==0.3.0',
-			'gevent==1.0.1'],
-      #dependency_links=[
-          #"git+ssh://git@github.com/radical-cybertools/saga-python.git@0.17#egg=saga-python-0.17"
-      #]
+      install_requires=['Flask',
+                        'Flask-SQLAlchemy',
+                        'Flask-Login',
+                        'Flask-WTF',
+                        'Flask-CSRF',
+                        'Flask-Uploads',
+                        'enum34',
+                        'saga-python',
+                        'py-bcrypt',
+                        'names',
+                        'gevent'],
       )

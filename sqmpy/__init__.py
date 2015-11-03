@@ -8,4 +8,4 @@
     `sqm' stands for Simple Queue Manager.
 """
 __author__ = 'Mehdi Sadeghi'
-__version__ = '0.3'
+__version__ = '0.4'

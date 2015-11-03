@@ -48,7 +48,6 @@ def login_manager_factory(state):
 
     @login_manager.user_loader
     def load_user(user_id):
-        print('Loading user %s' % user_id)
         return security_services.get_user(user_id)
 
     return login_manager

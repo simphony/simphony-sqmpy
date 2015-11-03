@@ -2,8 +2,8 @@
 Simple Queue Manager
 ====================
 
-.. image:: https://travis-ci.org/mehdisadeghi/sqmpy.svg?branch=master
-        :target: https://travis-ci.org/mehdisadeghi/sqmpy
+.. image:: https://travis-ci.org/simphony/sqmpy.svg?branch=master
+        :target: https://travis-ci.org/simphony/sqmpy
 
 .. image:: https://coveralls.io/repos/mehdisadeghi/sqmpy/badge.svg?branch=master
         :target: https://coveralls.io/r/mehdisadeghi/sqmpy

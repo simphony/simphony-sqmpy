@@ -83,5 +83,6 @@ class SqmpyLoginTestCase(unittest.TestCase):
         rv = self.login('admin', 'default')
         assert 'Successfully logged in' in rv.data
 
+
 if __name__ == '__main__':
     unittest.main()

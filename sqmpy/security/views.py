@@ -4,8 +4,12 @@
 
     View functions for security module
 """
-from flask import flash, url_for, request, redirect, render_template, session
-from flask.ext.login import login_user, logout_user, login_required
+import base64
+
+from flask import flash, url_for, request, redirect, render_template, session,\
+    Blueprint
+from flask.ext.login import login_user, logout_user, login_required,\
+    LoginManager, AnonymousUserMixin
 
 from ..database import db
 from sqlalchemy.exc import IntegrityError
@@ -13,9 +17,6 @@ from .forms import LoginForm, RegisterForm
 from .manager import get_password_digest
 from .models import User
 from . import manager as security_services
-
-from flask import Blueprint
-from flask.ext.login import LoginManager, AnonymousUserMixin
 
 __author__ = 'Mehdi Sadeghi'
 
@@ -66,7 +67,7 @@ def login():
                 login_user(user, remember=request.form.get('remember'))
                 flash('Successfully logged in.')
                 # We need to store password in order to do SSH
-                session['password'] = password
+                session['password'] = base64.b64encode(password)
                 return redirect(request.args.get('next') or
                                 url_for('sqmpy.index'))
             else:

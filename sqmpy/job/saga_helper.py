@@ -6,6 +6,7 @@
 """
 import os
 import time
+import base64
 import datetime
 import hashlib
 
@@ -53,7 +54,7 @@ class SagaJobWrapper(object):
         if flask.current_app.config.get('SSH_WITH_LOGIN_INFO'):
             ctx = saga.Context('userpass')
             ctx.user_id = current_user.username
-            ctx.user_pass = flask.session['password']
+            ctx.user_pass = base64.b64decode(flask.session['password'])
         else:
             ctx = saga.Context('ssh')
         session = saga.Session()

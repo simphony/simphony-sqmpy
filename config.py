@@ -57,7 +57,7 @@ LOGIN_DISABLED = False
 
 # Enables LDAP login, this will cause LDAP credentials to be
 #   used for SSH as well
-USE_LDAP_LOGIN = True
+USE_LDAP_LOGIN = False
 LDAP_SERVER = 'iwmnds0.iwm.fraunhofer.de'
 LDAP_BASEDN = 'ou=People,ou=IWM,o=Fraunhofer,c=DE'
 

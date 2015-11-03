@@ -2,7 +2,8 @@
 Entry point for running the sqmpy application standalone
 """
 import os
-from gevent import monkey; monkey.patch_all()
+from gevent import monkey
+monkey.patch_all()
 from sqmpy.factory import create_app
 
 # This line added to support heroku deployment

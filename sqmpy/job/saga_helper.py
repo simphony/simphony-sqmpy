@@ -58,6 +58,17 @@ class SagaJobWrapper(object):
         else:
             ctx = saga.Context('ssh')
         session = saga.Session()
+        # For a reason beyon my current understanding, js instance contains
+        # previous contex instances, i.e. it is not fresh. I have to manually
+        # delete previous contexts to avoid problems for now.
+        # TODO: Fix this
+        try:
+            while True:
+                session.contexts.pop()
+        except IndexError:
+            pass
+
+        # Explicitely add the only desired security context
         session.add_context(ctx)
         js = saga.job.Service(endpoint, session=session)
         # TODO: Fix in upstream. Service does not populate adaptor's session.

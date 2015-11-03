@@ -59,9 +59,10 @@ class SagaJobWrapper(object):
             ctx = saga.Context('ssh')
         session = saga.Session()
         session.add_context(ctx)
-
-        return saga.job.Service(endpoint,
-                                session=session)
+        js = saga.job.Service(endpoint, session=session)
+        # TODO: Fix in upstream. Service does not populate adaptor's session.
+        js._adaptor._set_session(session)
+        return js
 
     def _register_callbacks(self):
         """

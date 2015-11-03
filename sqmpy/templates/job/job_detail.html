@@ -1,5 +1,12 @@
 {% extends 'job/job_base.html' %}
 
+{% block title %}
+{% if job.description %}
+[{{job.description[:30]}}...] -
+{% endif %}
+{{super()}}
+{% endblock %}
+
 {% block container %}
     {{ super() }}
     <div class="panel panel-info">
@@ -31,7 +38,7 @@
                 </tr>
                 {% if job.submit_adaptor %}
                     <tr>
-                        <td><strong>Queoe name</strong></td>
+                        <td><strong>Queue name</strong></td>
                         <td>{{ job.queue }}</td>
                     </tr>
                     <tr>
@@ -54,15 +61,16 @@
                         <td><strong>Physical memory</strong></td>
                         <td>{{ job.total_physical_memory }}</td>
                     </tr>
-                    <tr>
-                        <td><strong>Working directory</strong></td>
-                        <td>{{ job.remote_dir }}</td>
-                    </tr>
-                    <tr>
-                        <td><strong>Description</strong></td>
-                        <td>{{job.description}}</td>
-                    </tr>
                 {% endif %}
+                <tr>
+                    <td><strong>Working directory</strong></td>
+                    <td>{{ job.remote_dir }}</td>
+                </tr>
+                <tr>
+                    <td><strong>Description</strong></td>
+                    <td>{{job.description}}</td>
+                </tr>
+
                 </tbody>
             </table>
         </div>

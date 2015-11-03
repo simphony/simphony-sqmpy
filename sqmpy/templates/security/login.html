@@ -1,8 +1,13 @@
 {% extends 'layout.html' %}
+
 {% block head_meta %}
 <meta charset="utf-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+{% endblock %}
+
+{% block title %}
+Login - {{super()}}
 {% endblock %}
 
 {% block head_tail%}
@@ -24,7 +29,11 @@
         <!--label class="checkbox">
         <input name="remember" type="checkbox" value="remember-me"> Remember me
     </label-->
-    <small>No account yet? Register <a href="{{ url_for('.register')}}">here.</a></small>
+    {% if not config.get('USE_LDAP_LOGIN') %}
+    <small class="text-muted">No account yet? Register <a href="{{ url_for('.register')}}">here.</a></small>
+    {% else %}
+    <small class="text-muted">Please use your LDAP account to login.</a></small>
+    {% endif %}
     <button class="btn btn-lg btn-primary btn-block" type="submit">Sign in</button>
 
 </form>

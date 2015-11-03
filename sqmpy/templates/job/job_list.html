@@ -1,6 +1,10 @@
 {% extends 'job/job_base.html' %}
 {% from "_paginationhelper.html" import render_pagination %}
 
+{% block title %}
+Jobs - {{super()}}
+{% endblock %}
+
 {% block head_tail%}
 {{super()}}
 <!-- Latest compiled and minified CSS -->
@@ -23,6 +27,7 @@
                 {% if not current_user.is_anonymous and current_user.get_role() == "admin" %}
                     <th>User</th>
                 {% endif %}
+                <th>Description</th>
                 <th>Status</th>
             </tr>
             </thead>
@@ -35,6 +40,7 @@
                 {% if not current_user.is_anonymous and current_user.get_role() == "admin" %}
                     <td>{{ job.owner_id }}</td>
                 {% endif %}
+                <td>{{job.description}}</td>
                 <td>
                 {% if job.last_status == 'Done' %}
                     <span class="label label-success">Done</span>

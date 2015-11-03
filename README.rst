@@ -23,11 +23,11 @@ sqmpy has a few dependencies which will be installed while installing with *pyth
 - Flask-SQLAlchemy
 - Flask-Login
 - Flask-WTF
-- Flask-Admin
 - Flask-CSRF
 - Flask-Uploads
 - enum34
 - py-bcrypt
+- python-ldap (for experimental LDAP login support)
 
 Installation
 ------------
@@ -52,8 +52,8 @@ If you clone from github then you can easily install the requirements with pip a
 
 ::
 
-    $ git clone git://github.com/mehdix/simple-queue-manager.git
-    $ cd simple-queue-manager
+    $ git clone git://github.com/simphony/sqmpy.git
+    $ cd sqmpy
     $ pip install -r requirements.txt
     $ python run.py
 
@@ -62,8 +62,8 @@ To install from git:
 
 ::
 
-    $ git clone git://github.com/mehdix/simple-queue-manager.git
-    $ cd simple-queue-manager
+    $ git clone git://github.com/simphony/sqmpy.git
+    $ cd sqmpy
     $ python setup install
 
 To install sqmpy from pypi:
@@ -98,7 +98,8 @@ a python file called run.py and run it:
 
 ::
 
-    from sqmpy import app
+    from sqmpy.factory import create_app
+    app = create_app('path_to_config.py') # Config is optional
     app.run('0.0.0.0', port=5001, debug=True)
 
 About Files and Folders, Local or Remote

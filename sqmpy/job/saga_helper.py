@@ -51,22 +51,23 @@ class SagaJobWrapper(object):
     def make_job_service(self, endpoint):
         # Create ssh security context
         ctx = None
+        session = saga.Session()
         if flask.current_app.config.get('SSH_WITH_LOGIN_INFO'):
             ctx = saga.Context('userpass')
             ctx.user_id = current_user.username
             ctx.user_pass = base64.b64decode(flask.session['password'])
+            # For a reason beyon my current understanding, js instance contains
+            # previous contex instances, i.e. it is not fresh. I have to
+            # manually delete previous contexts to avoid problems for now.
+            # Moreover this breaks userpass context and renders it useless.
+            # TODO: Fix this
+            try:
+                while True:
+                    session.contexts.pop()
+            except IndexError:
+                pass
         else:
             ctx = saga.Context('ssh')
-        session = saga.Session()
-        # For a reason beyon my current understanding, js instance contains
-        # previous contex instances, i.e. it is not fresh. I have to manually
-        # delete previous contexts to avoid problems for now.
-        # TODO: Fix this
-        try:
-            while True:
-                session.contexts.pop()
-        except IndexError:
-            pass
 
         # Explicitely add the only desired security context
         session.add_context(ctx)

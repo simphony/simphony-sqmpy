@@ -9,3 +9,4 @@ saga-python
 py-bcrypt
 names
 gevent
+python-ldap

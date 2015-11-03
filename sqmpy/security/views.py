@@ -21,7 +21,7 @@ __author__ = 'Mehdi Sadeghi'
 
 
 # Create security blueprint
-security_blueprint = Blueprint('security', __name__, url_prefix='/security')
+security_blueprint = Blueprint('security', __name__)
 
 
 @security_blueprint.record_once
@@ -36,7 +36,7 @@ def login_manager_factory(state):
     Create a login manager accordingly.
     """
     login_manager = LoginManager()
-    login_manager.login_view = '/security/login'
+    login_manager.login_view = 'security.login'
     login_manager.login_message_category = "warning"
 
     # Set custom anonymous user to return the user which is running the

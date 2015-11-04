@@ -7,7 +7,7 @@
 import datetime
 
 from ..database import db
-from . import constants
+from .constants import UserRole, UserStatus
 
 __author__ = 'Mehdi Sadeghi'
 
@@ -18,8 +18,8 @@ class User(db.Model):
     username = db.Column(db.String(50), unique=True)
     password = db.Column(db.String(120))
     email = db.Column(db.String(120), unique=True)
-    role = db.Column(db.String(20), default=constants.USER)
-    status = db.Column(db.SmallInteger, default=constants.NEW)
+    role = db.Column(db.SmallInteger, default=UserRole.user.value)
+    status = db.Column(db.SmallInteger, default=UserStatus.new.value)
     registered_on = db.Column(db.DateTime)
 
     def __init__(self, username=None, password=None, email=None):
@@ -27,14 +27,14 @@ class User(db.Model):
         self.password = password
         self.email = email
         self.registered_on = datetime.datetime.now()
-        self.role = constants.USER
-        self.status = constants.NEW
+        self.role = UserRole.user.value
+        self.status = UserStatus.new.value
 
     def get_status(self):
-        return constants.STATUS[self.status]
+        return UserStatus(self.status)
 
     def get_role(self):
-        return constants.ROLE[self.role]
+        return UserRole(self.role)
 
     @property
     def is_authenticated(self):
@@ -42,7 +42,7 @@ class User(db.Model):
 
     @property
     def is_active(self):
-        if self.status != constants.INACTIVE:
+        if self.status != UserStatus.inactive.value:
             return True
         return False
 

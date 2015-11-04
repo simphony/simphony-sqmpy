@@ -1,21 +1,21 @@
-# User roles
-ADMIN = 0
-STAFF = 1
-USER = 2
-ROLE = {
-    ADMIN: 'admin',
-    STAFF: 'staff',
-    USER: 'user',
-}
+from enum import Enum, unique
 
-# User status
-INACTIVE = 0
-NEW = 1
-ACTIVE = 2
-STATUS = {
-    INACTIVE: 'inactive',
-    NEW: 'new',
-    ACTIVE: 'active',
-}
 
-SECURITY_MANAGER = 'sqmpy.security.manager'
+@unique
+class UserRole(Enum):
+    """
+    Defines user roles
+    """
+    admin = 0
+    staff = 1
+    user = 2
+
+
+@unique
+class UserStatus(Enum):
+    """
+    Defines user status
+    """
+    new = 0
+    active = 1
+    inactive = 2

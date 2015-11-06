@@ -57,3 +57,5 @@ data.db
 # Sphinx documentation
 docs/_build/
 
+# Skip nfs files
+*.nfs*

@@ -51,22 +51,15 @@ class SagaJobWrapper(object):
     def make_job_service(self, endpoint):
         # Create ssh security context
         ctx = None
-        session = saga.Session()
+        session = None
         if flask.current_app.config.get('SSH_WITH_LOGIN_INFO'):
+            # Do not load default security contexts (user ssh keys)
+            session = saga.Session(False)
             ctx = saga.Context('userpass')
             ctx.user_id = current_user.username
             ctx.user_pass = base64.b64decode(flask.session['password'])
-            # For a reason beyon my current understanding, js instance contains
-            # previous contex instances, i.e. it is not fresh. I have to
-            # manually delete previous contexts to avoid problems for now.
-            # Moreover this breaks userpass context and renders it useless.
-            # TODO: Fix this
-            try:
-                while True:
-                    session.contexts.pop()
-            except IndexError:
-                pass
         else:
+            session = saga.Session()
             ctx = saga.Context('ssh')
 
         # Explicitely add the only desired security context
@@ -104,13 +97,13 @@ class SagaJobWrapper(object):
         # Make sure the working directory is empty
         if remote_job_dir.list():
             raise JobManagerException('Remote directory is not empty')
-
+        flask.current_app.logger.debug('Going to transfer files')
         # transfer job files to remote directory
-        transfer_job_files(self._job.id, remote_job_dir.get_url())
-
+        transfer_job_files(self._job.id, remote_job_dir,
+                           self._job_service.session)
+        flask.current_app.logger.debug('File transfer done.')
         # Create saga job description
         jd = make_job_description(self._job, remote_job_dir)
-
         # Create saga job
         self._saga_job = self._job_service.create_job(jd)
 
@@ -122,8 +115,8 @@ class SagaJobWrapper(object):
         @flask.copy_current_request_context
         def monitor_state():
             while True:
-                if __debug__:
-                    print('Monitoring job %s for changes...' % self._job.id)
+                flask.current_app.logger.debug(
+                    'Monitoring job %s for changes...' % self._job.id)
                 gevent.sleep(3)
                 try:
                     val = self._saga_job.state
@@ -216,10 +209,14 @@ def get_job_endpoint(job_id, session):
     # Remote working directory will be inside temp folder
     if not job.remote_dir:
         job.remote_dir = '/tmp/sqmpy/{job_id}'.format(job_id=job.id)
+    elif not os.path.isabs(job.remote_dir):
+        raise Exception('Working directory should be absolute path.')
+
     adapter = 'sftp'
     if helpers.is_localhost(job.resource.url):
         adapter = 'file'
-    adaptor_string = '{adapter}://{remote_host}/{working_directory}'
+    adaptor_string = '{adapter}://{remote_host}{working_directory}'
+
     remote_address = \
         adaptor_string.format(adapter=adapter,
                               remote_host=job.resource.url,
@@ -331,11 +328,13 @@ def download_job_files(job_id, job_description, session, config=None,
     db.session.commit()
 
 
-def transfer_job_files(job_id, remote_job_dir_url):
+def transfer_job_files(job_id, remote_job_dir, session):
     """
     Upload job files to remote resource
     :param job_id: job id
-    :param remote_job_dir_url: saga.url.Url of remote job directory
+    :param remote_job_dir: saga.filesystem.Directory instance
+        of remote job directory
+    :param session: saga.Session instance for this transfer
     :return
     """
     # Copy script and input files to remote host
@@ -345,7 +344,12 @@ def transfer_job_files(job_id, remote_job_dir_url):
             StagingFile.relation.in_([FileRelation.input.value,
                                       FileRelation.script.value])).all()
     for file_to_upload in uploading_files:
+        # If we don't pass correct session object, saga will create default
+        # session object which will not reflect correct security context.
+        # it would be useful only for a local run and not multi-user run
+        # session and remote_job_dir._adaptor.session should be the same
         file_wrapper = \
             saga.filesystem.File('file://localhost/{file_path}'
-                                 .format(file_path=file_to_upload.get_path()))
-        file_wrapper.copy(remote_job_dir_url)
+                                 .format(file_path=file_to_upload.get_path()),
+                                 session=session)
+        file_wrapper.copy(remote_job_dir.get_url())

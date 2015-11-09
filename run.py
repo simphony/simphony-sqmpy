@@ -20,4 +20,9 @@ app = create_app('../config.py')
 
 # If pyOpenSSL is installed it is possible to use adhoc certificates:
 # app.run(host='0.0.0.0', port=port, ssl_context='adhoc')
-app.run(host='0.0.0.0', port=port, ssl_context=('server.crt', 'server.key'))
+# app.run(host='0.0.0.0', port=port, ssl_context=('server.crt', 'server.key'))
+
+
+if __name__ == '__main__':
+    app.run(host='0.0.0.0', port=port,
+            ssl_context=('server.crt', 'server.key'))

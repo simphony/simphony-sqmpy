@@ -11,7 +11,7 @@ New job - {{super()}}
             <h3 class="panel-title">Job submission form</h3>
         </div>
         <div class="panel-body">
-            <form role="form" enctype=multipart/form-data action="{{url_for('.submit')}}" method="POST">
+            <form id="new_job" role="form" enctype=multipart/form-data action="{{url_for('.submit')}}" method="POST">
                 {% from "_formhelpers.html" import render_field with context%}
                 {{ form.hidden_tag() }}
                 <div class="col-lg-6 col-sm-6 col-12">
@@ -65,9 +65,18 @@ New job - {{super()}}
                     <button type="button" class="btn btn-default dropdown-toggle navbar-btn" data-toggle="collapse"
                             data-target="#options">Options
                     </button>
-                    <button type="submit" class="btn btn-success navbar-btn">Submit</button>
+                    <button id="job_submit_btn" type="submit" class="btn btn-success navbar-btn">Submit</button>
                 </div>
             </form>
         </div>
     </div>
+{% endblock %}
+
+{% block body_tail %}
+{{super()}}
+<script>$('#job_submit_btn').click(function(){
+    $(this).attr('disabled', true);
+    $("#new_job").submit();
+});
+</script>
 {% endblock %}

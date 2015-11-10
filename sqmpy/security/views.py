@@ -104,8 +104,11 @@ def register():
                 # After a successful register log in the user and go
                 # to home page.
                 login_user(user)
-                flash('Successfully registered')
-                return redirect('/')
+                # We need to store password in order to do SSH
+                session['password'] = base64.b64encode(form.password.data)
+                flash('Successfully registered and logged in.')
+                return redirect(request.args.get('next') or
+                                url_for('sqmpy.index'))
             except IntegrityError:
                 error = 'User with similar information already exists'
     return render_template('security/register.html', form=form, error=error)

@@ -208,7 +208,10 @@ def get_job_endpoint(job_id, session):
     job = Job.query.get(job_id)
     # Remote working directory will be inside temp folder
     if not job.remote_dir:
-        job.remote_dir = '/tmp/sqmpy/{job_id}'.format(job_id=job.id)
+        job.remote_dir =\
+            '/home/{username}/.sqmpy/{job_id}'.format(
+                username=current_user.username,
+                job_id=job.id)
     elif not os.path.isabs(job.remote_dir):
         raise Exception('Working directory should be absolute path.')
 

@@ -92,7 +92,7 @@ class SagaJobWrapper(object):
         """
         # Set remote job working directory
         remote_job_dir = \
-            get_job_endpoint(self._job.id, self._job_service.session)
+            get_job_endpoint(self._job.id, self._job_service.get_session())
 
         # Make sure the working directory is empty
         if remote_job_dir.list():
@@ -100,7 +100,7 @@ class SagaJobWrapper(object):
         flask.current_app.logger.debug('Going to transfer files')
         # transfer job files to remote directory
         transfer_job_files(self._job.id, remote_job_dir,
-                           self._job_service.session)
+                           self._job_service.get_session())
         flask.current_app.logger.debug('File transfer done.')
         # Create saga job description
         jd = make_job_description(self._job, remote_job_dir)
@@ -141,7 +141,7 @@ class SagaJobWrapper(object):
                         # with output and error files
                         download_job_files(self._job.id,
                                            self._saga_job.description,
-                                           self._job_service.session)
+                                           self._job_service.get_session())
 
                         # Update last status
                         self._job.last_status = val
@@ -352,4 +352,6 @@ def transfer_job_files(job_id, remote_job_dir, session):
             saga.filesystem.File('file://localhost/{file_path}'
                                  .format(file_path=file_to_upload.get_path()),
                                  session=session)
+        # TODO: This is a workaround for bug #480 remove it later
+        file_wrapper._adaptor._set_session(session)
         file_wrapper.copy(remote_job_dir.get_url())

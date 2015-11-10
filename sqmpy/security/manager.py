@@ -134,6 +134,9 @@ def _get_ldap_user(user_id):
     email = None
     if len(entry['mail']) > 0:
         email = entry['mail'][0]
+    if 'cn' in entry:
+        from flask import g
+        g.fullname = entry['cn'][0]
     user = User(username=user_id,
                 email=email)
     user.id = entry['uid'][0]

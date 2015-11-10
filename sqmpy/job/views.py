@@ -5,6 +5,7 @@
     View functions for jobs module
 """
 import os
+import shutil
 import tempfile
 
 from flask import request, redirect, url_for, abort, \
@@ -14,8 +15,7 @@ from flask.ext.csrf import csrf_exempt
 from werkzeug import secure_filename
 import names
 
-from .exceptions import JobNotFoundException, FileNotFoundException,\
-    JobManagerException
+from .exceptions import JobNotFoundException, FileNotFoundException
 from .forms import JobSubmissionForm
 from .models import Resource
 from .constants import ScriptType
@@ -59,12 +59,15 @@ def detail(job_id):
     :return:
     """
     try:
-        job = \
-            job_services.get_job(job_id)
+        job = job_services.get_job(job_id)
+        return render_template('job/job_detail.html', job=job)
     except JobNotFoundException:
         flash('There is no job with this id %s' % job_id, category='error')
         return redirect(url_for('.index'))
-    return render_template('job/job_detail.html', job=job)
+    except Exception, error:
+        flash('Error getting job: %s' % str(error), category='error')
+        return redirect(url_for('.index'))
+    
 
 
 @csrf_exempt
@@ -130,10 +133,10 @@ def submit(job_id=None):
                                     **form.data)
             # Redirect to list
             return redirect(url_for('.detail', job_id=job_id))
-        except JobManagerException, ex:
+        except Exception, ex:
             # Delete temporary directory with its contents
             if os.path.exists(upload_dir):
-                os.removedirs(upload_dir)
+                shutil.rmtree(upload_dir)
             flash(str(ex), category='error')
 
     return render_template('job/job_submit.html', form=form)

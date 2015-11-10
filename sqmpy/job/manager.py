@@ -109,6 +109,9 @@ def get_job_status(job_id):
     :return:
     """
     job = get_job(job_id)
+
+    # Check if user is allowed to see this job
+
     if job.id not in g.__jobs:
         if job.last_status not in [JobStatus.CANCELED,
                                    JobStatus.DONE,
@@ -123,14 +126,33 @@ def get_job_status(job_id):
     return job.last_status
 
 
+
+def _check_access(job):
+    """
+    Check if current user has access to the given job
+    """
+    if current_user.is_anonymous and current_app.config.get('LOGIN_DISABLED'):
+        # The app is running in single user mode
+        return
+    
+    if job.owner_id != current_user.id:
+        # Users are not allowed to see each other's activities
+        raise JobManagerException('Access to job [%s] denied.' % job.id)
+
+
 def get_job(job_id, *args, **kwargs):
     """
     Get a job
     :job_id: id of the job
-    """
+    """    
     job = Job.query.get(job_id)
+
     if not job:
         raise JobNotFoundException("Job not found.")
+    
+    # Check if current user has access to this job
+    _check_access(job)
+
     return job
 
 

@@ -20,6 +20,7 @@ from .forms import JobSubmissionForm
 from .models import Resource
 from .constants import ScriptType
 from . import manager as job_services
+from ..utils import get_redirect_target
 
 __author__ = 'Mehdi Sadeghi'
 
@@ -135,6 +136,26 @@ def submit(job_id=None):
             flash(str(ex), category='error')
 
     return render_template('job/job_submit.html', form=form)
+
+
+@job_blueprint.route('/<string:job_id>/resubmit', methods=['POST'])
+@login_required
+def resubmit(job_id):
+    """
+    Create and submit a new job out of an existing one
+    :return:
+    """
+    try:
+        # Submit the job
+        new_job_id = \
+            job_services.resubmit(job_id)
+        flash('Job resubmitted successfully', category='success')
+        # Redirect to the job's detail page
+        return redirect(url_for('.detail', job_id=new_job_id))
+    except Exception, ex:
+        flash(str(ex), category='error')
+        raise
+        return redirect(get_redirect_target() or url_for('.index'))
 
 
 @csrf_exempt

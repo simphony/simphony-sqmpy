@@ -4,14 +4,17 @@
 
     Manager class along with it's helpers.
 """
+import os
+import shutil
+
 from flask import current_app, g, abort
 from flask.ext.login import current_user
 
 import saga
+import constants
 from ..database import db
 from .exceptions import JobManagerException
 from .models import Job, Resource
-from .constants import JobStatus, HPCBackend, ScriptType
 from .saga_helper import SagaJobWrapper
 from .exceptions import JobNotFoundException, FileNotFoundException
 import helpers
@@ -51,10 +54,10 @@ def submit(resource_url, upload_dir, script_type, **kwargs):
     # Create a job and fill it with provided information
     job = Job()
     job.owner_id = current_user.id
-    job.script_type = ScriptType(script_type).value
+    job.script_type = constants.ScriptType(script_type).value
 
     if 'hpc_backend' in kwargs:
-        job.hpc_backend = HPCBackend(kwargs.get('hpc_backend')).value
+        job.hpc_backend = constants.HPCBackend(kwargs.get('hpc_backend')).value
 
     job.name = kwargs.get('job_name')
     job.remote_dir = kwargs.get('working_directory')
@@ -102,6 +105,64 @@ def submit(resource_url, upload_dir, script_type, **kwargs):
     return job.id
 
 
+def resubmit(job_id):
+    """
+    Create a new job and submit it using the given job as template.
+    """
+    # Create a new job and fill it, using the given job as template
+    template_job = get_job(job_id)
+    job = Job()
+    job.owner_id = current_user.id
+    job.script = template_job.script
+    job.script_type = template_job.script_type
+    job.description = template_job.description
+    job.total_cpu_count = template_job.total_cpu_count
+    job.walltime_limit = template_job.walltime_limit
+    job.spmd_variation = template_job.spmd_variation
+    job.queue = template_job.queue
+    job.project = template_job.project
+    job.total_physical_memory = template_job.total_physical_memory
+    job.resource_id = template_job.resource_id
+
+    db.session.add(job)
+    db.session.flush()
+
+    try:
+        # Get or create job directory
+        job_dir = helpers.get_job_staging_folder(job.id)
+
+        # Copy script and input files of the template job to new staging folder
+        for sf in template_job.files:
+            if sf.relation in (constants.FileRelation.input.value,
+                               constants.FileRelation.script.value):
+                # Move file to job directory
+                src = os.path.join(sf.location, sf.name)
+                dst = os.path.join(job_dir, sf.name)
+                shutil.copy(src, dst)
+
+                # Create a new record for newly copied file
+                db.session.expunge(sf)
+                db.make_transient(sf)
+                sf.id = None
+                sf.parent_id = job.id
+                db.session.add(sf)
+                db.session.flush()
+
+        # Submit the job using saga
+        saga_wrapper = SagaJobWrapper(job)
+        saga_wrapper.run()
+    except saga.exceptions.AuthenticationFailed, error:
+        db.session.rollback()
+        raise JobManagerException('Can not login to the remote host, \
+            authentication failed. %s' % error)
+    except:
+        db.session.rollback()
+        raise
+    # If no error has happened so far, commit the session.
+    db.session.commit()
+    return job.id
+
+
 def get_job_status(job_id):
     """
     Get job updated status
@@ -113,13 +174,13 @@ def get_job_status(job_id):
     # Check if user is allowed to see this job
 
     if job.id not in g.__jobs:
-        if job.last_status not in [JobStatus.CANCELED,
-                                   JobStatus.DONE,
-                                   JobStatus.FAILED]:
+        if job.last_status not in [constants.JobStatus.CANCELED,
+                                   constants.JobStatus.DONE,
+                                   constants.JobStatus.FAILED]:
             # If there is not wrapper for the job and the job is not either
             # cancelled, done, or failed, then we don't know what has happened
             # to the job.
-            return JobStatus.UNKNOWN
+            return constants.JobStatus.UNKNOWN
 
     # If we have the wrapper we trust him to update last_status and we sent
     # the object's status.

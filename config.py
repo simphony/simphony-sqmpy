@@ -30,7 +30,10 @@ CSRF_ENABLED = True
 # signing the data.
 CSRF_SESSION_KEY = "secret"
 
-# Staging options
+# Sqmpy uses this directory as file storage. All scripts, input and output
+# files will be stored at subfolders at this directory, separated by
+# usernames and job IDs.
+# STAGING_DIR = '/var/sqmpy/'
 STAGING_DIR = '/tmp/staging/'
 
 # SMTP Configs
@@ -62,4 +65,4 @@ LDAP_SERVER = 'iwmnds0.iwm.fraunhofer.de'
 LDAP_BASEDN = 'ou=People,ou=IWM,o=Fraunhofer,c=DE'
 
 # User user login information for SSH
-SSH_WITH_LOGIN_INFO = True
+SSH_WITH_LOGIN_INFO = False

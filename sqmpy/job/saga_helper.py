@@ -5,6 +5,7 @@
     Provides ways to interact with saga classes
 """
 import os
+import pwd
 import time
 import base64
 import datetime
@@ -197,6 +198,30 @@ def get_resource_endpoint(host, hpc_backend):
                                               remote_host=host)
 
 
+def _get_remote_home(session):
+    """
+    Return homde directory on target resource based on
+    the current security context.
+    """
+    user_id = None
+    for ctx in session.list_contexts():
+        if ctx.type == 'userpass':
+            return '/home/{0}'.format(ctx.user_id)
+        elif ctx.type == 'ssh':
+            user_id = ctx.user_id
+
+    # If user_id is not in the session object consider the user which
+    # is running the application
+    # This might not work on Windows, not tried.
+    user_id = pwd.getpwuid(os.getuid()).pw_name
+    if not user_id:
+        import getpass
+        user_id = getpass.getuser()
+    if not user_id:
+        raise Exception("Can't find the right username for SSH connection.")
+    return '/home/{0}'.format(user_id)
+
+
 def get_job_endpoint(job_id, session):
     """
     Returns the remote job working directory. Creates the parent
@@ -209,7 +234,8 @@ def get_job_endpoint(job_id, session):
     # Remote working directory will be inside temp folder
     if not job.remote_dir:
         job.remote_dir =\
-            '/home/{username}/.sqmpy/{job_id}'.format(
+            '{home_directory}/.sqmpy/{job_id}'.format(
+                home_directory=_get_remote_home(session),
                 username=current_user.username,
                 job_id=job.id)
     elif not os.path.isabs(job.remote_dir):

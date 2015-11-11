@@ -4,7 +4,7 @@
 
     Manager class along with it's helpers.
 """
-from flask import current_app, g
+from flask import current_app, g, abort
 from flask.ext.login import current_user
 
 import saga
@@ -126,7 +126,6 @@ def get_job_status(job_id):
     return job.last_status
 
 
-
 def _check_access(job):
     """
     Check if current user has access to the given job
@@ -134,22 +133,22 @@ def _check_access(job):
     if current_user.is_anonymous and current_app.config.get('LOGIN_DISABLED'):
         # The app is running in single user mode
         return
-    
+
     if job.owner_id != current_user.id:
         # Users are not allowed to see each other's activities
-        raise JobManagerException('Access to job [%s] denied.' % job.id)
+        abort(403)
 
 
 def get_job(job_id, *args, **kwargs):
     """
     Get a job
     :job_id: id of the job
-    """    
+    """
     job = Job.query.get(job_id)
 
     if not job:
         raise JobNotFoundException("Job not found.")
-    
+
     # Check if current user has access to this job
     _check_access(job)
 

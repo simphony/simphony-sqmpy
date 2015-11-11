@@ -62,12 +62,7 @@ def detail(job_id):
         job = job_services.get_job(job_id)
         return render_template('job/job_detail.html', job=job)
     except JobNotFoundException:
-        flash('There is no job with this id %s' % job_id, category='error')
-        return redirect(url_for('.index'))
-    except Exception, error:
-        flash('Error getting job: %s' % str(error), category='error')
-        return redirect(url_for('.index'))
-    
+        abort(404)
 
 
 @csrf_exempt

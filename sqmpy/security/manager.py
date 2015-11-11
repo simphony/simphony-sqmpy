@@ -73,6 +73,8 @@ def _is_valid_ldap_login(username, password):
         print ('No LDAP password is provided')
         return False
     user, dn, entry = _get_ldap_user(username)
+    if 'cn' in entry:
+        session['fullname'] = entry['cn'][0]
     if __debug__:
         print 'Got ldap user %s' % user
 

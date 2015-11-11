@@ -52,7 +52,7 @@
                         <li class="alert alert-danger">
                     {% endif %}
                     <a href="javascript:void(0)" class="close" data-dismiss="alert">x</a>
-                    {{ message.decode('utf-8') }}
+                    {{ message|string() }}
                     </li>
                 {% endfor %}
             </ul>

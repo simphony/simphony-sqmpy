@@ -22,6 +22,9 @@ class User(db.Model):
     status = db.Column(db.SmallInteger, default=UserStatus.new.value)
     registered_on = db.Column(db.DateTime)
 
+    # Extra fields to support other authentication backends
+    origin = db.Column(db.SmallInteger)
+
     def __init__(self, username=None, password=None, email=None):
         self.username = username
         self.password = password

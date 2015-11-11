@@ -6,22 +6,52 @@
 """
 import ldap
 import bcrypt
-from flask import current_app, session
 
+from flask import current_app, session, request, g
+import flask.ext.login as flask_login
+import constants
+
+from ..database import db
 from .exceptions import SecurityManagerException
 from .models import User
 
 __author__ = 'Mehdi Sadeghi'
 
 
-def validate_login(username, password):
+def login_user(username, password):
     """
-    Checks the login on the configured backend.
+    Login in the given user.
     """
     if current_app.config.get('USE_LDAP_LOGIN'):
-        return _is_valid_ldap_login(username, password)
-    else:
-        return _is_valid_login(username, password)
+        return _login_ldap_user(username, password)
+    elif _is_valid_login(username, password):
+        user = get_user_by_username(username)
+        flask_login.login_user(user, remember=request.form.get('remember'))
+        return True
+    # If non of above is the case
+    return False
+
+
+def _login_ldap_user(username, password):
+    """
+    Log in the given ldap user
+    """
+    if _is_valid_ldap_login(username, password):
+        new_user =\
+            User.query.filter(User.username == username,
+                              User.origin ==
+                              constants.UserOrigin.ldap.value).first()
+        if not new_user:
+            # Add a track record for ldap user
+            new_user = User(username=username)
+            new_user.origin = constants.UserOrigin.ldap.value
+            db.session.add(new_user)
+            db.session.commit()
+        flask_login.login_user(new_user,
+                               remember=request.form.get('remember'))
+        return True
+    # If non of above is the case
+    return False
 
 
 def _is_valid_login(username, password):
@@ -44,7 +74,7 @@ def _is_valid_ldap_login(username, password):
         return False
     user, dn, entry = _get_ldap_user(username)
     if __debug__:
-        print 'Got ldap user: %s %s %s' % (user, dn, entry)
+        print 'Got ldap user %s' % user
 
     try:
         if 'LDAP_SERVER' not in current_app.config:
@@ -71,25 +101,10 @@ def get_user_by_username(username):
     """
     Return a user based on username.
     """
-    if current_app.config.get('USE_LDAP_LOGIN'):
-        user, dn, entry = _get_ldap_user(username)
-        return user
-    else:
-        return User.query.filter_by(username=username).one()
+    return User.query.filter_by(username=username).one()
 
 
 def get_user(user_id):
-    """
-    Checks the login on the configured backend.
-    """
-    if current_app.config.get('USE_LDAP_LOGIN'):
-        user, dn, entry = _get_ldap_user(user_id)
-        return user
-    else:
-        return _get_user(user_id)
-
-
-def _get_user(user_id):
     """
     Returns the user with given username
     :param user_id:
@@ -135,7 +150,6 @@ def _get_ldap_user(user_id):
     if len(entry['mail']) > 0:
         email = entry['mail'][0]
     if 'cn' in entry:
-        from flask import g
         g.fullname = entry['cn'][0]
     user = User(username=user_id,
                 email=email)

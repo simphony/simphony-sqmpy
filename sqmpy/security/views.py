@@ -61,9 +61,7 @@ def login():
         username = request.form.get('username')
         password = request.form.get('password')
         try:
-            if security_services.validate_login(username, password):
-                user = security_services.get_user_by_username(username)
-                login_user(user, remember=request.form.get('remember'))
+            if security_services.login_user(username, password):
                 flash('Successfully logged in.')
                 # We need to store password in order to do SSH
                 session['password'] = base64.b64encode(password)

@@ -19,3 +19,12 @@ class UserStatus(Enum):
     new = 0
     active = 1
     inactive = 2
+
+
+@unique
+class UserOrigin(Enum):
+    """
+    Defines different backends
+    """
+    local = 0
+    ldap = 1

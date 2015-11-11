@@ -45,11 +45,14 @@
                     {% if category == 'warning' %}
                         <li class="alert alert-warning">
                     {% endif %}
+                    {% if category == 'success' %}
+                        <li class="alert alert-success">
+                    {% endif %}
                     {% if category == 'error' %}
                         <li class="alert alert-danger">
                     {% endif %}
                     <a href="javascript:void(0)" class="close" data-dismiss="alert">x</a>
-                    {{ message }}
+                    {{ message.decode('utf-8') }}
                     </li>
                 {% endfor %}
             </ul>

@@ -64,13 +64,15 @@ def login():
             if security_services.login_user(username, password):
                 flash('Successfully logged in.')
                 # We need to store password in order to do SSH
-                session['password'] = base64.b64encode(password)
+                session['password'] =\
+                    base64.b64encode(password.encode('utf-8'))
                 return redirect(request.args.get('next') or
                                 url_for('sqmpy.index'))
             else:
                 flash('Invalid username/password', category='error')
         except Exception, error:
             flash(error, category='error')
+            raise
     return render_template('security/login.html', form=form)
 
 
@@ -103,7 +105,7 @@ def register():
                 # to home page.
                 login_user(user)
                 # We need to store password in order to do SSH
-                session['password'] = base64.b64encode(form.password.data)
+                session['password'] = base64.b64encode(form.password.data.encode('utf-8'))
                 flash('Successfully registered and logged in.')
                 return redirect(request.args.get('next') or
                                 url_for('sqmpy.index'))

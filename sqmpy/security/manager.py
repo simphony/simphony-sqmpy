@@ -86,7 +86,10 @@ def _is_valid_ldap_login(username, password):
             host=current_app.config.get('LDAP_SERVER'),
             port=current_app.config.get('LDAP_PORT', 389)
         ))
-        result = ld.simple_bind_s(dn, password)
+        # Everything in Flask is Unicode but it seems that python-ldap library
+        # does not play well with Unicode objects and throws UnicodeEncodeError.
+        # Therefore we convert it to bytes and pass it to ldap-python.
+        result = ld.simple_bind_s(dn, password.encode('utf-8'))
         if __debug__:
             print 'LDAP bind_simple_s result is %s' % str(result)
 

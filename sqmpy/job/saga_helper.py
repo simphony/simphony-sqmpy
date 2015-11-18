@@ -58,7 +58,8 @@ class SagaJobWrapper(object):
             session = saga.Session(False)
             ctx = saga.Context('userpass')
             ctx.user_id = current_user.username
-            ctx.user_pass = base64.b64decode(flask.session['password'])
+            ctx.user_pass =\
+                base64.b64decode(flask.session['password'].decode('utf-8'))
         else:
             session = saga.Session()
             ctx = saga.Context('ssh')

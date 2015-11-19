@@ -8,7 +8,6 @@ import os
 import pwd
 import time
 import base64
-import datetime
 import hashlib
 from threading import Thread
 
@@ -20,7 +19,7 @@ from . import helpers
 from .helpers import send_state_change_email
 from .constants import FileRelation, ScriptType, HPCBackend
 from .exceptions import JobManagerException
-from .models import StagingFile, JobStateHistory, Job
+from .models import StagingFile, Job
 from .callback import JobStateChangeCallback
 from ..database import db
 

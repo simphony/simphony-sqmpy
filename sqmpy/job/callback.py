@@ -4,15 +4,11 @@
 
     Provides ways to interact with saga classes
 """
-import datetime
-
 import saga
 from flask import current_app
 
+from . import saga_helper, helpers
 from ..database import db
-from .models import JobStateHistory
-import helpers
-
 
 __author__ = 'Mehdi Sadeghi'
 
@@ -39,6 +35,7 @@ class JobStateChangeCallback(saga.Callback):
         :param val:the new value of the watched attribute
         :return:
         """
+        current_app.logger.debug('Callback called: %s, %s' % (key, val))
         saga_job = obj
         try:
             template = \
@@ -71,6 +68,7 @@ class JobStateChangeCallback(saga.Callback):
         # Update job status
         if self._job.last_status != val:
             try:
+                current_app.logger.debug('Callback: sending mail')
                 helpers.send_state_change_email(self._job.id,
                                                 self._job.owner_id,
                                                 self._job.last_status,
@@ -78,19 +76,24 @@ class JobStateChangeCallback(saga.Callback):
             except Exception, ex:
                 current_app.logger.debug(
                     "Callback: Failed to send mail: %s" % ex)
+            # History records are unused for now.
             # Insert history record
-            history_record = JobStateHistory()
-            history_record.change_time = datetime.datetime.now()
-            history_record.old_state = self._job.last_status
-            history_record.new_state = val
-            history_record.job_id = self._job.id
-            db.session.add(history_record)
+            # current_app.logger.debug('Callback: adding history record')
+            # history_record = JobStateHistory()
+            # history_record.change_time = datetime.datetime.now()
+            # history_record.old_state = self._job.last_status
+            # history_record.new_state = val
+            # history_record.job_id = self._job.id
+            # db.session.add(history_record)
 
             # If there are new files, transfer them back, along with output
             #   and error files
-            helpers.download_job_files(self._job.id,
-                                       self._wrapper.get_job_description(),
-                                       self._wrapper.get_saga_session())
+            current_app.logger.debug('Callback: downloading files')
+            saga_helper.download_job_files(
+                self._job.id,
+                self._wrapper._saga_job.description,
+                self._wrapper._job_service.get_session())
+            current_app.logger.debug('Callback: finished downloading files')
             # Update last status
             if self._job not in db.session:
                 db.session.merge(self._job)

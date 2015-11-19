@@ -7,7 +7,7 @@
 import saga
 from flask import current_app
 
-from . import saga_helper, helpers
+from . import helpers
 from ..database import db
 
 __author__ = 'Mehdi Sadeghi'
@@ -89,6 +89,7 @@ class JobStateChangeCallback(saga.Callback):
             # If there are new files, transfer them back, along with output
             #   and error files
             current_app.logger.debug('Callback: downloading files')
+            from . import saga_helper
             saga_helper.download_job_files(
                 self._job.id,
                 self._wrapper._saga_job.description,

@@ -14,7 +14,6 @@ from flask.ext.login import login_user, logout_user, login_required,\
 from ..database import db
 from sqlalchemy.exc import IntegrityError
 from .forms import LoginForm, RegisterForm
-from .manager import get_password_digest
 from .models import User
 from . import manager as security_services
 
@@ -97,7 +96,7 @@ def register():
         if form.validate():
             try:
                 user = User(form.username.data,
-                            get_password_digest(form.password.data),
+                            form.password.data,
                             form.email.data,)
                 db.session.add(user)
                 db.session.commit()
@@ -105,7 +104,8 @@ def register():
                 # to home page.
                 login_user(user)
                 # We need to store password in order to do SSH
-                session['password'] = base64.b64encode(form.password.data.encode('utf-8'))
+                session['password'] =\
+                    base64.b64encode(form.password.data.encode('utf-8'))
                 flash('Successfully registered and logged in.')
                 return redirect(request.args.get('next') or
                                 url_for('sqmpy.index'))

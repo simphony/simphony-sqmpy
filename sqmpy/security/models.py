@@ -4,6 +4,7 @@
 
     User related database models
 """
+import bcrypt
 import datetime
 
 from ..database import db
@@ -27,7 +28,8 @@ class User(db.Model):
 
     def __init__(self, username=None, password=None, email=None):
         self.username = username
-        self.password = password
+        if password:
+            self.password = _get_password_digest(password)
         self.email = email
         self.registered_on = datetime.datetime.now()
         self.role = UserRole.user.value
@@ -56,5 +58,26 @@ class User(db.Model):
     def get_id(self):
         return unicode(self.id)
 
+    def is_equal_password(self, password):
+        """
+        Checks if the given password corresponds to the given digest
+        :param password:
+        :param digest:
+        """
+        old_digest = self.password
+
+        return bcrypt.hashpw(password.encode('utf-8'),
+                             old_digest.encode('utf-8')) == old_digest
+
     def __repr__(self):
         return '<User %r>' % self.username
+
+
+def _get_password_digest(password):
+    """
+    Generates password digest
+    :param password:
+    """
+    # encode is required to avoid encoding exceptions
+    return bcrypt.hashpw(password.encode('utf-8'),
+                         bcrypt.gensalt())

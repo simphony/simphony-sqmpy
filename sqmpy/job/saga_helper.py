@@ -10,18 +10,19 @@ import time
 import base64
 import datetime
 import hashlib
+from threading import Thread
 
 import saga
 import flask
-import gevent
 from flask.ext.login import current_user
 
-import helpers
-from ..database import db
+from . import helpers
+from .helpers import send_state_change_email
 from .constants import FileRelation, ScriptType, HPCBackend
 from .exceptions import JobManagerException
 from .models import StagingFile, JobStateHistory, Job
 from .callback import JobStateChangeCallback
+from ..database import db
 
 __author__ = 'Mehdi Sadeghi'
 
@@ -109,58 +110,70 @@ class SagaJobWrapper(object):
         # Create saga job
         self._saga_job = self._job_service.create_job(jd)
 
-        # Register call backs
+        # Register call backs. SAGA callbacks are not reliable and
+        # we don't use them unless they are fixed first. Instead,
+        # we use a monitoring thread. The flask.copy_current_request_context
+        # decorator is very important here, if not used, the other
+        # thread will not have access to the context data of the original
+        # one.
         # self._register_callbacks()
-
-        # TODO: My monitoring approach is wrong and should be changed.
-        # Prepare our gevent greenlet
+        # TODO: My monitoring approach is messy and should be changed.
         @flask.copy_current_request_context
-        def monitor_state():
-            while True:
-                flask.current_app.logger.debug(
-                    'Monitoring job %s for changes...' % self._job.id)
-                gevent.sleep(3)
-                try:
-                    val = self._saga_job.state
-                    if val != self._job.last_status:
-                        # Shout out load
-                        helpers.send_state_change_email(self._job.id,
-                                                        self._job.owner_id,
-                                                        self._job.last_status,
-                                                        val,
-                                                        silent=True)
+        def monitor_state(app):
+            with app.app_context():
+                while True:
+                    flask.current_app.logger.debug(
+                        'Monitoring job %s for changes...' % self._job.id)
+                    # Check for changes every three seconds
+                    time.sleep(3)
+                    try:
+                        val = self._saga_job.state
+                        if val != self._job.last_status:
+                            # Shout out load
+                            # Todo: use signals here
+                            send_state_change_email(self._job.id,
+                                                    self._job.owner_id,
+                                                    self._job.last_status,
+                                                    val,
+                                                    silent=True)
 
-                        # Insert history record
-                        history_record = JobStateHistory()
-                        history_record.change_time = datetime.datetime.now()
-                        history_record.old_state = self._job.last_status
-                        history_record.new_state = val
-                        history_record.job_id = self._job.id
-                        db.session.add(history_record)
-                        db.session.flush()
+                            # Currently storing history is unused.
+                            # Insert history record
+                            # history_record = JobStateHistory()
+                            # history_record.change_time =\
+                            #     datetime.datetime.now()
+                            # history_record.old_state = self._job.last_status
+                            # history_record.new_state = val
+                            # history_record.job_id = self._job.id
+                            # db.session.add(history_record)
+                            # db.session.flush()
 
-                        # If there are new files, transfer them back, along
-                        # with output and error files
-                        download_job_files(self._job.id,
-                                           self._saga_job.description,
-                                           self._job_service.get_session())
+                            # If there are new files, transfer them back, along
+                            # with output and error files
+                            download_job_files(self._job.id,
+                                               self._saga_job.description,
+                                               self._job_service.get_session())
 
-                        # Update last status
-                        self._job.last_status = val
-                        if self._job not in db.session:
-                            db.session.merge(self._job)
-                        db.session.commit()
-                    if val in (saga.FAILED,
-                               saga.DONE,
-                               saga.CANCELED,
-                               saga.FINAL,
-                               saga.EXCEPTION):
-                        return
-                except saga.IncorrectState:
-                    pass
+                            # Update last status
+                            self._job.last_status = val
+                            if self._job not in db.session:
+                                db.session.merge(self._job)
+                            db.session.commit()
+                        if val in (saga.FAILED,
+                                   saga.DONE,
+                                   saga.CANCELED,
+                                   saga.FINAL,
+                                   saga.EXCEPTION):
+                            return
+                    except saga.IncorrectState:
+                        pass
 
-        # Spawn the coroutine
-        gevent.spawn(monitor_state)
+        flask.current_app.logger.debug(
+            'creating thread and passing %s to it' %
+            (flask.current_app._get_current_object()))
+        thr = Thread(target=monitor_state,
+                     args=[flask.current_app._get_current_object()])
+        thr.start()
 
         # Run the job eventually
         flask.current_app.logger.debug("...starting job[%s]..." % self._job.id)

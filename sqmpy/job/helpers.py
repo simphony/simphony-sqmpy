@@ -10,12 +10,13 @@ import shutil
 import hashlib
 import smtplib
 import socket
+from threading import Thread
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 
-from flask import current_app
+import flask
+from flask import url_for
 from flask.ext.login import current_user
-from flask.helpers import url_for
 
 from ..database import db
 from ..security import manager as security_services
@@ -38,21 +39,36 @@ def send_state_change_email(job_id, owner_id, old_state, new_state,
     :return:
     """
     if not mail_config:
-        mail_config = current_app.config
+        mail_config = flask.current_app.config
 
     if not mail_config.get('NOTIFICATION'):
         return
 
     owner_email = None
     if owner_id:
+        print security_services.get_user(owner_id).id
         owner_email = security_services.get_user(owner_id).email
     elif 'ADMIN_EMAIL' in mail_config:
         owner_email = mail_config.get('ADMIN_EMAIL')
-    else:
+
+    if not owner_email:
         raise Exception('Job owner email unknown.')
+
     text_message = \
         'Status changed from {old} to {new}'.format(old=old_state,
                                                     new=new_state)
+    job_link = None
+    if flask.current_app is not None:
+        with flask.current_app.app_context():
+            # `jobs` is name of the corresponding blueprint
+            job_link = url_for('jobs.detail',
+                               job_id=job_id,
+                               _external=True)
+    else:
+        job_link = url_for('jobs.detail',
+                           job_id=job_id,
+                           _external=True)
+
     html_message = \
         """<DOCTYPE html>
         <html>
@@ -67,9 +83,7 @@ def send_state_change_email(job_id, owner_id, old_state, new_state,
         </body>
         </html>""".format(text_message=text_message,
                           job_id=job_id,
-                          link=url_for('.detail',
-                                       job_id=job_id,
-                                       _external=True))
+                          link=job_link)
 
     part1 = MIMEText(text_message, 'plain')
     part2 = MIMEText(html_message, 'html')
@@ -82,18 +96,26 @@ def send_state_change_email(job_id, owner_id, old_state, new_state,
     message['To'] = owner_email
 
     try:
-        smtp_server = smtplib.SMTP(host=mail_config.get('SMTP_HOST',
-                                                        'localhost'),
-                                   port=mail_config.get('SMTP_PORT', 0))
-        smtp_server.sendmail(mail_config.get('DEFAULT_MAIL_SENDER'),
-                             [owner_email],
-                             message.as_string())
-        smtp_server.quit()
+        thr = Thread(target=send_async_mail,
+                     args=[mail_config.get('SMTP_HOST', 'localhost'),
+                           mail_config.get('SMTP_PORT', 0),
+                           mail_config.get('DEFAULT_MAIL_SENDER'),
+                           [owner_email],
+                           message.as_string()])
+        thr.start()
     except Exception, error:
-        print "Callback: Failed to send mail: %s" % error
-        current_app.logger.debug("Callback: Failed to send mail: %s" % error)
+        flask.current_app.logger.debug(
+            "Callback: Failed to send mail: %s" % error)
         if not silent:
             raise
+
+
+def send_async_mail(host, port, fromaddr, toaddrs, msg):
+    smtp_server = smtplib.SMTP(host, port)
+    smtp_server.sendmail(fromaddr,
+                         toaddrs,
+                         msg)
+    smtp_server.quit()
 
 
 def is_localhost(host):
@@ -174,9 +196,9 @@ def get_job_staging_folder(job_id, config=None, make_sftp_url=False):
     :rtype : str
     """
     if not config:
-        config = current_app.config
+        config = flask.current_app.config
 
-    staging_dir = config.get('STAGING_DIR', current_app.instance_path)
+    staging_dir = config.get('STAGING_DIR', flask.current_app.instance_path)
 
     if current_user.is_anonymous:
         # Use the username which this process is running under it

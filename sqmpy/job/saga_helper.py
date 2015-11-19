@@ -244,13 +244,29 @@ def get_job_endpoint(job_id, session):
     :return:
     """
     job = Job.query.get(job_id)
-    # Remote working directory will be inside temp folder
+    # We use a combination of job id and a random string to make the
+    # directory name unique and meanwhile human readable
+    # Use the staging directory name as remote directory name as well,
+    # otherwise decide for a new unique name
+    # however since directories normally resied on different machines we
+    # don't need to do that. It only makes things more human.
+    dir_name = None
+    if job.staging_dir:
+        # Get the last part of path, i.e. job directory. See os.path.split
+        if job.staging_dir.endswith('/'):
+            dir_name = os.path.split(job.staging_dir[:-1])[-1]
+        else:
+            dir_name = os.path.split(job.staging_dir)[-1]
+    else:
+        # If staging directory is not set make a random name
+        dir_name = "{0}_{1}".format(job_id,
+                                    base64.urlsafe_b64encode(os.urandom(6)))
+
     if not job.remote_dir:
         job.remote_dir =\
-            '{home_directory}/.sqmpy/{job_id}'.format(
+            '{home_directory}/.sqmpy/{path}'.format(
                 home_directory=_get_remote_home(session),
-                username=current_user.username,
-                job_id=job.id)
+                path=dir_name)
     elif not os.path.isabs(job.remote_dir):
         raise Exception('Working directory should be absolute path.')
 
@@ -328,8 +344,8 @@ def download_job_files(job_id, job_description, session, config=None,
     if helpers.is_localhost(job.resource.url):
         local_job_dir_url = local_job_dir
     else:
-        local_job_dir_url = \
-            helpers.get_job_staging_folder(job_id, config, make_sftp_url=True)
+        local_job_dir_url =\
+            'sftp://localhost{job_path}'.format(job_path=local_job_dir)
 
     # Get staging file names for this job which are already uploaded
     # we don't need to download them since we have them already

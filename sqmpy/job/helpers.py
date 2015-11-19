@@ -6,6 +6,7 @@
     than implementing a feature.
 """
 import os
+import base64
 import shutil
 import hashlib
 import smtplib
@@ -142,7 +143,8 @@ def stage_uploaded_files(job, upload_dir, config, silent=False):
     :return:
     """
     # Get or create job directory
-    job_dir = get_job_staging_folder(job.id, config)
+    if not job.staging_dir:
+        job.staging_dir = get_job_staging_folder(job.id, config)
 
     # Save staging data before running the job
     # Input files will be moved under a new folder with this structure:
@@ -169,7 +171,7 @@ def stage_uploaded_files(job, upload_dir, config, silent=False):
 
         # Move file to job directory
         src = os.path.join(upload_dir, filename)
-        dst = os.path.join(job_dir, staging_file_name)
+        dst = os.path.join(job.staging_dir, staging_file_name)
         shutil.move(src, dst)
 
         # Create a record for each file
@@ -178,7 +180,7 @@ def stage_uploaded_files(job, upload_dir, config, silent=False):
         sf.relation = staging_file_relation
         sf.original_name = filename
         sf.checksum = hashlib.md5(open(dst).read()).hexdigest()
-        sf.location = job_dir
+        sf.location = job.staging_dir
         sf.parent_id = job.id
         db.session.add(sf)
     # Delete temporary upload directory
@@ -186,15 +188,19 @@ def stage_uploaded_files(job, upload_dir, config, silent=False):
     db.session.flush()
 
 
-def get_job_staging_folder(job_id, config=None, make_sftp_url=False):
+def get_job_staging_folder(job_id, config=None):
     """
     Returns the directory which contains job files
 
     :param job_id:
-    :param make_sftp_url: return as sftp address
     :return: file system path
     :rtype : str
     """
+    # Check if the job has alreday a staging directory
+    job = Job.query.get(job_id)
+    if job.staging_dir:
+        return job.staging_dir
+
     if not config:
         config = flask.current_app.config
 
@@ -207,13 +213,18 @@ def get_job_staging_folder(job_id, config=None, make_sftp_url=False):
         job = Job.query.get(job_id)
         job_owner = \
             security_services.get_user(job.owner_id)
+        # Use job owner's username as top level directory for
+        # his/her jobs
         job_owner_dir = os.path.join(staging_dir, job_owner.username)
-
+    # Create a directory for the user if it does not exist yet
     if not os.path.exists(job_owner_dir):
         os.makedirs(job_owner_dir)
-    job_dir = os.path.join(job_owner_dir, str(job_id))
-    if not os.path.exists(job_dir):
-        os.makedirs(job_dir)
-    if make_sftp_url:
-        job_dir = 'sftp://localhost{job_dir}'.format(job_dir=job_dir)
-    return job_dir
+
+    # We use a combination of job id and a random string to make the
+    # directory name unique and meanwhile human readable
+    dir_name = "{0}_{1}".format(job_id,
+                                base64.urlsafe_b64encode(os.urandom(6)))
+    job_path = os.path.join(job_owner_dir, dir_name)
+    if not os.path.exists(job_path):
+        os.makedirs(job_path)
+    return job_path

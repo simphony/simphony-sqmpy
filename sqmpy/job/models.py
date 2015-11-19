@@ -26,6 +26,7 @@ class Job(db.Model):
     # '[fork://localhost]-[17856.0]'
     remote_job_id = db.Column(db.String(50))
     remote_dir = db.Column(db.String(150))
+    staging_dir = db.Column(db.String(150))
     resource_endpoint = db.Column(db.Text())
     script = db.Column(db.Text())
     script_type = db.Column(db.Integer, nullable=False)

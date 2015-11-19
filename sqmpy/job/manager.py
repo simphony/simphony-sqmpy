@@ -129,15 +129,14 @@ def resubmit(job_id):
 
     try:
         # Get or create job directory
-        job_dir = helpers.get_job_staging_folder(job.id)
-
+        job.staging_dir = helpers.get_job_staging_folder(job.id)
         # Copy script and input files of the template job to new staging folder
         for sf in template_job.files:
             if sf.relation in (constants.FileRelation.input.value,
                                constants.FileRelation.script.value):
                 # Move file to job directory
                 src = os.path.join(sf.location, sf.name)
-                dst = os.path.join(job_dir, sf.name)
+                dst = os.path.join(job.staging_dir, sf.name)
                 shutil.copy(src, dst)
 
                 # Create a new record for newly copied file

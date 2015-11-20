@@ -133,7 +133,12 @@ def submit(job_id=None):
             # Delete temporary directory with its contents
             if os.path.exists(upload_dir):
                 shutil.rmtree(upload_dir)
-            flash(str(ex), category='error')
+            if "message too long" in str(ex):
+                flash("sftp error: Make sure you can do sftp/scp to the"
+                      " remote host and there are no echo statements in the"
+                      " .bashrc of the remote machine.", category='error')
+            else:
+                flash(str(ex), category='error')
 
     return render_template('job/job_submit.html', form=form)
 

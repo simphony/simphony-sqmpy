@@ -36,8 +36,9 @@ class FileRelation(Enum):
     """
     input = 0
     output = 1
-    error = 2
-    script = 3
+    stdout = 2
+    stderr = 3
+    script = 4
 
 
 @unique

@@ -7,15 +7,16 @@
 import os
 import shutil
 import tempfile
+import mimetypes
 
 from flask import request, redirect, url_for, abort, \
     render_template, flash, send_from_directory, Blueprint, g
-from flask.ext.login import login_required, current_user
+from flask.ext.login import login_required
 from flask.ext.csrf import csrf_exempt
 from werkzeug import secure_filename
 import names
 
-from .exceptions import JobNotFoundException, FileNotFoundException
+from .exceptions import JobNotFoundException
 from .forms import JobSubmissionForm
 from .models import Resource
 from .constants import ScriptType
@@ -164,7 +165,7 @@ def resubmit(job_id):
 
 
 @csrf_exempt
-@job_blueprint.route('/<string:job_id>/cancel', methods=['GET', 'POST'])
+@job_blueprint.route('/<int:job_id>/cancel', methods=['GET', 'POST'])
 @login_required
 def cancel(job_id):
     """
@@ -180,22 +181,17 @@ def cancel(job_id):
 # of a file. Then it will locate that file on the upload
 # directory and show it on the browser, so if the user uploads
 # an image, that image is going to be show after the upload
-@job_blueprint.route('/uploads/<username>/<job_id>/<filename>')
-def uploaded_file(username, job_id, filename):
-    if username != current_user.username:
-        abort(403)
-    upload_dir = None
-    try:
-        upload_dir = job_services.get_file_location(job_id, filename)
-    except JobNotFoundException:
-        abort(404)
-    except FileNotFoundException:
-        abort(404)
-    # Add proper mimetypes
-    import mimetypes
+@job_blueprint.route('/<int:job_id>/files/<string:file_name>')
+@login_required
+def get_file(job_id, file_name):
+    # Get file location
+    job_file = job_services.get_file_by_name(job_id, file_name)
+
+    # Add extra mime types
     mimetypes.add_type('text/plain', '.lammps')
     mimetypes.add_type('text/plain', '.couette')
-    return send_from_directory(upload_dir, filename)
+    print 'Got these: ', (job_file.location, job_file.name)
+    return send_from_directory(job_file.location, job_file.name)
 
 
 @job_blueprint.app_template_global(name='url_for_other_page')

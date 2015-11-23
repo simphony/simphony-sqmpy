@@ -14,7 +14,7 @@ from flask.ext.login import current_user
 from . import constants
 from . import helpers
 from .exceptions import JobManagerException
-from .models import Job, Resource
+from .models import Job, Resource, StagingFile
 from .saga_helper import SagaJobWrapper
 from .exceptions import JobNotFoundException, FileNotFoundException
 from ..database import db
@@ -199,6 +199,15 @@ def _check_access(job):
         abort(403)
 
 
+def _check_file_access(file_id):
+    """
+    Check if current user has access to the given job
+    """
+    staging_file = StagingFile.query.get_or_404(file_id)
+    job = Job.query.get_or_404(staging_file.parent_id)
+    _check_access(job)
+
+
 def get_job(job_id, *args, **kwargs):
     """
     Get a job
@@ -207,7 +216,7 @@ def get_job(job_id, *args, **kwargs):
     job = Job.query.get(job_id)
 
     if not job:
-        raise JobNotFoundException("Job not found.")
+        abort(404)
 
     # Check if current user has access to this job
     _check_access(job)
@@ -233,25 +242,33 @@ def list_jobs(page=None, **kwargs):
     return query.paginate(page, current_app.config['PER_PAGE'])
 
 
-def get_file_location(job_id, file_name):
+def get_file(file_id):
     """
-    Returns the folder of the file
-    :param job_id:
+    Returns a staging file
+    :param file_id:
+    :return:
+    """
+    # Check if user has access to this file
+    _check_file_access(file_id)
+
+    return StagingFile.query.get_or_404(file_id)
+
+
+def get_file_by_name(job_id, file_name):
+    """
+    Returns a staging file
     :param file_name:
     :return:
     """
-    # If there is a request context get the config
-    if current_app is not None:
-        config = current_app.config
-    job = Job.query.get(job_id)
-    if job is None:
-        raise JobNotFoundException('Job number %s does not exist.' % job_id)
-    for f in job.files:
-        if f.name == file_name:
-            return helpers.get_job_staging_folder(job.id, config)
-    raise \
-        FileNotFoundException('Job number %s does not have any file called %s'
-                              % (job_id, file_name))
+    # Find the job
+    job = get_job(job_id)
+
+    for staging_file in job.files:
+        if staging_file.name == file_name:
+            return staging_file
+
+    # If nothing sofar
+    abort(404)
 
 
 def cancel_job(job_id):

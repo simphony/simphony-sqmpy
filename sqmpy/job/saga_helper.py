@@ -347,43 +347,131 @@ def download_job_files(job_id, job_description, session, config=None,
         local_job_dir_url =\
             'sftp://localhost{job_path}'.format(job_path=local_job_dir)
 
+#    local_job_dir_url = local_job_dir
+
     # Get staging file names for this job which are already uploaded
     # we don't need to download them since we have them already
-    uploaded_files = \
+    excluded = \
         StagingFile.query.with_entities(StagingFile.name).filter(
             StagingFile.parent_id == Job.id,
             Job.id == job_id).all()
     # Convert tuple result to list
-    uploaded_files = [file_name for file_name, in uploaded_files]
-    remote_dir = get_job_endpoint(job_id, session)
-    files = remote_dir.list()
-    staging_files = []
-    for file_url in files:
-        if file_url.path == job_description.output:
-            staging_files.append((file_url, FileRelation.output.value))
-        elif file_url.path == job_description.error:
-            staging_files.append((file_url, FileRelation.error.value))
-        elif file_url.path not in uploaded_files:
-            staging_files.append((file_url, FileRelation.output.value))
+    excluded = [file_name for file_name, in excluded]
 
-    for file_url, relation in staging_files:
-        # Copy physical file to local directory
+    # Get the working directory instance
+    remote_dir = get_job_endpoint(job_id, session)
+
+    # Find all files in the working directory and its subdirectories
+    # Files are as a dict of full_path/saga.filesystem.Url objects
+    remote_files, sub_direcotires = _traverse_directory(remote_dir)
+
+    # Copy/move files and create corresponding records in db
+    # Note: we can recursively move everything back but the reason
+    # behind traversing through all directories is that we want to
+    # collect some information about them upon adding.
+    for remote_abspath, remote_url in remote_files.iteritems():
+        # Get file name
+        remote_file_name = os.path.basename(remote_abspath)
+        # Do nothing if file is excluded
+        if remote_file_name in excluded:
+            continue
+        # Copy physical file to local directory. Since paths are absolote
+        # we need to make them relative to the job's staging folder
+        relative_path =\
+            _make_relative_path(remote_dir.get_url().get_path(),
+                                remote_abspath)
+        # Join the relative path and local job staging directory
+        local_path = os.path.join(local_job_dir_url, relative_path)
+        # No sftp in path
+        local_abspath = os.path.join(local_job_dir, relative_path)
+
         if wipe:
-            remote_dir.move(file_url, local_job_dir_url)
+            # Move the file and create parents if required
+            remote_dir.move(remote_abspath, local_path,
+                            saga.filesystem.CREATE_PARENTS)
         else:
-            remote_dir.copy(file_url, local_job_dir_url)
-        time.sleep(.5)
+            # Copy the file and create parents if required
+            remote_dir.copy(remote_abspath, local_path,
+                            saga.filesystem.CREATE_PARENTS)
+
         # Insert appropriate record into db
-        absolute_name = os.path.join(local_job_dir, file_url.path)
         sf = StagingFile()
-        sf.name = file_url.path
-        sf.relation = relation
-        sf.original_name = file_url.path
-        sf.checksum = hashlib.md5(open(absolute_name).read()).hexdigest()
-        sf.location = local_job_dir
+        sf.name = remote_url.path
+        sf.relation = _get_file_relation_to_job(job_description, remote_url)
+        sf.original_name = remote_url.path
+        sf.checksum = hashlib.md5(open(local_abspath).read()).hexdigest()
+        sf.location = os.path.dirname(local_abspath)
         sf.parent_id = job_id
         db.session.add(sf)
+
+    # Persist changes
     db.session.commit()
+
+
+def _get_file_relation_to_job(job_description, file_url):
+    """
+    Find if file is stdout, stderr or generated output.
+    """
+    if file_url.path == job_description.output:
+        return FileRelation.stdout.value
+    elif file_url.path == job_description.error:
+        return FileRelation.stderr.value
+    elif file_url.path in job_description.arguments[0]:
+        return FileRelation.script.value
+    else:
+        return FileRelation.output.value
+
+
+def _make_relative_path(base_path, full_path):
+    """
+    Strip out the base_path from full_path and make it relative.
+    """
+    if base_path in full_path:
+        # Get the common prefix
+        common_prefix =\
+            os.path.commonprefix([base_path, full_path])
+        rel_path = full_path[len(common_prefix):]
+        # Remove '/' from the beginning
+        if os.path.isabs(rel_path):
+            rel_path = rel_path[1:]
+        return rel_path
+
+
+def _traverse_directory(directory,
+                        collected_files=None,
+                        collected_directories=None):
+    """
+    Walk through subdirectories and collect files.
+    :param directory: instance of saga.filesystem.Directory
+    """
+    if not collected_files:
+        collected_files = {}
+
+    if not collected_directories:
+        collected_directories = []
+
+    # Find all files in the working directory and its subdirectories
+    for entry in directory.list():
+        # Add entry only if its a file
+        if directory.is_file(entry):
+            # Generate full path to each file
+            file_path =\
+                os.path.join(directory.get_url().get_path(),
+                             entry.path)
+            collected_files[file_path] = entry
+        # Go through sub-directories
+        elif directory.is_dir(entry):
+            sub_directory =\
+                directory.open_dir(os.path.join(directory.get_url().get_path(),
+                                                entry.path))
+            collected_directories.append(sub_directory)
+            _traverse_directory(sub_directory,
+                                collected_files,
+                                collected_directories)
+        else:
+            print('Omitting non-file and non-directory entry: %s' % entry)
+    # Return collected information
+    return collected_files, collected_directories
 
 
 def transfer_job_files(job_id, remote_job_dir, session):
@@ -412,4 +500,4 @@ def transfer_job_files(job_id, remote_job_dir, session):
                                  session=session)
         # TODO: This is a workaround for bug #480 remove it later
         file_wrapper._adaptor._set_session(session)
-        file_wrapper.copy(remote_job_dir.get_url())
+        file_wrapper.copy(remote_job_dir.get_url(), saga.filesystem.RECURSIVE)

@@ -91,13 +91,13 @@
                         </tr>
                     </thead>
                     <tbody>
-                    {% for file in job.files if file.relation|int in (0,3) %}
+                    {% for file in job.files if file.relation|int in (0, 4) %}
                         <tr>
                             <td>{{loop.index}}</td>
                             <td>{{file.name}}</td>
                             <td>{{file.get_relation_str()|title}}</td>
                             <td>
-                                <a href="{{url_for('.uploaded_file', username=current_user.username, job_id=job.id, filename=file.name)}}">Download</a>
+                                <a href="{{url_for('.get_file', job_id=job.id, file_name=file.name)}}">Download</a>
                             </td>
                         </tr>
                     {% endfor %}
@@ -120,13 +120,14 @@
                         </tr>
                     </thead>
                     <tbody>
-                    {% for file in job.files if file.relation|int not in (0,3) %}
+                    {% for file in job.files if file.relation|int not in (0, 4) %}
+                    {% set active_link = recordtype -%}
                         <tr>
                             <td>{{loop.index}}</td>
                             <td>{{file.name}}</td>
                             <td>{{file.get_relation_str()|title}}</td>
                             <td>
-                                <a href="{{url_for('.uploaded_file', username=current_user.username, job_id=job.id, filename=file.name)}}">Download</a>
+                                <a href="{{url_for('.get_file', job_id=job.id, file_name=file.name)}}">Download</a>
                             </td>
                         </tr>
                     {% endfor %}

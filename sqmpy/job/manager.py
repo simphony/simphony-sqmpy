@@ -16,7 +16,6 @@ from . import helpers
 from .exceptions import JobManagerException
 from .models import Job, Resource, StagingFile
 from .saga_helper import SagaJobWrapper
-from .exceptions import JobNotFoundException, FileNotFoundException
 from ..database import db
 
 __author__ = 'Mehdi Sadeghi'

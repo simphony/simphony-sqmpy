@@ -134,17 +134,26 @@ def resubmit(job_id):
         for sf in template_job.files:
             if sf.relation in (constants.FileRelation.input.value,
                                constants.FileRelation.script.value):
-                # Move file to job directory
+                # Copy file to the job's directory
                 src = os.path.join(sf.location, sf.name)
                 dst = os.path.join(job.staging_dir, sf.name)
+                if sf.relative_path:
+                    dst = os.path.join(job.staging_dir,
+                                       sf.relative_path,
+                                       sf.name)
                 shutil.copy(src, dst)
 
                 # Create a new record for newly copied file
-                db.session.expunge(sf)
-                db.make_transient(sf)
-                sf.id = None
-                sf.parent_id = job.id
-                db.session.add(sf)
+                new_sf = StagingFile()
+                new_sf.name = sf.name
+                new_sf.original_name = sf.original_name
+                new_sf.location = os.path.dirname(dst)
+                new_sf.relative_path = sf.relative_path
+                new_sf.relation = sf.relation
+                new_sf.checksum = sf.checksum
+                new_sf.parent_id = job.id
+
+                db.session.add(new_sf)
                 db.session.flush()
 
         # Submit the job using saga

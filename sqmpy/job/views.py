@@ -190,7 +190,6 @@ def get_file(job_id, file_name):
     # Add extra mime types
     mimetypes.add_type('text/plain', '.lammps')
     mimetypes.add_type('text/plain', '.couette')
-    print 'Got these: ', (job_file.location, job_file.name)
     return send_from_directory(job_file.location, job_file.name)
 
 

@@ -167,13 +167,6 @@ class SagaJobWrapper(object):
                     except saga.IncorrectState:
                         pass
 
-        flask.current_app.logger.debug(
-            'creating thread and passing %s to it' %
-            (flask.current_app._get_current_object()))
-        thr = Thread(target=monitor_state,
-                     args=[flask.current_app._get_current_object()])
-        thr.start()
-
         # Run the job eventually
         flask.current_app.logger.debug("...starting job[%s]..." % self._job.id)
         self._saga_job.run()
@@ -181,6 +174,14 @@ class SagaJobWrapper(object):
         # Store remote pid
         self._job.remote_job_id = self._saga_job.get_id()
         db.session.commit()
+
+        # Make sure to start monitoring after starting the job
+        flask.current_app.logger.debug(
+            'creating monitoring thread and passing %s to it' %
+            (flask.current_app._get_current_object()))
+        thr = Thread(target=monitor_state,
+                     args=[flask.current_app._get_current_object()])
+        thr.start()
 
         flask.current_app.logger.debug(
             "Remote Job ID    : %s" % self._saga_job.id)
@@ -325,8 +326,7 @@ def make_job_description(job, remote_job_dir):
     return jd
 
 
-def download_job_files(job_id, job_description, session, config=None,
-                       wipe=True):
+def download_job_files(job_id, job_description, session, wipe=True):
     """
     Copies output and error files along with any other output files back to the
     current machine.
@@ -336,27 +336,16 @@ def download_job_files(job_id, job_description, session, config=None,
     :param wipe: if set to True will wipe files from remote machine.
     :return:
     """
-    # Get a new object in this session
-    job = Job.query.get(job_id)
-
-    # Get or create job directory
-    local_job_dir = helpers.get_job_staging_folder(job_id, config)
-    if helpers.is_localhost(job.resource.url):
-        local_job_dir_url = local_job_dir
-    else:
-        local_job_dir_url =\
-            'sftp://localhost{job_path}'.format(job_path=local_job_dir)
-
-#    local_job_dir_url = local_job_dir
-
     # Get staging file names for this job which are already uploaded
     # we don't need to download them since we have them already
-    excluded = \
-        StagingFile.query.with_entities(StagingFile.name).filter(
-            StagingFile.parent_id == Job.id,
-            Job.id == job_id).all()
+    staged_files = \
+        StagingFile.query.filter(StagingFile.parent_id == Job.id,
+                                 Job.id == job_id).all()
     # Convert tuple result to list
-    excluded = [file_name for file_name, in excluded]
+    excluded = [os.path.join(sf.location, sf.name) for sf in staged_files]
+
+    # Get or create job directory
+    job_staging_folder = helpers.get_job_staging_folder(job_id)
 
     # Get the working directory instance
     remote_dir = get_job_endpoint(job_id, session)
@@ -370,20 +359,23 @@ def download_job_files(job_id, job_description, session, config=None,
     # behind traversing through all directories is that we want to
     # collect some information about them upon adding.
     for remote_abspath, remote_url in remote_files.iteritems():
-        # Get file name
-        remote_file_name = os.path.basename(remote_abspath)
-        # Do nothing if file is excluded
-        if remote_file_name in excluded:
-            continue
         # Copy physical file to local directory. Since paths are absolote
         # we need to make them relative to the job's staging folder
         relative_path =\
             _make_relative_path(remote_dir.get_url().get_path(),
                                 remote_abspath)
         # Join the relative path and local job staging directory
-        local_path = os.path.join(local_job_dir_url, relative_path)
+        local_path =\
+            os.path.join('sftp://localhost{job_path}'.format(
+                job_path=job_staging_folder), relative_path)
         # No sftp in path
-        local_abspath = os.path.join(local_job_dir, relative_path)
+        local_abspath = os.path.join(job_staging_folder, relative_path)
+
+        # Do nothing if the file is already downloaded or belongs
+        # to initially uploaded files.
+        if local_abspath in excluded:
+            flask.current_app.logger.debug('Excluding %s' % local_abspath)
+            continue
 
         if wipe:
             # Move the file and create parents if required
@@ -397,10 +389,11 @@ def download_job_files(job_id, job_description, session, config=None,
         # Insert appropriate record into db
         sf = StagingFile()
         sf.name = remote_url.path
-        sf.relation = _get_file_relation_to_job(job_description, remote_url)
         sf.original_name = remote_url.path
-        sf.checksum = hashlib.md5(open(local_abspath).read()).hexdigest()
         sf.location = os.path.dirname(local_abspath)
+        sf.relative_path = relative_path.lstrip(os.sep)
+        sf.relation = _get_file_relation_to_job(job_description, remote_url)
+        sf.checksum = hashlib.md5(open(local_abspath).read()).hexdigest()
         sf.parent_id = job_id
         db.session.add(sf)
 
@@ -426,6 +419,8 @@ def _make_relative_path(base_path, full_path):
     """
     Strip out the base_path from full_path and make it relative.
     """
+    flask.current_app.logger.debug(
+        'got base_path: %s and full_path: %s' % (base_path, full_path))
     if base_path in full_path:
         # Get the common prefix
         common_prefix =\
@@ -435,6 +430,7 @@ def _make_relative_path(base_path, full_path):
         if os.path.isabs(rel_path):
             rel_path = rel_path[1:]
         return rel_path
+    print 'No relative path'
 
 
 def _traverse_directory(directory,
@@ -461,13 +457,25 @@ def _traverse_directory(directory,
             collected_files[file_path] = entry
         # Go through sub-directories
         elif directory.is_dir(entry):
-            sub_directory =\
-                directory.open_dir(os.path.join(directory.get_url().get_path(),
-                                                entry.path))
-            collected_directories.append(sub_directory)
-            _traverse_directory(sub_directory,
-                                collected_files,
-                                collected_directories)
+            # Fixme: currently saga failes to populate child Urls,
+            # therefore we have to fill it manually. See #483 on Github
+            # Desired format is like: {scheme}://{host}/{path}/{sub_path}
+            path_template =\
+                '{scheme}://{host}/{job_dir}/{job_rel_dir}'
+            job_staging_folder = directory.get_url().get_path().lstrip(os.sep)
+            sub_dir_path =\
+                path_template.format(scheme=directory.get_url().get_scheme(),
+                                     host=directory.get_url().get_host(),
+                                     job_dir=job_staging_folder,
+                                     job_rel_dir=entry.path.lstrip(os.sep))
+            flask.current_app.logger.debug(
+                'Made this path for sub_dir: %s' % sub_dir_path)
+            sub_dir = directory.open_dir(sub_dir_path)
+            collected_directories.append(sub_dir)
+            collected_files, collected_directories =\
+                _traverse_directory(sub_dir,
+                                    collected_files,
+                                    collected_directories)
         else:
             print('Omitting non-file and non-directory entry: %s' % entry)
     # Return collected information

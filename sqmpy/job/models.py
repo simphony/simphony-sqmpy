@@ -83,6 +83,7 @@ class StagingFile(db.Model):
     original_name = db.Column(db.String(50))
     relation = db.Column(db.Integer, nullable=False)
     location = db.Column(db.String(150), nullable=False)
+    relative_path = db.Column(db.String(150), nullable=False)
     checksum = db.Column(db.String)
     parent_id = db.Column(db.Integer, db.ForeignKey('jobs.id'))
 

@@ -210,7 +210,6 @@ def get_job_staging_folder(job_id, config=None):
         # Use the username which this process is running under it
         job_owner_dir = os.path.join(staging_dir, 'anonymous_user')
     else:
-        job = Job.query.get(job_id)
         job_owner = \
             security_services.get_user(job.owner_id)
         # Use job owner's username as top level directory for

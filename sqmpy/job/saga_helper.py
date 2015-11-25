@@ -430,7 +430,6 @@ def _make_relative_path(base_path, full_path):
         if os.path.isabs(rel_path):
             rel_path = rel_path[1:]
         return rel_path
-    print 'No relative path'
 
 
 def _traverse_directory(directory,
@@ -477,7 +476,8 @@ def _traverse_directory(directory,
                                     collected_files,
                                     collected_directories)
         else:
-            print('Omitting non-file and non-directory entry: %s' % entry)
+            flask.current_app.logger.debug(
+                'Omitting non-file and non-directory entry: %s' % entry)
     # Return collected information
     return collected_files, collected_directories
 

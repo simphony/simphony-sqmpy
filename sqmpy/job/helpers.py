@@ -47,7 +47,6 @@ def send_state_change_email(job_id, owner_id, old_state, new_state,
 
     owner_email = None
     if owner_id:
-        print security_services.get_user(owner_id).id
         owner_email = security_services.get_user(owner_id).email
     elif 'ADMIN_EMAIL' in mail_config:
         owner_email = mail_config.get('ADMIN_EMAIL')

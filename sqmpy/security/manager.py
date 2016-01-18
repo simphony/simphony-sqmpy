@@ -8,7 +8,7 @@ import flask.ext.login as flask_login
 from flask import current_app, session, request, g
 
 from . import constants
-from .models import User
+from .models import User, _AnonymousUserMixin
 from .exceptions import SecurityManagerException
 from ..database import db
 
@@ -44,6 +44,8 @@ def get_user(user_id):
     :param user_id:
     :return:
     """
+    if current_app.config.get('LOGIN_DISABLED'):
+        return _AnonymousUserMixin()
     user = User.query.get(user_id)
     if user is None:
         raise SecurityManagerException(

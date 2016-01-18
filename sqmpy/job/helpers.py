@@ -51,7 +51,7 @@ def send_state_change_email(job_id, owner_id, old_state, new_state,
     elif 'ADMIN_EMAIL' in mail_config:
         owner_email = mail_config.get('ADMIN_EMAIL')
 
-    if not owner_email:
+    if not owner_email and not silent:
         raise Exception('Job owner email unknown.')
 
     text_message = \

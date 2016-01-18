@@ -7,8 +7,11 @@
 import bcrypt
 import datetime
 
+from flask.ext.login import AnonymousUserMixin
+
 from ..database import db
 from .constants import UserRole, UserStatus
+
 
 __author__ = 'Mehdi Sadeghi'
 
@@ -81,3 +84,15 @@ def _get_password_digest(password):
     # encode is required to avoid encoding exceptions
     return bcrypt.hashpw(password.encode('utf-8'),
                          bcrypt.gensalt())
+
+
+class _AnonymousUserMixin(AnonymousUserMixin, User):
+    """
+    Custom anonymous user to have an id field.
+    """
+    def __init__(self):
+        self.username = 'anonymous'
+        self.password = ''
+        self.id = -1
+        User.__init__(self)
+        AnonymousUserMixin.__init__(self)

@@ -9,12 +9,12 @@ import base64
 from flask import flash, url_for, request, redirect, render_template, session,\
     Blueprint
 from flask.ext.login import login_user, logout_user, login_required,\
-    LoginManager, AnonymousUserMixin
+    LoginManager
 
 from ..database import db
 from sqlalchemy.exc import IntegrityError
 from .forms import LoginForm, RegisterForm
-from .models import User
+from .models import User, _AnonymousUserMixin
 from . import manager as security_services
 
 __author__ = 'Mehdi Sadeghi'
@@ -42,7 +42,7 @@ def login_manager_factory(state):
     # Set custom anonymous user to return the user which is running the
     #   process.
     def make_anon_user():
-        return AnonymousUserMixin()
+        return _AnonymousUserMixin()
     login_manager.anonymous_user = make_anon_user
 
     @login_manager.user_loader

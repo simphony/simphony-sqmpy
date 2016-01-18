@@ -53,7 +53,8 @@ class SagaJobWrapper(object):
         # Create ssh security context
         ctx = None
         session = None
-        if flask.current_app.config.get('SSH_WITH_LOGIN_INFO'):
+        if not flask.current_app.config.get('LOGIN_DISABLED') and\
+                flask.current_app.config.get('SSH_WITH_LOGIN_INFO'):
             # Do not load default security contexts (user ssh keys)
             session = saga.Session(False)
             ctx = saga.Context('userpass')

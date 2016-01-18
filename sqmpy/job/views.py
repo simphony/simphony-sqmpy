@@ -134,6 +134,7 @@ def submit(job_id=None):
             # This is a workaround to recognize the error, regarding cases, when user's login page produces a lot of
             # text upon SSH, which confuses sftp. This is a well known issue on the net and currently I cound not
             # find a better way to recognize it.
+            raise
             if "message too long" in str(ex):
                 flash("sftp error: Make sure you can do sftp/scp to the"
                       " remote host and there are no echo statements in the"

@@ -4,7 +4,6 @@
 
     Provides user management
 """
-import ldap
 import flask.ext.login as flask_login
 from flask import current_app, session, request, g
 
@@ -12,6 +11,12 @@ from . import constants
 from .models import User
 from .exceptions import SecurityManagerException
 from ..database import db
+
+LDAP_AVAILABLE=True
+try:
+    import ldap
+except:
+    LDAP_AVAILABLE=False
 
 __author__ = 'Mehdi Sadeghi'
 
@@ -21,6 +26,9 @@ def login_user(username, password):
     Login in the given user.
     """
     if current_app.config.get('USE_LDAP_LOGIN'):
+        if not LDAP_AVAILABLE:
+            # If python-ldap is not installed raise an error
+            raise SecurityManagerException('Error loading ldap package.')
         return _login_ldap_user(username, password)
     elif _is_valid_login(username, password):
         user = User.query.filter_by(username=username).one()

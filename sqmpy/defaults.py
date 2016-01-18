@@ -1,7 +1,8 @@
 """
     default_config
     ~~~~~~~~~~~~~~
-    This module contains configuration keys for the application.
+    This module contains default configuration keys for the application.
+    Use a copy of this module to provide custom keys.
     See http://flask.pocoo.org/docs/config/ for more information.
 """
 # Set to True to get interactive debug output instead of HTTP 500 error
@@ -58,6 +59,8 @@ USE_LDAP_LOGIN = False
 # LDAP_BASEDN = 'ou=People,ou=IWM,o=Fraunhofer,c=DE'
 
 # User user login information for SSH. Default option is password-less access.
-# When set, sqmpy will user the provided username and password to obtain an
-# SSH connection to any remote host.
+# When set, sqmpy will use the provided username and password to obtain a
+# SSH connection to any remote host. Otherwise, passwordless SSH access will
+# be assumed, i.e. the user running sqmpy, should have passwor-less SSH access
+# to any given remote machine.
 SSH_WITH_LOGIN_INFO = False

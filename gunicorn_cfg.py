@@ -16,7 +16,7 @@ import multiprocessing
 bind = '0.0.0.0:3000'
 
 # The only tested worker class is gevent
-worker_class = 'gevent'
+#worker_class = 'gevent'
 
 # Set number of workers based on CPU count
 workers = multiprocessing.cpu_count() * 2 + 1
@@ -31,5 +31,5 @@ daemon = False
 keyfile = 'server.key'
 certfile = 'server.crt'
 
-# Application loglevel
+# Application log level
 loglevel = 'debug'

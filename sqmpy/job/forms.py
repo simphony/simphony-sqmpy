@@ -35,9 +35,6 @@ class JobSubmissionForm(Form):
     """
     Form to handle job submission.
     """
-    name = \
-        wtf.StringField('Label', [wtf.validators.Optional(),
-                        wtf.validators.Length(min=1, max=50)])
     script_file = \
         FileField('Script file',
                   validators=[FileRequired(),

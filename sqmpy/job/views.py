@@ -131,6 +131,9 @@ def submit(job_id=None):
             # Delete temporary directory with its contents
             if os.path.exists(upload_dir):
                 shutil.rmtree(upload_dir)
+            # This is a workaround to recognize the error, regarding cases, when user's login page produces a lot of
+            # text upon SSH, which confuses sftp. This is a well known issue on the net and currently I cound not
+            # find a better way to recognize it.
             if "message too long" in str(ex):
                 flash("sftp error: Make sure you can do sftp/scp to the"
                       " remote host and there are no echo statements in the"
@@ -157,7 +160,6 @@ def resubmit(job_id):
         return redirect(url_for('.detail', job_id=new_job_id))
     except Exception, ex:
         flash(str(ex), category='error')
-        raise
         return redirect(get_redirect_target() or url_for('.index'))
 
 

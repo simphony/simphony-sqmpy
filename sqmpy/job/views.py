@@ -14,7 +14,6 @@ from flask import request, redirect, url_for, abort, \
 from flask.ext.login import login_required
 from flask.ext.csrf import csrf_exempt
 from werkzeug import secure_filename
-import names
 
 from .exceptions import JobNotFoundException
 from .forms import JobSubmissionForm
@@ -125,8 +124,6 @@ def submit(job_id=None):
                 job_services.submit(resource_url,
                                     upload_dir,
                                     script_type,
-                                    job_name=form.name.data
-                                    or names.get_last_name(),
                                     **form.data)
             # Redirect to list
             return redirect(url_for('.detail', job_id=job_id))

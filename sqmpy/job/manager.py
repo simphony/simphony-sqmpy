@@ -33,7 +33,6 @@ def submit(resource_url, upload_dir, script_type, **kwargs):
     :param script_type: a value from ScriptType enum to represend script type.
         could be 0 for shell and 1 for python scripts.
     :param kwargs::
-        :param name: a user defined name for the job
         :param hpc_backend: type of scheduler on the remote host. Currently
             normal(shell) and sge are supported.
         :param total_cpu_count:
@@ -58,7 +57,6 @@ def submit(resource_url, upload_dir, script_type, **kwargs):
     if 'hpc_backend' in kwargs:
         job.hpc_backend = constants.HPCBackend(kwargs.get('hpc_backend')).value
 
-    job.name = kwargs.get('job_name')
     job.remote_dir = kwargs.get('working_directory')
     job.description = kwargs.get('description')
     job.total_cpu_count = kwargs.get('total_cpu_count')

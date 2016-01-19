@@ -91,9 +91,7 @@ since new versions of virtualenv do not download and install pip and setuptools 
     $ python virtualenv.py --no-site-packages sqmpy-env
     $ source sqmpy-env/bin/activate
 
-If you clone Sqmpy from Github then you can easily install the requirements with pip and then run the program directly:
-
-::
+If you clone Sqmpy from Github then you can easily install the requirements with pip and then run the program directly::
 
     $ git clone git://github.com/simphony/sqmpy.git
     $ cd sqmpy
@@ -101,7 +99,7 @@ If you clone Sqmpy from Github then you can easily install the requirements with
     $ python run.py
 
 Then browse to http://127.0.0.1:5000 to use the application. By default, Sqmpy uses user's SSH keys when accessing
- remote resources. Therefore, user must have passwordless SSH access to remote machines.
+remote resources. Therefore, user must have passwordless SSH access to remote machines.
 
 .. Note::
   The above setup uses a lightweight internal development web server which might be slow and problematic. It

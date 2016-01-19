@@ -7,6 +7,3 @@ Flask-Uploads
 enum34
 saga-python
 py-bcrypt
-names
-gevent
-python-ldap

@@ -14,7 +14,13 @@ Sqmpy lets user to submit simple python or shell scripts on remote machines. The
 job detail page. The notification system will send emails after status changes to the user. Moreover sqmpy lets user
 to have a history of previous jobs and all files related to those jobs.
 
-Dependencies
+
+Repository
+----------
+Sqmpy is hosted on Github: https://github.com/simphony/sqmpy
+
+
+Requirements
 ------------
 Sqmpy has a few dependencies which will be installed while installing with *python setup* or *pip*:
 
@@ -27,28 +33,65 @@ Sqmpy has a few dependencies which will be installed while installing with *pyth
 - Flask-Uploads
 - enum34
 - py-bcrypt
-- python-ldap (for experimental LDAP login support)
 
-Installation
-------------
-I suggest to install a virtaul environment to try Sqmpy or if you want to run it on your local machine. If you have
-virtual-env installed then:
+
+Optional Requirements
+---------------------
+In order to use LDAP support, a few libraries and a python package should be installed on the system.
+In an Ubuntu machine they could be installed this way:
+
+    # apt-get install libldap2-dev libsasl2-dev libssl-dev
+
+In OpenSUSE they could be installed this way:
+
+    # zupper in openldap2-devel cyrus-sasl-devel
+
+The following python package should be installed afterwards:
+
+- python-ldap
+
+Configuration
+-------------
+Sqmpy will locad configuration keys from a file called `config.py` inside the application directory.
+Alternatively, configurations can be loaded from a user defined python file using **SQMPY_CONFIG**
+environment variable:
 
 ::
 
-    $ virtual-env --no-site-packages sqmpy-env
-    $ . sqmpy-env/bin/activate
+    $ export SQMPY_CONFIG = /path/to/config/file/config.py
 
-If you don't have virutal-env on your machine then try to download it. **Please be aware that this is outdated
-since new versions of virtualenv do not download and install pip and setuptools for security reasons**:
+Even though Sqmpy will run with default configuration, for a proper installation certain settings inside `config.py`
+ file must be changed. This will be explained shortly for server setup, here is a short overview:
+
+::
+
+    SECRET_KEY = 'This should be replaced with a long unique string in your setup'
+    CSRF_SESSION_KEY = "Same for this one"
+
+Above two keys *must* be changed. There are more configuration options which are explained in `config.py` file.
+
+
+Local Installation
+------------------
+Sqmpy is meant to be installed on a web server and used as a multi-user website. However, in early stages and for
+demonstration purposes one can run it on a local computer. I will explain further how to install it on a web server.
+I suggest to install a virtaul environment to try Sqmpy when running it on your local machine:
+
+::
+
+    $ virtualenv --no-site-packages sqmpy-env
+    $ source sqmpy-env/bin/activate
+
+If you don't have virutalenv on your machine then try to download it. **Please be aware that this is outdated
+since new versions of virtualenv do not download and install pip and setuptools for security reasons**.
 
 ::
 
     $ wget https://raw.githubusercontent.com/pypa/virtualenv/1.9.X/virtualenv.py
     $ python virtualenv.py --no-site-packages sqmpy-env
-    $ . sqmpy-env/bin/activate
+    $ source sqmpy-env/bin/activate
 
-If you clone from github then you can easily install the requirements with pip and then run the program directly:
+If you clone Sqmpy from Github then you can easily install the requirements with pip and then run the program directly:
 
 ::
 
@@ -57,60 +100,97 @@ If you clone from github then you can easily install the requirements with pip a
     $ pip install -r requirements.txt
     $ python run.py
 
-**Make sure to change values inside config.py before running the program**
-To install from git:
+Then browse to http://127.0.0.1:5000 to use the application. By default, Sqmpy uses user's SSH keys when accessing
+ remote resources. Therefore, user must have passwordless SSH access to remote machines.
+
+.. Note::
+  The above setup uses a lightweight internal development web server which might be slow and problematic. It
+  is only mentioned for demonstration and development purposes. Read on to `Gunicorn` section to learn more.
+
+
+
+Running with Gunicorn
+---------------------
+Running with Gunicorn is the preferred way to use Sqmpy, either local or on a web server as a proxy.
+First install its python package:
 
 ::
 
-    $ git clone git://github.com/simphony/sqmpy.git
-    $ cd sqmpy
-    $ python setup install
+    $ pip install gunicorn
 
-To install Sqmpy from pypi:
-
-::
-
-    $ pip install sqmpy
-
-Please remember that installing from pypi will only install Sqmpy package without config, database and run file. You have
-to make them yourself for now.
-
-Configuration
--------------
-There are a few settings which Sqmpy can read from a configuration file. There is a *default_config* python module
-in Sqmpy package that contains default configuration values. The same configurations can be read from a user defined
-config file via **SQMPY_CONFIG** environment variable:
+Inside Sqmpy's folder, there is a file called `gunicorn_cfg.py`. You can change that file to configure Gunicorn,
+e.g. to change default port. To run Sqmpy with gunicorn run:
 
 ::
 
-    $ export SQMPY_CONFIG = /path/to/config/file/config.py
-    $ python run.py
+    $ gunicorn -c gunicorn_cfg.py run:app
 
-Run With No Configuration
+In order to run Sqmpy as a daemon:
+
+::
+
+    $ gunicorn -c gunicorn_cfg.py run:app -D
+
+
+Enabling LDAP Support
+---------------------
+
+If you use LDAP in your organization it is possible to configure Sqmpy to use it as authentication backend. The
+following keys should be changed:
+
+::
+
+    LOGIN_DISABLED = False
+    USE_LDAP_LOGIN = True
+    LDAP_SERVER = 'ldap.example.com' # your ldap server here
+    LDAP_BASEDN = 'ou=People,ou=IWM,o=Fraunhofer,c=DE' # your BASEDN here
+
+We have only tested this inside IWM, so it might not work for you, hence experimental!
+There is one point here. Sqmpy, by default, will use SSH keys of the current user to connect to remote machines in
+order to run submitted jobs there. To force it to use the login information, e.g. in LDAP case, change the following
+key::
+
+    SSH_WITH_LOGIN_INFO = True
+
+
+Enabling SSL Support
+--------------------
+
+In case of a multiuser setup, SSL must be enabled. Otherwise, users' information will be transferred in clear-text
+throught the network. Here we generate a self-signed SSL certificate to use with Gunicorn::
+
+    $ openssl genrsa -des3 -passout pass:x -out server.pass.key 2048
+    $ openssl rsa -passin pass:x -in server.pass.key -out server.key
+    $ rm server.pass.key
+    $ openssl req -new -key server.key -out server.csr
+    $ openssl x509 -req -days 365 -in server.csr -signkey server.key -out server.crt
+
+Now we have three files, called server.crt, server.csr and, server.key. Edit gunicorn_cfg.py and uncomment
+ certificate lines::
+
+    keyfile = 'server.key'
+    certfile = 'server.crt'
+
+    # And re-run Sqmpy
+    $ gunicorn -c gunicorn_cfg.py run:app
+
+Now you should be able to browse https://localhost:5000 which is SSL protected.
+
+Deploying on a Web Server
 -------------------------
-In this case Sqmpy will user in-memory sqlite db, logging to stdout, and a temp folder for staging files. State
-will lost after restarting the application.
+As a Flask application, sqmpy can be deployed in multiple ways: http://flask.pocoo.org/docs/0.10/deploying/.
+The best deployment scenario for Sqmpy is running it as a WSGI application and use nginx to forward requests
+to it. It is beyond scope of this README to explain deployment WSGI application with web servers. There are many
+good guides on the internet, however we will update this guide if users ask for it. We strongly recommend using
+Sqmpy + Gunicorn + nginx.
 
-Using sqmpy
------------
-sqmpy is a flask web application therefore it runs like any other flask applications. Put the following code in
-a python file called run.py and run it:
-
-::
-
-    from sqmpy.factory import create_app
-    app = create_app('path_to_config.py') # Config is optional
-    app.run('0.0.0.0', port=5001, debug=True)
 
 About Files and Folders, Local or Remote
 ----------------------------------------
 Sqmpy will create a *sqmpy.log* and *sqmpy.db* and a staging folder called *staging*. The path to these files are
-being read from config values: ``LOG_FILE``, ``SQLALCHEMY_DATABASE_URI`` and ``STAGING_FOLDER``.
-Staginf folder will contain uploaded files and script files created by Sqmpy. Moreover on remote machiens
-Sqmpy will create another folder called *sqmpy* in user home directory and will upload files there before
-running tasks. For each job one folder will be created and will be set as job working directory. This folder
+read from config values: ``LOG_FILE``, ``SQLALCHEMY_DATABASE_URI`` and ``STAGING_FOLDER``.
+Staging folder will contain uploaded files and script files created by Sqmpy. Moreover, on remote machines
+Sqmpy will create another folder called *sqmpy* in user's home directory and will upload files there before
+running tasks. For each job one folder will be created and will be set as job's working directory. This folder
 will contain input and output files as well as script file and any other files being produced or consumed by
 the remote job.
-
-.. image:: https://www.herokucdn.com/deploy/button.png
-    :target: https://heroku.com/deploy

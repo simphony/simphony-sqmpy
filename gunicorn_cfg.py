@@ -28,8 +28,8 @@ workers = multiprocessing.cpu_count() * 2 + 1
 daemon = False
 
 # Comment only for development. Use your own certificates here.
-keyfile = 'server.key'
-certfile = 'server.crt'
+#keyfile = 'server.key'
+#certfile = 'server.crt'
 
 # Application log level
 loglevel = 'debug'

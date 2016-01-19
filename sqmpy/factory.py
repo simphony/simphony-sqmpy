@@ -14,15 +14,15 @@ def create_app(config_filename=None, **kwargs):
     # Import default configs
     app.config.from_object('sqmpy.defaults')
 
-    # Import from environment
-    app.config.from_envvar('SQMPY_SETTINGS', silent=True)
-
     # Configurations
     app.config.from_object('config')
 
     # Load the given config file
     if config_filename:
         app.config.from_pyfile(config_filename, silent=False)
+
+    # Import from environment
+    app.config.from_envvar('SQMPY_SETTINGS', silent=True)
 
     # Updated with keyword arguments
     app.config.update(kwargs)

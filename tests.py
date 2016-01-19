@@ -4,20 +4,21 @@
 
     This file is part of sqmpy project.
 """
-__author__ = 'Mehdi Sadeghi'
-
 import os
 import unittest
 import tempfile
 
 from sqmpy.factory import create_app
 
+__author__ = 'Mehdi Sadeghi'
+
 
 class SqmpyLoginTestCase(unittest.TestCase):
     def setUp(self):
         self.db_fd, self.db_file = tempfile.mkstemp()
-        opts = {'SQLALCHEMY_DATABASE_URI': 'sqlite:///'
-                + self.db_file + '?check_same_thread=False',
+        opts = {'SQLALCHEMY_DATABASE_URI': 'sqlite:///' +
+                                           self.db_file +
+                                           '?check_same_thread=False',
                 'TESTING': True,
                 'WTF_CSRF_ENABLED': False,
                 'CSRF_ENABLED': False,

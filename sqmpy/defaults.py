@@ -63,11 +63,12 @@ LOGIN_DISABLED = True
 # to any given remote machine.
 SSH_WITH_LOGIN_INFO = False
 
-# Enables LDAP login and will cause LDAP credentials to be used for SSH as well.
+# Enables LDAP login, will cause LDAP credentials to be used for SSH as well.
 # TODO: use authentication backends instead of this flag. Remove this.
 USE_LDAP_LOGIN = False
-#LDAP_SERVER = 'ldap.example.com'
-#LDAP_BASEDN = 'ou=People,ou=IWM,o=Fraunhofer,c=DE'
+LDAP_SERVER = 'localhost'
+# For example: LDAP_BASEDN = 'ou=People,ou=IWM,o=Fraunhofer,c=DE'
+LDAP_BASEDN = ''
 
 # Number of results to show when using pagination
 PER_PAGE = 10

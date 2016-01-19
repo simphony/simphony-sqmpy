@@ -131,9 +131,10 @@ def submit(job_id=None):
             # Delete temporary directory with its contents
             if os.path.exists(upload_dir):
                 shutil.rmtree(upload_dir)
-            # This is a workaround to recognize the error, regarding cases, when user's login page produces a lot of
-            # text upon SSH, which confuses sftp. This is a well known issue on the net and currently I cound not
-            # find a better way to recognize it.
+            # This is a workaround to recognize the error, regarding cases,
+            # when user's login page produces a lot of text upon SSH, which
+            # confuses sftp. This is a well known issue on the net and
+            # this is this is a trick to recognize the error.
             raise
             if "message too long" in str(ex):
                 flash("sftp error: Make sure you can do sftp/scp to the"

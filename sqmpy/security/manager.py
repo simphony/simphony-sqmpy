@@ -12,11 +12,11 @@ from .models import User, _AnonymousUserMixin
 from .exceptions import SecurityManagerException
 from ..database import db
 
-LDAP_AVAILABLE=True
+LDAP_AVAILABLE = True
 try:
     import ldap
 except:
-    LDAP_AVAILABLE=False
+    LDAP_AVAILABLE = False
 
 __author__ = 'Mehdi Sadeghi'
 

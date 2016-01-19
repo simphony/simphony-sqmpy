@@ -5,16 +5,17 @@
     Setting these keys, you can override default values.
     See http://flask.pocoo.org/docs/config/ for more information.
 """
+import os
+
 # Statement for enabling the development environment
 # DEBUG = True
 
 # Define the secret key for signing session cookies.
-# For every installation this should be unique. This will be used to 
+# For every installation this should be unique. This will be used to
 # encrypt cookies.
 SECRET_KEY = "This string will be replaced with a proper key in production."
 
 # Get current directory
-import os
 _basedir = os.path.abspath(os.path.dirname(__file__))
 
 # Define the database URI.
@@ -29,7 +30,7 @@ CSRF_SESSION_KEY = "this will be replaced with a strong secret"
 # Sqmpy uses this directory as file storage. All scripts, input and output
 # files will be stored at subfolders at this directory, separated by
 # usernames and job IDs.
-# STAGING_DIR = '/tmp/sqmpy/staging'
+#STAGING_DIR = '/tmp/sqmpy/staging'
 
 # Set to True to get notifications (emails) when status of submitted job changes.
 #NOTIFICATION = False

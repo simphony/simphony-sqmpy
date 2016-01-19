@@ -1,5 +1,3 @@
-__author__ = 'Mehdi Sadeghi'
-
 from flask.ext.sqlalchemy import SQLAlchemy
 
 

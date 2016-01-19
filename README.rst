@@ -166,13 +166,14 @@ throught the network. Here we generate a self-signed SSL certificate to use with
     $ openssl x509 -req -days 365 -in server.csr -signkey server.key -out server.crt
 
 Now we have three files, called server.crt, server.csr and, server.key. Edit gunicorn_cfg.py and uncomment
- certificate lines::
+certificate lines::
 
     keyfile = 'server.key'
     certfile = 'server.crt'
 
     # And re-run Sqmpy
     $ gunicorn -c gunicorn_cfg.py run:app
+
 
 Now you should be able to browse https://localhost:5000 which is SSL protected.
 

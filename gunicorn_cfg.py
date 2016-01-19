@@ -13,7 +13,7 @@ import multiprocessing
 
 
 # Gunicorn will listen on the given host:port
-bind = '0.0.0.0:3000'
+bind = '0.0.0.0:5000'
 
 # The only tested worker class is gevent
 #worker_class = 'gevent'

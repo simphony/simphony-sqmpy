@@ -5,7 +5,7 @@ import os
 from sqmpy.factory import create_app
 
 # This is necessary to support Heroku deployment
-port = int(os.environ.get("PORT", 3000))
+port = int(os.environ.get("PORT", 5000))
 
 # Pass the correct config file and create the app instance
 app = create_app('../config.py')

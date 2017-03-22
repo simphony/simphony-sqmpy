@@ -9,23 +9,25 @@ import shutil
 import tempfile
 import mimetypes
 
-from flask import request, redirect, url_for, abort, \
+from flask import request, redirect, url_for, abort,\
     render_template, flash, send_from_directory, Blueprint, g
-from flask.ext.login import login_required
-from flask.ext.csrf import csrf_exempt
+from flask_login import login_required
 from werkzeug import secure_filename
+from flask_wtf import CSRFProtect
 
-from .exceptions import JobNotFoundException
-from .forms import JobSubmissionForm
-from .models import Resource
-from .constants import ScriptType
-from . import manager as job_services
-from ..utils import get_redirect_target
+from sqmpy.job.exceptions import JobNotFoundException
+from sqmpy.job.forms import JobSubmissionForm
+from sqmpy.job.models import Resource
+from sqmpy.job.constants import ScriptType
+from sqmpy.job import manager as job_services
+from sqmpy.utils import get_redirect_target
+
 
 __author__ = 'Mehdi Sadeghi'
 
 
 job_blueprint = Blueprint('jobs', __name__, url_prefix='/jobs')
+csrf = CSRFProtect()
 
 
 @job_blueprint.context_processor
@@ -66,7 +68,7 @@ def detail(job_id):
         abort(404)
 
 
-@csrf_exempt
+@csrf.exempt
 @job_blueprint.route('/new', methods=['GET', 'POST'])
 @login_required
 def submit(job_id=None):
@@ -165,7 +167,7 @@ def resubmit(job_id):
         return redirect(get_redirect_target() or url_for('.index'))
 
 
-@csrf_exempt
+@csrf.exempt
 @job_blueprint.route('/<int:job_id>/cancel', methods=['GET', 'POST'])
 @login_required
 def cancel(job_id):

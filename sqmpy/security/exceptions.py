@@ -4,7 +4,7 @@
 
     Contains security exceptions
 """
-from ..exceptions import SqmpyException
+from sqmpy.exceptions import SqmpyException
 
 __author__ = 'Mehdi Sadeghi'
 

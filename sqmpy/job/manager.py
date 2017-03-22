@@ -9,14 +9,14 @@ import shutil
 
 import saga
 from flask import current_app, g, abort
-from flask.ext.login import current_user
+from flask_login import current_user
 
-from . import constants
-from . import helpers
-from .exceptions import JobManagerException
-from .models import Job, Resource, StagingFile
-from .saga_helper import SagaJobWrapper
-from ..database import db
+from sqmpy.job import constants
+from sqmpy.job import helpers
+from sqmpy.job.exceptions import JobManagerException
+from sqmpy.job.models import Job, Resource, StagingFile
+from sqmpy.job.saga_helper import SagaJobWrapper
+from sqmpy.database import db
 
 __author__ = 'Mehdi Sadeghi'
 

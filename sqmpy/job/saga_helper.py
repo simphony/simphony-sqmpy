@@ -13,15 +13,15 @@ from threading import Thread
 
 import saga
 import flask
-from flask.ext.login import current_user
+from flask_login import current_user
 
-from . import helpers
-from .helpers import send_state_change_email
-from .constants import FileRelation, ScriptType, HPCBackend
-from .exceptions import JobManagerException
-from .models import StagingFile, Job
-from .callback import JobStateChangeCallback
-from ..database import db
+from sqmpy.job import helpers
+from sqmpy.job.helpers import send_state_change_email
+from sqmpy.job.constants import FileRelation, ScriptType, HPCBackend
+from sqmpy.job.exceptions import JobManagerException
+from sqmpy.job.models import StagingFile, Job
+from sqmpy.job.callback import JobStateChangeCallback
+from sqmpy.database import db
 
 __author__ = 'Mehdi Sadeghi'
 

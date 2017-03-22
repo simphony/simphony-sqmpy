@@ -4,13 +4,13 @@
 
     Provides user management
 """
-import flask.ext.login as flask_login
+import flask_login as flask_login
 from flask import current_app, session, request, g
 
-from . import constants
-from .models import User, _AnonymousUserMixin
-from .exceptions import SecurityManagerException
-from ..database import db
+from sqmpy.security import constants
+from sqmpy.security.models import User, _AnonymousUserMixin
+from sqmpy.security.exceptions import SecurityManagerException
+from sqmpy.database import db
 
 LDAP_AVAILABLE = True
 try:

@@ -5,7 +5,7 @@
     View functions
 """
 from flask import Blueprint, redirect, url_for
-from flask.ext.login import login_required
+from flask_login import login_required
 
 main_blueprint = Blueprint('sqmpy', __name__)
 

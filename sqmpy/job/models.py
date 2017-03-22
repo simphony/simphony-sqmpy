@@ -7,8 +7,8 @@
 import os
 import datetime
 
-from ..database import db
-from .constants import FileRelation, JobStatus
+from sqmpy.database import db
+from sqmpy.job.constants import FileRelation, JobStatus
 
 __author__ = 'Mehdi Sadeghi'
 

@@ -1,6 +1,8 @@
 """
 Entry point for running the sqmpy application standalone
 """
+# Import saga first to let it patch logging module
+import saga
 import os
 from sqmpy.factory import create_app
 

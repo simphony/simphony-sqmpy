@@ -72,3 +72,6 @@ LDAP_BASEDN = ''
 
 # Number of results to show when using pagination
 PER_PAGE = 10
+
+# Default CSRF
+#WTF_CSRF_CHECK_DEFAULT = False

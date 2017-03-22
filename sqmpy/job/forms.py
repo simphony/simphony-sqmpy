@@ -4,8 +4,8 @@
 
     Implements job management forms.
 """
-from flask.ext.wtf import Form
-from flask.ext.wtf.file import FileField, FileAllowed, FileRequired
+from flask_wtf import FlaskForm as Form
+from flask_wtf.file import FileField, FileAllowed, FileRequired
 import wtforms as wtf
 
 from .constants import HPCBackend

@@ -7,10 +7,10 @@
 import bcrypt
 import datetime
 
-from flask.ext.login import AnonymousUserMixin
+from flask_login import AnonymousUserMixin
 
-from ..database import db
-from .constants import UserRole, UserStatus
+from sqmpy.database import db
+from sqmpy.security.constants import UserRole, UserStatus
 
 
 __author__ = 'Mehdi Sadeghi'

@@ -8,14 +8,14 @@ import base64
 
 from flask import flash, url_for, request, redirect, render_template, session,\
     Blueprint
-from flask.ext.login import login_user, logout_user, login_required,\
+from flask_login import login_user, logout_user, login_required,\
     LoginManager
 
-from ..database import db
+from sqmpy.database import db
 from sqlalchemy.exc import IntegrityError
-from .forms import LoginForm, RegisterForm
-from .models import User, _AnonymousUserMixin
-from . import manager as security_services
+from sqmpy.security.forms import LoginForm, RegisterForm
+from sqmpy.security.models import User, _AnonymousUserMixin
+from sqmpy.security import manager as security_services
 
 __author__ = 'Mehdi Sadeghi'
 

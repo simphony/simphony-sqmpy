@@ -1,5 +1,5 @@
 from flask import Flask
-from flask.ext.wtf.csrf import CsrfProtect
+from flask_wtf.csrf import CSRFProtect
 
 
 def create_app(config_filename=None, **kwargs):
@@ -31,14 +31,15 @@ def create_app(config_filename=None, **kwargs):
     from .database import db
     db.init_app(app)
 
+    csrf = CSRFProtect()
     # Activate CSRF protection
     if app.config.get('CSRF_ENABLED'):
-        CsrfProtect(app)
+        csrf.init_app(app)
 
     # Register blueprints
-    from .security import security_blueprint
-    from .job import job_blueprint
-    from .views import main_blueprint
+    from sqmpy.security import security_blueprint
+    from sqmpy.job import job_blueprint
+    from sqmpy.views import main_blueprint
     app.register_blueprint(security_blueprint)
     app.register_blueprint(job_blueprint)
     app.register_blueprint(main_blueprint)

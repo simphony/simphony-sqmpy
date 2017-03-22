@@ -7,8 +7,8 @@
 import saga
 from flask import current_app
 
-from . import helpers
-from ..database import db
+from sqmpy.job import helpers
+from sqmpy.database import db
 
 __author__ = 'Mehdi Sadeghi'
 

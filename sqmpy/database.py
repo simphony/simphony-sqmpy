@@ -1,4 +1,5 @@
-from flask.ext.sqlalchemy import SQLAlchemy
+"""DB module."""
+from flask_sqlalchemy import SQLAlchemy
 
 
 # Create database

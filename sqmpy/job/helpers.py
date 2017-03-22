@@ -17,13 +17,13 @@ from email.mime.multipart import MIMEMultipart
 
 import flask
 from flask import url_for
-from flask.ext.login import current_user
+from flask_login import current_user
 
-from ..database import db
-from ..security import manager as security_services
-from .exceptions import JobManagerException
-from .models import Job, StagingFile
-from .constants import FileRelation, ScriptType
+from sqmpy.database import db
+from sqmpy.security import manager as security_services
+from sqmpy.job.exceptions import JobManagerException
+from sqmpy.job.models import Job, StagingFile
+from sqmpy.job.constants import FileRelation, ScriptType
 
 __author__ = 'Mehdi Sadeghi'
 

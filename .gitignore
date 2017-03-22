@@ -59,3 +59,5 @@ docs/_build/
 
 # Skip nfs files
 *.nfs*
+
+instance/

@@ -1,0 +1,9 @@
+Flask
+Flask-SQLAlchemy
+Flask-Login
+Flask-WTF
+Flask-CSRF
+Flask-Uploads
+enum34
+saga-python
+py-bcrypt

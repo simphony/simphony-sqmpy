@@ -89,21 +89,21 @@ class DropletJobSubmissionForm(Form):
     simulation_name = wtf.StringField('Name of simulation', default='Droplet test')
     simulation_box_side_length = \
         wtf.FloatField('Simulation box side length', default=0.008)
-    mesh_grid_size = wtf.DecimalField('Mesh grid size', default=8.0e-04)
+    mesh_grid_size = wtf.FloatField('Mesh grid size', default=8.0e-04)
 
     # Time section
     end_time = wtf.FloatField('End time', default=0.1)
-    time_step = wtf.DecimalField('Time step', default=1e-4)
+    time_step = wtf.FloatField('Time step', default=1e-4)
     number_of_states = wtf.IntegerField('Number of states', default=10)
 
     # Material properties
     wetting_angle = wtf.IntegerField('Wetting angle', default=110)
-    drop_volume = wtf.DecimalField('Drop volume', default=1e-9)
-    dynamic_viscosity_of_gas_phase = wtf.DecimalField('Dynamic viscosity of gas phase', default=1.48e-5)
+    drop_volume = wtf.FloatField('Drop volume', default=1e-9)
+    dynamic_viscosity_of_gas_phase = wtf.FloatField('Dynamic viscosity of gas phase', default=1.48e-5)
     density_of_gas_phase = wtf.FloatField('Density of gas phase', default=1.0)
-    dynamic_viscosity_of_liquid_phase = wtf.DecimalField('Dynamic viscosity of liquid phase', default=0.002)
+    dynamic_viscosity_of_liquid_phase = wtf.FloatField('Dynamic viscosity of liquid phase', default=0.002)
     density_of_liquid_phase = wtf.FloatField('Density of liquid phase', default=1058.0)
-    surface_tension_of_liquid_gas_interface = wtf.DecimalField('Surface tension of liquid gas phase', default=70.0e-3)
+    surface_tension_of_liquid_gas_interface = wtf.FloatField('Surface tension of liquid gas phase', default=70.0e-3)
 
     # choices will be filled at runtime
     resource = \

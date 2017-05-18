@@ -86,24 +86,24 @@ class DropletJobSubmissionForm(Form):
     Form to handle job submission.
     """
     # Simulation setup
-    # simulation_name = wtf.StringField('Simulation Name', [wtf.validators.Optional()], coerce=str)
+    #simulation_name = wtf.StringField('Name of simulation', default='Droplet test')
     simulation_box_side_length = \
-        wtf.IntegerField('Simulation box side length')
-    mesh_grid_size = wtf.DecimalField('Mesh grid size')
+        wtf.FloatField('Simulation box side length', default=0.008)
+    mesh_grid_size = wtf.DecimalField('Mesh grid size', default=8.0e-04)
 
     # Time section
-    end_time = wtf.FloatField('End time')
-    time_step = wtf.DecimalField('Time step')
-    number_of_states = wtf.IntegerField('Number of states')
+    end_time = wtf.FloatField('End time', default=0.1)
+    time_step = wtf.DecimalField('Time step', default=1e-4)
+    number_of_states = wtf.IntegerField('Number of states', default=10)
 
     # Material properties
-    wetting_angle = wtf.IntegerField('Wetting angle')
-    drop_volume = wtf.DecimalField('Drop volume')
-    dynamic_viscosity_of_gas_phase = wtf.DecimalField('Dynamic viscosity of gas phase')
-    density_of_gas_phase = wtf.FloatField('Density of gas phase')
-    dynamic_viscosity_of_liquid_phase = wtf.DecimalField('Dynamic viscosity of liquid phase')
-    density_of_liquid_phase = wtf.FloatField('Density of liquid phase')
-    surface_tension_of_liquid_gas_interface = wtf.DecimalField('Surface tension of liquid gas phase')
+    wetting_angle = wtf.IntegerField('Wetting angle', default=110)
+    drop_volume = wtf.DecimalField('Drop volume', default=1e-9)
+    dynamic_viscosity_of_gas_phase = wtf.DecimalField('Dynamic viscosity of gas phase', default=1.48e-5)
+    density_of_gas_phase = wtf.FloatField('Density of gas phase', default=1.0)
+    dynamic_viscosity_of_liquid_phase = wtf.DecimalField('Dynamic viscosity of liquid phase', default=0.002)
+    density_of_liquid_phase = wtf.FloatField('Density of liquid phase', default=1058.0)
+    surface_tension_of_liquid_gas_interface = wtf.DecimalField('Surface tension of liquid gas phase', default=70.0e-3)
 
     input_files = FileField('Input files', [wtf.validators.Optional()])
     # choices will be filled at runtime

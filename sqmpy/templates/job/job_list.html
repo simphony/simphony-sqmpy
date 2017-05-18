@@ -58,6 +58,7 @@ Jobs - {{super()}}
     <div>
         <p>
             <a type="button" class="btn btn-primary" role="button" href="{{url_for('.submit')}}">New Job</a>
+            <a type="button" class="btn btn-success" role="button" href="{{url_for('.submit_droplet')}}">New Droplet</a>
         {{render_pagination(pagination)}}
         </p>
     </div>

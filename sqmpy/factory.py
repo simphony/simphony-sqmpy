@@ -1,5 +1,8 @@
 from flask import Flask
 from flask_wtf.csrf import CSRFProtect
+from flask_sqlalchemy import SQLAlchemy
+
+from sqmpy.job.monitor import JobMonitorThread
 
 
 def create_app(config_filename=None, **kwargs):
@@ -28,7 +31,7 @@ def create_app(config_filename=None, **kwargs):
     app.config.update(kwargs)
 
     # Register app on db
-    from .database import db
+    from sqmpy.database import db
     db.init_app(app)
 
     csrf = CSRFProtect()
@@ -59,5 +62,11 @@ def create_app(config_filename=None, **kwargs):
                                  url_for('%s.index' % job_blueprint.name)}}
         else:
             return {}
+
+    @app.before_first_request
+    def activate_job_monitor():
+        thread = JobMonitorThread(kwargs={'app': app})
+        app.monitor = thread
+        thread.start()
 
     return app

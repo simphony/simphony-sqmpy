@@ -117,56 +117,6 @@ class SagaJobWrapper(object):
         # thread will not have access to the context data of the original
         # one.
         # self._register_callbacks()
-        # TODO: My monitoring approach is messy and should be changed.
-        @flask.copy_current_request_context
-        def monitor_state(app):
-            with app.app_context():
-                while True:
-                    flask.current_app.logger.debug(
-                        'Monitoring job %s for changes...' % self._job.id)
-                    # Check for changes every three seconds
-                    time.sleep(3)
-                    try:
-                        val = self._saga_job.state
-                        if val != self._job.last_status:
-                            # Shout out load
-                            # Todo: use signals here
-                            send_state_change_email(self._job.id,
-                                                    self._job.owner_id,
-                                                    self._job.last_status,
-                                                    val,
-                                                    silent=True)
-
-                            # Currently storing history is unused.
-                            # Insert history record
-                            # history_record = JobStateHistory()
-                            # history_record.change_time =\
-                            #     datetime.datetime.now()
-                            # history_record.old_state = self._job.last_status
-                            # history_record.new_state = val
-                            # history_record.job_id = self._job.id
-                            # db.session.add(history_record)
-                            # db.session.flush()
-
-                            # If there are new files, transfer them back, along
-                            # with output and error files
-                            download_job_files(self._job.id,
-                                               self._saga_job.description,
-                                               self._job_service.get_session())
-
-                            # Update last status
-                            self._job.last_status = val
-                            if self._job not in db.session:
-                                db.session.merge(self._job)
-                            db.session.commit()
-                        if val in (saga.FAILED,
-                                   saga.DONE,
-                                   saga.CANCELED,
-                                   saga.FINAL,
-                                   saga.EXCEPTION):
-                            return
-                    except saga.IncorrectState:
-                        pass
 
         # Run the job eventually
         flask.current_app.logger.debug("...starting job[%s]..." % self._job.id)
@@ -177,12 +127,13 @@ class SagaJobWrapper(object):
         db.session.commit()
 
         # Make sure to start monitoring after starting the job
-        flask.current_app.logger.debug(
-            'creating monitoring thread and passing %s to it' %
-            (flask.current_app._get_current_object()))
-        thr = Thread(target=monitor_state,
-                     args=[flask.current_app._get_current_object()])
-        thr.start()
+        #flask.current_app.logger.debug(
+        #    'creating monitoring thread and passing %s to it' %
+        #    (flask.current_app._get_current_object()))
+
+        flask.current_app.monitor.send((self._job.id,
+                                        self._job_service))
+
 
         flask.current_app.logger.debug(
             "Remote Job ID    : %s" % self._saga_job.id)

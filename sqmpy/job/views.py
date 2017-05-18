@@ -244,7 +244,7 @@ def submit_droplet(job_id=None):
     if form.validate_on_submit():
         # Populate the template
         droplet_script = droplet_script_template.format(
-            simulation_name=form.simulation_name,
+            simulation_name=form.simulation_name.data,
             simulation_box_side_length=form.simulation_box_side_length.data,
             mesh_grid_size=form.mesh_grid_size.data,
             end_time=form.end_time.data,

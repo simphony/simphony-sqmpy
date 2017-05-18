@@ -18,4 +18,4 @@ if __name__ == '__main__':
     # app.run(ssl_context=('server.crt', 'server.key'))
     # It is possible to configure custom hsot and port:
     # app.run(host='127.0.0.1', port=5000)
-    app.run()
+    app.run(port=port)

@@ -32,20 +32,6 @@ New job - {{super()}}
                     {{ render_field(form.density_of_liquid_phase) }}
                     {{ render_field(form.surface_tension_of_liquid_gas_interface) }}
 
-                    <h5><strong>Input files</strong></h6>
-                     <div class="input-group">
-                         <span class="input-group-btn">
-                             <span class="btn btn-default btn-file">
-                                 Browse&hellip; <input type="file" multiple id="input_files" name="input_files">
-                             </span>
-                         </span>
-                         <input type="text" class="form-control" readonly>
-                     </div>
-                     {% if form.input_files.errors %}
-                         {% for error in form.input_files.errors %}
-                             <div style="color:red;">{{ error }}</div>
-                         {% endfor %}
-                     {% endif %}
                     {{ render_field(form.resource) }}
                     {{ render_field(form.description) }}
                     <span id="options" class="collapse">

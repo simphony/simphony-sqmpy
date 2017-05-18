@@ -105,7 +105,6 @@ class DropletJobSubmissionForm(Form):
     density_of_liquid_phase = wtf.FloatField('Density of liquid phase', default=1058.0)
     surface_tension_of_liquid_gas_interface = wtf.DecimalField('Surface tension of liquid gas phase', default=70.0e-3)
 
-    input_files = FileField('Input files', [wtf.validators.Optional()])
     # choices will be filled at runtime
     resource = \
         wtf.SelectField('Resource', [wtf.validators.Optional()], coerce=str)

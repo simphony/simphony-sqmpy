@@ -21,7 +21,7 @@ _basedir = os.path.abspath(os.path.dirname(__file__))
 # Define the database URI.
 SQLALCHEMY_DATABASE_URI =\
     'sqlite:///' + os.path.join(_basedir,
-                                'data.db') + '?check_same_thread=False'
+                                'data.db')
 
 # Use a secure, unique and absolutely secret key for
 # signing the data.

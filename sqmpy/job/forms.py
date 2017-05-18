@@ -86,7 +86,7 @@ class DropletJobSubmissionForm(Form):
     Form to handle job submission.
     """
     # Simulation setup
-    #simulation_name = wtf.StringField('Name of simulation', default='Droplet test')
+    simulation_name = wtf.StringField('Name of simulation', default='Droplet test')
     simulation_box_side_length = \
         wtf.FloatField('Simulation box side length', default=0.008)
     mesh_grid_size = wtf.DecimalField('Mesh grid size', default=8.0e-04)

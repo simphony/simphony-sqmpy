@@ -17,6 +17,7 @@ New job - {{super()}}
                 <div class="col-lg-6 col-sm-6 col-12">
                     
                     <div class="alert alert-info" role="alert">Note: Please Use SI units (Kg, metre, second) </div>
+                    {{ render_field(form.simulation_name) }}
                     {{ render_field(form.simulation_box_side_length) }}
                     {{ render_field(form.mesh_grid_size) }}
                     {{ render_field(form.end_time) }}

@@ -17,7 +17,7 @@ import math
 import foam_controlwrapper
 # Start "User Interface" 
 ############################ 
-Name_of_Simulation = 'Test'
+Name_of_Simulation = {simulation_name}
 # Note: Please Use SI units (Kg, metre, second) 
 
 # Simulation Set Up Section 

@@ -1,0 +1,69 @@
+job:
+  script_type:
+    description:  Type of the script 0-shell 1-python (values defined by sqmpy)
+    value:        1
+  resource_type:
+    description:  Type of resource to run the job ("local", "remote")
+    value:        local
+  description:
+    description:  Description of the job
+    value:        Test job for Kratos Wrapper
+  project:
+    description:  Project to which the job is associated
+    value:        Simphony
+  command:
+    description:  Command to be run
+    value:        python2
+  arguments:
+    description:  Arguments for the command
+    value:        [test.py, Input]
+  out_file:
+    description:  Output file
+    value:        example.out
+  err_file:
+    description:  Error file
+    value:        example.err
+  remote:
+    description:  Parameters for the remote execution
+    resource_url:
+      description:  address of the remote machine
+      value:        localhost
+    hpc_backend:
+      description:  scheduler used in the remote machine
+      value:        shell
+    working_directory:
+      description:  directory were the input folder will be copied and where the job will run
+      value:        /tmp
+    upload_dir:
+      description:  Directory to be copied to the remote machine
+      value:        /dir/to/upload
+    queue:
+      description:  Queue of the machine where the job will run
+      value:        None
+    spmd_variation:
+      description:  Parallel environment.
+      value:        12way
+    total_cpu:
+      description:  Total number of cpu requeired by the job
+      value:        1
+    processes:
+      description:  Number of processes (MPI)
+      value:        1
+    cpu_per_process:
+      description:  Number of cpu per process (OpenMP)
+      value:        4
+    total_nodes:
+      description:  Total number of nodes to use
+      value:        1
+    processes_per_node:
+      description:  Maximum number of processes that can be spawn per node
+      value:        1
+    total_physical_memory:
+      description:  Memory to be allocated per job (Megabytes)
+      value:        4096
+    wall_time:
+      description:  Maximum time before the job is killed (Minutes)
+      value:        60
+    adaptor:
+      description:  Backend to be used ('shell' or 'sge')
+      value:        shell
